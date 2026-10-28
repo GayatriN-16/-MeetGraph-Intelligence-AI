@@ -1,6 +1,14 @@
-﻿import React, { useState } from 'react';
-import { Search, Bell, Building2, ChevronDown, Sparkles, Plus, Key, ShieldCheck } from 'lucide-react';
-import { User } from '../types';
+﻿
+import React, { useState } from 'react';
+import {
+  Search,
+  Bell,
+  Building2,
+  ChevronDown,
+  ShieldCheck,
+  Check,
+} from 'lucide-react';
+import { NavigationTab, User } from '../types';
 
 interface TopHeaderProps {
   currentUser: User;
@@ -8,20 +16,19 @@ interface TopHeaderProps {
   onSearch: (query: string) => void;
   openUploadModal: () => void;
   selectedProject: string;
-  setSelectedProject: (proj: string) => void;
+  setSelectedProject: (project: string) => void;
   unreadCount?: number;
-  onSelectTab: (tab: any) => void;
+  onSelectTab: (tab: NavigationTab) => void;
 }
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
   currentUser,
   onOpenAuthModal,
   onSearch,
-  openUploadModal,
   selectedProject,
   setSelectedProject,
-  unreadCount = 1,
-  onSelectTab
+  unreadCount = 0,
+  onSelectTab,
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
@@ -30,97 +37,114 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     'Acme Engineering - Capstone v2.4',
     'Product Launch v1',
     'Core Engine',
-    'Client Review Board'
+    'Client Review Board',
   ];
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-    onSearch(e.target.value);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchValue(query);
+    onSearch(query);
   };
 
   return (
-    <header className="h-16 bg-[#ffffff] border-b border-[#e2e8f0] px-6 flex items-center justify-between sticky top-0 z-10 font-sans">
-      {/* Global Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+    <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+      <div className="min-w-[200px] flex-1">
+        <label className="relative block w-full max-w-xl">
+          <span className="sr-only">Search meetings</span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
           <input
-            type="text"
+            type="search"
             value={searchValue}
             onChange={handleSearchChange}
-            placeholder="Search transcripts, speaker quotes, entities, action items..."
-            className="w-full pl-10 pr-12 py-2 text-sm bg-[#f1f5f9] border border-transparent rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#4f46e5] focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+            placeholder="Search meetings, decisions and tasks..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-            âŒ˜K
-          </span>
-        </div>
+        </label>
       </div>
 
-      {/* Right Header Actions */}
-      <div className="flex items-center gap-3">
-        {/* Project Selector Dropdown */}
+      <div className="flex items-center gap-2 sm:gap-3">
         <div className="relative">
           <button
-            onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-[#f1f5f9] hover:bg-[#e2e8f0] border border-slate-200 rounded-lg transition-colors"
+            type="button"
+            onClick={() => setShowProjectDropdown((open) => !open)}
+            aria-expanded={showProjectDropdown}
+            className="flex max-w-[220px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
           >
-            <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="truncate max-w-[180px]">{selectedProject}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <Building2 className="h-4 w-4 shrink-0 text-indigo-500" />
+            <span className="truncate">{selectedProject}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
           </button>
 
           {showProjectDropdown && (
-            <div className="absolute right-0 mt-1 w-64 bg-white border border-[#cbd5e1] rounded-lg shadow-lg py-1 z-30">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Select Active Project Scope
+            <>
+              <button
+                type="button"
+                aria-label="Close project menu"
+                className="fixed inset-0 z-20 cursor-default"
+                onClick={() => setShowProjectDropdown(false)}
+              />
+              <div className="absolute right-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10">
+                <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Project scope
+                </p>
+                {projects.map((project) => {
+                  const active = selectedProject === project;
+
+                  return (
+                    <button
+                      type="button"
+                      key={project}
+                      onClick={() => {
+                        setSelectedProject(project);
+                        setShowProjectDropdown(false);
+                      }}
+                      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${
+                        active
+                          ? 'bg-indigo-50 font-medium text-indigo-700'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{project}</span>
+                      {active && <Check className="h-4 w-4 shrink-0" />}
+                    </button>
+                  );
+                })}
               </div>
-              {projects.map((proj) => (
-                <button
-                  key={proj}
-                  onClick={() => {
-                    setSelectedProject(proj);
-                    setShowProjectDropdown(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-[#f1f5f9] flex items-center justify-between ${
-                    selectedProject === proj ? 'font-semibold text-indigo-600 bg-indigo-50/50' : 'text-slate-700'
-                  }`}
-                >
-                  <span>{proj}</span>
-                  {selectedProject === proj && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>}
-                </button>
-              ))}
-            </div>
+            </>
           )}
         </div>
 
-        {/* Notifications Button */}
         <button
+          type="button"
           onClick={() => onSelectTab('notifications')}
-          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-[#f1f5f9] rounded-lg relative transition-colors"
           title="Notifications"
+          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
         >
-          <Bell className="w-4 h-4" />
+          <Bell className="h-[18px] w-[18px]" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           )}
         </button>
 
-        {/* JWT Auth & Role Pill */}
         <button
+          type="button"
           onClick={onOpenAuthModal}
-          className="flex items-center gap-2 bg-[#eaedff] hover:bg-[#d2d9f4] border border-[#c7c4d8] px-2.5 py-1 rounded-lg transition-colors text-xs"
+          aria-label={`Account: ${currentUser.name}`}
+          className="flex shrink-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-left transition hover:border-slate-300 hover:bg-slate-50"
         >
-          <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
             {currentUser.avatarInitials}
-          </div>
-          <div className="text-left hidden sm:block">
-            <div className="text-[11px] font-bold text-slate-900 leading-tight">{currentUser.name}</div>
-            <div className="text-[9px] font-semibold text-indigo-700 uppercase flex items-center gap-0.5">
-              <ShieldCheck className="w-2.5 h-2.5" />
+          </span>
+          <span className="hidden min-w-0 sm:block">
+            <span className="block max-w-28 truncate text-xs font-semibold text-slate-800">
+              {currentUser.name}
+            </span>
+            <span className="mt-0.5 flex items-center gap-1 text-[10px] text-slate-500">
+              <ShieldCheck className="h-3 w-3 text-indigo-500" />
               {currentUser.role}
-            </div>
-          </div>
+            </span>
+          </span>
         </button>
       </div>
     </header>

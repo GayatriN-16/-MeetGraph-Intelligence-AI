@@ -1,9 +1,10 @@
-﻿import React from 'react';
+﻿
+import React from 'react';
 import {
   LayoutDashboard,
   Library,
   UploadCloud,
-  Share2,
+  Network,
   CheckSquare,
   Sparkles,
   FolderKanban,
@@ -12,136 +13,145 @@ import {
   Cpu,
   Workflow,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react';
-import { NavigationTab } from '../types';
+import { NavigationTab, User } from '../types';
 
 interface SidebarProps {
   currentTab: NavigationTab;
+  currentUser: User;
   onSelectTab: (tab: NavigationTab) => void;
   openUploadModal: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, openUploadModal }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  currentUser,
+  onSelectTab,
+  openUploadModal,
+}) => {
   const workspaceItems = [
-    { id: 'dashboard' as NavigationTab, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'meetings' as NavigationTab, label: 'Meetings Library', icon: Library },
-    { id: 'upload' as NavigationTab, label: 'Upload Meeting', icon: UploadCloud, action: openUploadModal },
-    { id: 'knowledge-graph' as NavigationTab, label: 'Knowledge Graph', icon: Share2 },
+    { id: 'dashboard' as NavigationTab, label: 'Overview', icon: LayoutDashboard },
+    { id: 'meetings' as NavigationTab, label: 'Meetings', icon: Library },
+    { id: 'knowledge-graph' as NavigationTab, label: 'Knowledge Graph', icon: Network },
     { id: 'tasks-decisions' as NavigationTab, label: 'Tasks & Decisions', icon: CheckSquare },
   ];
 
   const intelligenceItems = [
-    { id: 'ask-ai' as NavigationTab, label: 'Ask AI (GraphRAG)', icon: Sparkles },
-    { id: 'architecture' as NavigationTab, label: 'System Architecture', icon: Workflow },
-    { id: 'integrations' as NavigationTab, label: 'Integrations', icon: Layers },
-    { id: 'admin-audit' as NavigationTab, label: 'Admin & Audit Logs', icon: ShieldCheck },
+    { id: 'ask-ai' as NavigationTab, label: 'Ask AI', icon: Sparkles },
     { id: 'projects' as NavigationTab, label: 'Projects', icon: FolderKanban },
+  ];
+
+  const systemItems = [
+    { id: 'architecture' as NavigationTab, label: 'Architecture', icon: Workflow },
+    { id: 'integrations' as NavigationTab, label: 'Integrations', icon: Layers },
+    { id: 'admin-audit' as NavigationTab, label: 'Audit Logs', icon: ShieldCheck },
     { id: 'settings' as NavigationTab, label: 'Settings', icon: Settings },
   ];
 
+  const renderItems = (
+    items: { id: NavigationTab; label: string; icon: React.ElementType }[],
+  ) =>
+    items.map(({ id, label, icon: Icon }) => {
+      const active = currentTab === id;
+
+      return (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onSelectTab(id)}
+          aria-current={active ? 'page' : undefined}
+          className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+            active
+              ? 'bg-indigo-500/15 font-semibold text-white ring-1 ring-inset ring-indigo-400/20'
+              : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
+          }`}
+        >
+          <Icon
+            className={`h-[18px] w-[18px] shrink-0 ${
+              active ? 'text-indigo-300' : 'text-slate-500 group-hover:text-slate-300'
+            }`}
+          />
+          <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+          {active && <ChevronRight className="h-4 w-4 text-indigo-300" />}
+        </button>
+      );
+    });
+
   return (
-    <aside className="w-64 bg-[#ffffff] border-r border-[#e2e8f0] flex flex-col justify-between h-screen sticky top-0 shrink-0 z-20 font-sans">
-      <div className="p-4 space-y-5 overflow-y-auto">
-        {/* Brand Logo Header */}
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1 font-bold text-slate-900 tracking-tight text-base">
-                MeetGraph
-              </div>
-              <div className="text-[10px] font-semibold tracking-wider uppercase text-indigo-600">
-                INTELLIGENCE AI
-              </div>
-            </div>
-          </div>
+    <aside className="sticky top-0 z-30 flex h-screen w-[250px] shrink-0 flex-col border-r border-slate-800 bg-[#111827] text-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
+        <button
+          type="button"
+          onClick={() => onSelectTab('dashboard')}
+          className="mb-8 flex items-center gap-3 rounded-xl text-left"
+          aria-label="MeetGraph AI home"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500 shadow-lg shadow-indigo-950/30">
+            <Cpu className="h-5 w-5 text-white" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-base font-bold tracking-tight text-white">
+              MeetGraph AI
+            </span>
+            <span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
+              Meeting intelligence
+            </span>
+          </span>
+        </button>
 
-          {/* Capstone Environment Pill */}
-          <div className="mt-3 bg-[#f2f3ff] border border-[#e2e7ff] rounded-md px-2.5 py-1.5 flex items-center gap-2 text-xs font-medium text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Capstone v2.4 (Active)</span>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={openUploadModal}
+          className="mb-7 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 px-3 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2 focus:ring-offset-[#111827]"
+        >
+          <UploadCloud className="h-4 w-4" />
+          Upload a meeting
+        </button>
 
-        {/* WORKSPACE Navigation */}
-        <div className="space-y-1">
-          <div className="px-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-2">
-            WORKSPACE
-          </div>
-          {workspaceItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.action) {
-                    item.action();
-                  } else {
-                    onSelectTab(item.id);
-                  }
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-[#4f46e5] text-white shadow-sm font-semibold'
-                    : 'text-slate-600 hover:bg-[#f1f5f9] hover:text-slate-900'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <nav className="space-y-7" aria-label="Main navigation">
+          <section className="space-y-2">
+            <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Workspace
+            </h2>
+            <div className="space-y-1">{renderItems(workspaceItems)}</div>
+          </section>
 
-        {/* INTELLIGENCE & ARCHITECTURE Navigation */}
-        <div className="space-y-1">
-          <div className="px-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-2">
-            INTELLIGENCE & SPECS
-          </div>
-          {intelligenceItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-[#4f46e5] text-white shadow-sm font-semibold'
-                    : 'text-slate-600 hover:bg-[#f1f5f9] hover:text-slate-900'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                <span className="truncate">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+          <section className="space-y-2">
+            <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Intelligence
+            </h2>
+            <div className="space-y-1">{renderItems(intelligenceItems)}</div>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              System
+            </h2>
+            <div className="space-y-1">{renderItems(systemItems)}</div>
+          </section>
+        </nav>
       </div>
 
-      {/* User Profile Footer */}
-      <div className="p-3 border-t border-[#e2e8f0] bg-[#f8fafc]">
-        <div className="bg-[#eaedff] border border-[#d2d9f4] rounded-lg p-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-              AV
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-900">Alex Vance</div>
-              <div className="text-[11px] text-slate-500">Admin</div>
-            </div>
+      <div className="border-t border-slate-800 p-4">
+        <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+            {currentUser.avatarInitials}
           </div>
-          <button
-            title="Log Out / Switch Account"
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-white/60 rounded-md transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-slate-100">
+              {currentUser.name}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-slate-400">
+              {currentUser.role}
+            </p>
+          </div>
+          <LogOut className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
         </div>
+        <p className="mt-3 text-center text-[10px] text-slate-600">
+          MeetGraph AI · Development preview
+        </p>
       </div>
     </aside>
   );

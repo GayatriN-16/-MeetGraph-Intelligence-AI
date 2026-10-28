@@ -92,7 +92,8 @@ export default function App() {
 
       {/* Left Navigation Sidebar */}
       <Sidebar
-        currentTab={currentTab}
+  currentTab={currentTab}
+  currentUser={currentUser}
         onSelectTab={setCurrentTab}
         openUploadModal={() => setShowUploadModal(true)}
       />
