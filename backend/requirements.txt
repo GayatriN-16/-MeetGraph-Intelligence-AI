@@ -1,6 +1,10 @@
-﻿fastapi
+﻿
+fastapi
 uvicorn[standard]
 pydantic-settings
 python-multipart
+sqlalchemy>=2.0,<3.0
+psycopg[binary]>=3.2,<4.0
+alembic
 pytest
 httpx

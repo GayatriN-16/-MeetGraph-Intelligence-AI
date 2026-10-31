@@ -1,9 +1,10 @@
 
 from fastapi.testclient import TestClient
 
-from app.main import app
+import app.main as main_module
 
-client = TestClient(app)
+
+client = TestClient(main_module.app)
 
 
 def test_root_endpoint():
@@ -13,14 +14,29 @@ def test_root_endpoint():
     assert response.json()["message"] == "Welcome to MeetGraph AI API"
 
 
-def test_health_endpoint():
+def test_health_endpoint_with_database(monkeypatch):
+    monkeypatch.setattr(
+        main_module,
+        "check_database_connection",
+        lambda: True,
+    )
+
     response = client.get("/api/v1/health")
 
     assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
+    assert response.json()["services"]["postgresql"] == "connected"
 
-    data = response.json()
 
-    assert data["status"] == "healthy"
-    assert data["services"]["fastapi"] == "running"
-    assert data["services"]["postgresql"] == "not_configured"
-    assert data["services"]["neo4j"] == "not_configured"
+def test_health_endpoint_without_database(monkeypatch):
+    monkeypatch.setattr(
+        main_module,
+        "check_database_connection",
+        lambda: False,
+    )
+
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 503
+    assert response.json()["status"] == "degraded"
+    assert response.json()["services"]["postgresql"] == "disconnected"
