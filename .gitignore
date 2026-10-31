@@ -11,3 +11,6 @@ backend/**/__pycache__/
 backend/.pytest_cache/
 backend/.env
 backend/**/*.pyc
+# Meeting recordings (local user data)
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep

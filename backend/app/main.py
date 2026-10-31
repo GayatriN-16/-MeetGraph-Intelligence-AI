@@ -4,13 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.database import check_database_connection
+from app.api.meetings import router as meetings_router
+from app.api.projects import router as projects_router
 
 
 app = FastAPI(
     title="MeetGraph AI API",
     description=(
-        "Backend API for meeting transcription, "
-        "decision extraction, task tracking and knowledge retrieval."
+        "Backend API for meeting transcription, decisions, "
+        "action items and connected meeting knowledge."
     ),
     version="1.0.0",
 )
@@ -24,6 +26,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    projects_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    meetings_router,
+    prefix="/api/v1",
 )
 
 
@@ -52,16 +64,10 @@ async def health_check():
         "llm": "not_configured",
     }
 
-    all_critical_services_healthy = database_connected
-
     return JSONResponse(
-        status_code=200 if all_critical_services_healthy else 503,
+        status_code=200 if database_connected else 503,
         content={
-            "status": (
-                "healthy"
-                if all_critical_services_healthy
-                else "degraded"
-            ),
+            "status": "healthy" if database_connected else "degraded",
             "application": "MeetGraph AI",
             "version": "1.0.0",
             "services": services,
