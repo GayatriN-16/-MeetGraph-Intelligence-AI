@@ -1,4 +1,4 @@
-
+﻿
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from app.core.database import check_database_connection
 from app.api.meetings import router as meetings_router
 from app.api.projects import router as projects_router
-
+from app.api.extraction import router as extraction_router
 
 app = FastAPI(
     title="MeetGraph AI API",
@@ -28,15 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(
-    projects_router,
-    prefix="/api/v1",
-)
-
-app.include_router(
-    meetings_router,
-    prefix="/api/v1",
-)
+app.include_router(projects_router, prefix="/api/v1")
+app.include_router(meetings_router, prefix="/api/v1")
+app.include_router(extraction_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["General"])
@@ -54,14 +48,13 @@ async def health_check():
 
     services = {
         "fastapi": "running",
-        "postgresql": (
-            "connected" if database_connected else "disconnected"
-        ),
+        "postgresql": "connected" if database_connected else "disconnected",
         "neo4j": "not_configured",
         "vector_store": "not_configured",
-        "transcription": "not_configured",
-        "speaker_diarization": "not_configured",
+        "transcription": "available",
+        "speaker_diarization": "available",
         "llm": "not_configured",
+        "local_extraction": "available",
     }
 
     return JSONResponse(
