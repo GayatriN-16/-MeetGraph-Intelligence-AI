@@ -7,14 +7,16 @@ from app.core.database import check_database_connection
 from app.api.meetings import router as meetings_router
 from app.api.projects import router as projects_router
 from app.api.extraction import router as extraction_router
+from app.api.questions import router as questions_router
 
 app = FastAPI(
     title="MeetGraph AI API",
     description=(
         "Backend API for meeting transcription, decisions, "
-        "action items and connected meeting knowledge."
+        "action items, connected meeting knowledge and "
+        "evidence-based question answering."
     ),
-    version="1.0.0",
+    version="1.1.0",
 )
 
 app.add_middleware(
@@ -31,6 +33,7 @@ app.add_middleware(
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(meetings_router, prefix="/api/v1")
 app.include_router(extraction_router, prefix="/api/v1")
+app.include_router(questions_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["General"])
@@ -55,6 +58,7 @@ async def health_check():
         "speaker_diarization": "available",
         "llm": "not_configured",
         "local_extraction": "available",
+        "question_answering": "available",
     }
 
     return JSONResponse(
@@ -62,7 +66,7 @@ async def health_check():
         content={
             "status": "healthy" if database_connected else "degraded",
             "application": "MeetGraph AI",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "services": services,
         },
     )
