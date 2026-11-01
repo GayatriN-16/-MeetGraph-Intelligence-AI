@@ -12,10 +12,15 @@ MONTHS = {
     if name
 }
 
-ACTION_PATTERN = re.compile(
-    r"\bI will\s+(.+?)(?:[.!?]|$)",
-    re.IGNORECASE,
-)
+ACTION_PATTERNS = [
+    re.compile(
+        r"\bI will\s+(.+?)(?:[.!?]|$)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b([A-Z][a-z]+)\s+will\s+(.+?)(?:[.!?]|$)"
+    ),
+]
 
 DECISION_PATTERN = re.compile(
     r"\b(?:we decided to|we agreed to|agreed that|"
@@ -31,8 +36,9 @@ DEADLINE_PATTERN = re.compile(
 )
 
 DURATION_PATTERN = re.compile(
-    r"\b(?:will take|should take|estimated duration is)\s+"
-    r"(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)\b",
+    r"\b(?:will take|should take|estimated duration is|"
+    r"within)\s+(\d+(?:\.\d+)?)\s*"
+    r"(minutes?|mins?|hours?|hrs?|days?)\b",
     re.IGNORECASE,
 )
 
@@ -83,6 +89,9 @@ def parse_duration(text: str):
     if unit.startswith(("hour", "hr")):
         return value * 60
 
+    if unit.startswith("day"):
+        return value * 1440
+
     return value
 
 
@@ -114,10 +123,6 @@ def is_filler(text: str):
 
 
 def build_utterances(segments, max_gap: float = 1.5):
-    """
-    Merge fragments only when the previous segment does not
-    end a sentence. Preserve sentence boundaries and speakers.
-    """
     utterances = []
 
     for segment in segments:
@@ -127,7 +132,6 @@ def build_utterances(segments, max_gap: float = 1.5):
             continue
 
         speaker_id = segment.speaker_id
-
         speaker_name = (
             segment.speaker.display_name
             if segment.speaker else None
@@ -135,17 +139,17 @@ def build_utterances(segments, max_gap: float = 1.5):
 
         if utterances:
             previous = utterances[-1]
-
             gap = segment.start_seconds - previous["end_seconds"]
 
             same_speaker = (
                 speaker_id == previous["speaker_id"]
             )
 
-            previous_text = previous["text"].rstrip()
-
             sentence_complete = bool(
-                re.search(r"[.!?][\"')\]]*$", previous_text)
+                re.search(
+                    r"[.!?][\"')\]]*$",
+                    previous["text"].rstrip(),
+                )
             )
 
             if (
@@ -153,9 +157,7 @@ def build_utterances(segments, max_gap: float = 1.5):
                 and 0 <= gap <= max_gap
                 and not sentence_complete
             ):
-                previous["text"] = (
-                    previous_text + " " + text
-                )
+                previous["text"] += " " + text
                 previous["end_seconds"] = segment.end_seconds
                 continue
 
@@ -168,6 +170,53 @@ def build_utterances(segments, max_gap: float = 1.5):
         })
 
     return utterances
+
+
+def extract_action(text: str, speaker_id: int | None,
+                   start: float, end: float, year: int):
+
+    assignee_name = None
+    description = None
+
+    # First-person commitment.
+    match = ACTION_PATTERNS[0].search(text)
+
+    if match:
+        description = match.group(1).strip()
+
+    else:
+        # Explicit named commitment.
+        match = ACTION_PATTERNS[1].search(text)
+
+        if match:
+            assignee_name = match.group(1).strip()
+            description = match.group(2).strip()
+
+    if not description:
+        return None
+
+    deadline = parse_deadline(text, year)
+    duration = parse_duration(text)
+
+    description = DEADLINE_PATTERN.sub("", description)
+    description = DURATION_PATTERN.sub("", description)
+    description = description.strip(" ,.!?")
+
+    if not description:
+        return None
+
+    return {
+        "task_description": description,
+        "assignee_name": assignee_name,
+        "assignee_speaker_id": (
+            speaker_id if assignee_name is None else None
+        ),
+        "due_date": deadline,
+        "estimated_duration_minutes": duration,
+        "evidence_text": text,
+        "start_seconds": start,
+        "end_seconds": end,
+    }
 
 
 def extract_meeting_intelligence(segments, year: int):
@@ -185,7 +234,6 @@ def extract_meeting_intelligence(segments, year: int):
         if is_filler(text):
             continue
 
-        # Keep relevant discussion sentences.
         if any(
             keyword in normalized
             for keyword in TOPIC_KEYWORDS
@@ -197,32 +245,17 @@ def extract_meeting_intelligence(segments, year: int):
                 "end_seconds": utterance["end_seconds"],
             })
 
-        # Extract explicit first-person commitments.
-        action_match = ACTION_PATTERN.search(text)
+        action = extract_action(
+            text,
+            utterance["speaker_id"],
+            utterance["start_seconds"],
+            utterance["end_seconds"],
+            year,
+        )
 
-        if action_match:
-            description = (
-                action_match.group(1).strip().rstrip(" .!?")
-            )
+        if action:
+            action_items.append(action)
 
-            deadline = parse_deadline(text, year)
-
-            description = DEADLINE_PATTERN.sub(
-                "", description
-            ).strip().rstrip(" ,")
-
-            if description:
-                action_items.append({
-                    "task_description": description,
-                    "assignee_speaker_id": utterance["speaker_id"],
-                    "due_date": deadline,
-                    "estimated_duration_minutes": parse_duration(text),
-                    "evidence_text": original_text,
-                    "start_seconds": utterance["start_seconds"],
-                    "end_seconds": utterance["end_seconds"],
-                })
-
-        # Only explicit decisions and agreements.
         decision_match = DECISION_PATTERN.search(text)
 
         if decision_match:
@@ -240,7 +273,6 @@ def extract_meeting_intelligence(segments, year: int):
                 "confidence": 0.8,
             })
 
-    # Remove duplicate key points while preserving order.
     unique_points = []
     seen = set()
 

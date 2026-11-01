@@ -172,6 +172,7 @@ class ActionItem(Base):
     assignee_speaker_id: Mapped[int | None] = mapped_column(
         ForeignKey("speakers.id", ondelete="SET NULL")
     )
+    assignee_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     task_description: Mapped[str] = mapped_column(Text, nullable=False)
     priority: Mapped[str] = mapped_column(String(30), default="medium")
     status: Mapped[str] = mapped_column(String(30), default="open")

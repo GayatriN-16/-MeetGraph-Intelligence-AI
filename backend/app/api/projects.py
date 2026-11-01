@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import User, Project
+from app.models import User, Project, Meeting
 from app.schemas.project import (
     UserCreate,
     UserResponse,
@@ -82,3 +82,47 @@ def list_projects(db: Session = Depends(get_db)):
     return db.scalars(
         select(Project).order_by(Project.created_at.desc())
     ).all()
+
+
+@router.get("/projects/{project_id}/meetings")
+def get_project_meetings(
+    project_id: int,
+    db: Session = Depends(get_db),
+):
+    project = db.get(Project, project_id)
+
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found.",
+        )
+
+    meetings = db.scalars(
+        select(Meeting)
+        .where(Meeting.project_id == project_id)
+        .order_by(Meeting.created_at.asc())
+    ).all()
+
+    return {
+        "project_id": project.id,
+        "project_name": project.name,
+        "total_meetings": len(meetings),
+        "meetings": [
+            {
+                "meeting_id": meeting.id,
+                "title": meeting.title,
+                "original_filename": meeting.original_filename,
+                "status": meeting.status,
+                "duration_seconds": meeting.duration_seconds,
+                "meeting_date": (
+                    meeting.meeting_date.isoformat()
+                    if meeting.meeting_date else None
+                ),
+                "created_at": (
+                    meeting.created_at.isoformat()
+                    if meeting.created_at else None
+                ),
+            }
+            for meeting in meetings
+        ],
+    }
