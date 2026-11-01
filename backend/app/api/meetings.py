@@ -11,14 +11,23 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Meeting, Project, TranscriptSegment
+from app.models import (
+    Meeting,
+    Project,
+    Speaker,
+    TranscriptSegment,
+)
 from app.schemas.meeting import MeetingResponse
 from app.services.storage import save_recording, delete_recording
 from app.services.transcription import transcribe_recording
+from app.services.diarization import (
+    diarize_recording,
+    match_segments_to_speakers,
+)
 
 router = APIRouter(tags=["Meetings"])
 
@@ -133,12 +142,13 @@ async def transcribe_meeting(
             language,
         )
 
-        # Replace prior transcript segments only after successful
-        # transcription, so a failed retry does not destroy old data.
         db.execute(
             delete(TranscriptSegment).where(
                 TranscriptSegment.meeting_id == meeting_id
             )
+        )
+        db.execute(
+            delete(Speaker).where(Speaker.meeting_id == meeting_id)
         )
 
         for item in result["segments"]:
@@ -166,6 +176,7 @@ async def transcribe_meeting(
             "language_probability": result["language_probability"],
             "duration_seconds": result["duration_seconds"],
             "segments_saved": len(result["segments"]),
+            "diarization_status": "not_started",
         }
 
     except Exception as exc:
@@ -181,6 +192,120 @@ async def transcribe_meeting(
         raise HTTPException(
             status_code=500,
             detail=f"Transcription failed: {str(exc)}",
+        )
+
+
+@router.post("/meetings/{meeting_id}/diarize")
+async def diarize_meeting(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+):
+    meeting = db.get(Meeting, meeting_id)
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+
+    if not Path(meeting.storage_path).is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="The original recording file is missing.",
+        )
+
+    transcript_segments = db.scalars(
+        select(TranscriptSegment)
+        .where(TranscriptSegment.meeting_id == meeting_id)
+        .order_by(TranscriptSegment.start_seconds)
+    ).all()
+
+    if not transcript_segments:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "No transcript segments exist. "
+                "Transcribe this meeting before diarization."
+            ),
+        )
+
+    try:
+        result = await asyncio.to_thread(
+            diarize_recording,
+            meeting.storage_path,
+        )
+
+        assignments = match_segments_to_speakers(
+            transcript_segments,
+            result["turns"],
+        )
+
+        # Remove previous speaker records so retries do not create duplicates.
+        db.execute(
+            delete(Speaker).where(Speaker.meeting_id == meeting_id)
+        )
+        db.flush()
+
+        speaker_records = {}
+
+        for index, label in enumerate(result["speakers"], start=1):
+            speaker = Speaker(
+                meeting_id=meeting_id,
+                display_name=f"Speaker {index}",
+                diarization_label=label,
+            )
+            db.add(speaker)
+            db.flush()
+
+            speaker_records[label] = speaker.id
+
+        assigned_count = 0
+
+        for segment, label in zip(transcript_segments, assignments):
+            segment.speaker_id = (
+                speaker_records.get(label)
+                if label is not None
+                else None
+            )
+
+            if segment.speaker_id is not None:
+                assigned_count += 1
+
+        db.commit()
+
+        return {
+            "message": "Speaker diarization completed successfully.",
+            "meeting_id": meeting_id,
+            "model": result["model"],
+            "speaker_count": result["speaker_count"],
+            "speakers": [
+                {
+                    "id": speaker_id,
+                    "display_name": next(
+                        (
+                            f"Speaker {index}"
+                            for index, label in enumerate(
+                                result["speakers"], start=1
+                            )
+                            if label == diarization_label
+                        ),
+                        diarization_label,
+                    ),
+                    "diarization_label": diarization_label,
+                }
+                for diarization_label, speaker_id
+                in speaker_records.items()
+            ],
+            "speaker_turns_detected": len(result["turns"]),
+            "transcript_segments_total": len(transcript_segments),
+            "transcript_segments_assigned": assigned_count,
+            "transcript_segments_unassigned": (
+                len(transcript_segments) - assigned_count
+            ),
+        }
+
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Speaker diarization failed: {str(exc)}",
         )
 
 
@@ -212,6 +337,16 @@ def get_meeting_transcript(
                 "text": segment.text,
                 "confidence": segment.confidence,
                 "speaker_id": segment.speaker_id,
+                "speaker_name": (
+                    segment.speaker.display_name
+                    if segment.speaker
+                    else None
+                ),
+                "diarization_label": (
+                    segment.speaker.diarization_label
+                    if segment.speaker
+                    else None
+                ),
             }
             for segment in segments
         ],
