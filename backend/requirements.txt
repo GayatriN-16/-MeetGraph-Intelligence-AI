@@ -8,3 +8,4 @@ psycopg[binary]>=3.2,<4.0
 alembic
 pytest
 httpx
+faster-whisper==1.2.1
