@@ -31,6 +31,7 @@ def ask_project_question(
         db=db,
         project_id=project_id,
         question=payload.question,
+        meeting_id=payload.meeting_id,
     )
 
     return {

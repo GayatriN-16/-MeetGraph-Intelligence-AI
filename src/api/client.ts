@@ -1,146 +1,199 @@
-﻿import { Meeting, Decision, Task, TimelineConflictRisk, ReactFlowNode, ReactFlowEdge, User, Project, NotificationItem } from '../types';
-
+﻿
 const API_BASE = '/api/v1';
 
-let authToken: string | null = localStorage.getItem('meetgraph_jwt_token') || 'demo_jwt_token_admin';
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+    },
+  });
 
-export function setAuthToken(token: string | null) {
-  authToken = token;
-  if (token) {
-    localStorage.setItem('meetgraph_jwt_token', token);
-  } else {
-    localStorage.removeItem('meetgraph_jwt_token');
-  }
-}
+  if (!response.ok) {
+    let message = `Request failed: ${response.status}`;
 
-export function getAuthToken() {
-  return authToken;
-}
-
-async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {})
-  };
-
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
+    try {
+      const errorData = await response.json();
+      message =
+        errorData.detail ||
+        errorData.message ||
+        message;
+    } catch {
+      // Response was not JSON.
     }
 
-    return await response.json() as T;
-  } catch (err) {
-    console.warn(`[MeetGraph API Client] Endpoint ${endpoint} fallback:`, err);
-    throw err;
+    throw new Error(message);
   }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export interface Project {
+  id: number;
+  name: string;
+  description: string | null;
+  owner_id: number;
+  created_at: string;
+}
+
+export interface Meeting {
+  id: number;
+  project_id: number;
+  title: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  duration_seconds: number | null;
+  meeting_date: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface ActionItem {
+  id: number;
+  meeting_id: number;
+  task_description: string;
+  assignee_name: string | null;
+  assignee_speaker_id: number | null;
+  due_date: string | null;
+  estimated_duration_minutes: number | null;
+  status: string;
+  evidence_text: string | null;
+  start_seconds: number | null;
+  end_seconds: number | null;
+}
+
+export interface Decision {
+  id: number;
+  meeting_id: number;
+  title: string;
+  description: string | null;
+  speaker_id: number | null;
+  status: string;
+  evidence_text: string | null;
+  start_seconds: number | null;
+  end_seconds: number | null;
+  confidence: number | null;
+}
+
+export interface ProjectMeetingIntelligence {
+  meeting_id: number;
+  title: string;
+  status: string;
+  duration_seconds: number | null;
+  summary: string;
+  key_points: {
+    text: string;
+    speaker: string | null;
+    start_seconds: number | null;
+    end_seconds: number | null;
+  }[];
+  action_item_count: number;
+  decision_count: number;
+}
+
+export interface ProjectIntelligence {
+  project_id: number;
+  project_name: string;
+  total_meetings: number;
+  processed_meetings: number;
+  total_action_items: number;
+  pending_action_items: number;
+  completed_action_items: number;
+  total_decisions: number;
+  meetings: ProjectMeetingIntelligence[];
+  action_items: ActionItem[];
+  decisions: Decision[];
+}
+
+export interface QuestionSource {
+  meeting_id: number;
+  meeting_title: string;
+  source_type: string;
+  evidence_text: string;
+  speaker: string | null;
+  start_seconds: number | null;
+  end_seconds: number | null;
+}
+
+export interface QuestionResponse {
+  project_id: number;
+  question: string;
+  answer: string;
+  answer_method: string;
+  sources: QuestionSource[];
+}
+
+export interface DeleteMeetingResponse {
+  message: string;
+  meeting_id: number;
 }
 
 export const api = {
-  // Authentication
-  login: async (email: string, role: 'Admin' | 'Member') => {
-    return fetchAPI<{ user: User; token: string }>('/auth/login', {
+  getProjects: () =>
+    request<Project[]>('/projects'),
+
+  getMeetings: (projectId: number) =>
+    request<Meeting[]>(`/meetings?project_id=${projectId}`),
+
+  getIntelligence: (projectId: number) =>
+    request<ProjectIntelligence>(
+      `/projects/${projectId}/intelligence`,
+    ),
+
+ askQuestion: (
+  projectId: number,
+  question: string,
+  meetingId: number | null = null,
+) =>
+  request<QuestionResponse>(
+    `/projects/${projectId}/ask`,
+    {
       method: 'POST',
-      body: JSON.stringify({ email, role })
-    });
-  },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question,
+        meeting_id: meetingId,
+      }),
+    },
+  ),
 
-  getMe: async () => {
-    return fetchAPI<{ user: User }>('/auth/me');
-  },
+  uploadMeeting: (
+    projectId: number,
+    title: string,
+    recording: File,
+  ) => {
+    const formData = new FormData();
 
-  // Projects
-  getProjects: async () => {
-    return fetchAPI<{ projects: Project[] }>('/projects');
-  },
+    formData.append('project_id', String(projectId));
+    formData.append('title', title);
+    formData.append('recording', recording);
 
-  createProject: async (name: string, description: string) => {
-    return fetchAPI<{ project: Project }>('/projects', {
+    return request<Meeting>('/meetings/upload', {
       method: 'POST',
-      body: JSON.stringify({ name, description })
+      body: formData,
     });
   },
 
-  // Meetings
-  getMeetings: async (projectId?: string) => {
-    const query = projectId ? `?projectId=${projectId}` : '';
-    return fetchAPI<{ meetings: Meeting[] }>(`/meetings${query}`);
-  },
-
-  getMeetingDetails: async (id: string) => {
-    return fetchAPI<{ meeting: Meeting }>(`/meetings/${id}`);
-  },
-
-  getMeetingStatus: async (id: string) => {
-    return fetchAPI<{ meetingId: string; status: string; percent: number }>(`/meetings/${id}/status`);
-  },
-
-  uploadMeeting: async (data: { title: string; projectId: string; audioFileName: string; audioSizeMb: number }) => {
-    return fetchAPI<{ meeting: Meeting }>('/meetings', {
+  transcribeMeeting: (meetingId: number) =>
+    request<unknown>(`/meetings/${meetingId}/transcribe`, {
       method: 'POST',
-      body: JSON.stringify(data)
-    });
-  },
+    }),
 
-  // Tasks
-  getTasks: async () => {
-    return fetchAPI<{ tasks: Task[] }>('/tasks');
-  },
-
-  createTask: async (task: Partial<Task>) => {
-    return fetchAPI<{ task: Task }>('/tasks', {
-      method: 'POST',
-      body: JSON.stringify(task)
-    });
-  },
-
-  toggleTask: async (id: string) => {
-    return fetchAPI<{ success: boolean; task: Task }>(`/tasks/${id}/toggle`, {
-      method: 'PATCH'
-    });
-  },
-
-  // Decisions
-  getDecisions: async () => {
-    return fetchAPI<{ decisions: Decision[] }>('/decisions');
-  },
-
-  confirmDecision: async (id: string) => {
-    return fetchAPI<{ decision: Decision }>(`/decisions/${id}/confirm`, {
-      method: 'PATCH'
-    });
-  },
-
-  // Knowledge Graph (React Flow)
-  getGraph: async (projectId?: string) => {
-    const query = projectId ? `?projectId=${projectId}` : '';
-    return fetchAPI<{ nodes: ReactFlowNode[]; edges: ReactFlowEdge[] }>(`/graph${query}`);
-  },
-
-  // Risks & Conflict Detection
-  getRisks: async () => {
-    return fetchAPI<{ risks: TimelineConflictRisk[] }>('/risks');
-  },
-
-  // Ask GraphRAG
-  askGraphRAG: async (prompt: string, projectId?: string) => {
-    return fetchAPI<{ answer: string; citations: string[]; sourceNodes: string[] }>('/search', {
-      method: 'POST',
-      body: JSON.stringify({ prompt, projectId })
-    });
-  },
-
-  // Notifications
-  getNotifications: async () => {
-    return fetchAPI<{ notifications: NotificationItem[] }>('/notifications');
-  }
+  deleteMeeting: (meetingId: number) =>
+    request<DeleteMeetingResponse>(
+      `/meetings/${meetingId}`,
+      {
+        method: 'DELETE',
+      },
+    ),
 };
