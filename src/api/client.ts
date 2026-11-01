@@ -22,7 +22,7 @@ async function request<T>(
         errorData.message ||
         message;
     } catch {
-      // Response was not JSON.
+      // The response was not JSON.
     }
 
     throw new Error(message);
@@ -148,24 +148,24 @@ export const api = {
       `/projects/${projectId}/intelligence`,
     ),
 
- askQuestion: (
-  projectId: number,
-  question: string,
-  meetingId: number | null = null,
-) =>
-  request<QuestionResponse>(
-    `/projects/${projectId}/ask`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  askQuestion: (
+    projectId: number,
+    question: string,
+    meetingId: number | null = null,
+  ) =>
+    request<QuestionResponse>(
+      `/projects/${projectId}/ask`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question,
+          meeting_id: meetingId,
+        }),
       },
-      body: JSON.stringify({
-        question,
-        meeting_id: meetingId,
-      }),
-    },
-  ),
+    ),
 
   uploadMeeting: (
     projectId: number,

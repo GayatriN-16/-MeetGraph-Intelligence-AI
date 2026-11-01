@@ -1,39 +1,58 @@
-﻿@import "tailwindcss";
+﻿
+@import "tailwindcss";
 
-@layer base {
-  body {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  }
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  code, pre, .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-  }
+  color: #3F3022;
+  background: #F3EEE5;
+
+  --mg-brown: #3F3022;
+  --mg-gold: #B58B3F;
+  --mg-cream: #F3EEE5;
+  --mg-white: #FFFDF9;
+  --mg-taupe: #766654;
+
+  --mg-border: #DED3C3;
+  --mg-gold-light: #EFE2C9;
+  --mg-gold-hover: #A47A32;
+  --mg-muted: #93816D;
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+* {
+  box-sizing: border-box;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+html, body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--mg-cream);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+body {
+  color: var(--mg-brown);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+button {
+  cursor: pointer;
+  font: inherit;
 }
 
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+button:disabled {
+  cursor: not-allowed;
 }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s infinite ease-in-out;
+input, textarea, select {
+  font: inherit;
+}
+
+::selection {
+  background: #E3C995;
+  color: #3F3022;
+}
+
+#root {
+  min-height: 100vh;
 }
