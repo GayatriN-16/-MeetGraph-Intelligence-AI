@@ -1,4 +1,3 @@
-
 import re
 
 from sqlalchemy import select
@@ -19,7 +18,7 @@ STOP_WORDS = {
     "this", "that", "involving", "related", "information",
     "details", "filter", "search", "across", "main",
     "there", "their", "they", "its", "it", "be", "been",
-    "were", "will", "would", "could", "should", "can",
+    "will", "would", "could", "should", "can",
 }
 
 
@@ -36,43 +35,38 @@ AGENDA_PATTERNS = [
 ]
 
 
-# Specific topic concepts are preferred over generic words.
 TOPIC_CONCEPTS = {
     "project progress": [
         "project progress", "progress of the project",
         "project update", "project status",
     ],
     "backend integration": [
-        "backend integration", "api integration",
-        "backend development",
+        "backend integration", "back-end integration",
+        "api integration", "backend development",
     ],
     "frontend development": [
         "frontend", "user interface", "ui development",
     ],
     "team structure and responsibilities": [
         "team structure", "team restructuring",
-        "new team", "team roles", "acting manager",
+        "new team", "team roles",
     ],
     "security and policies": [
         "security", "security policies", "secure",
         "security incident",
     ],
-    "dynamic analysis": [
-        "dynamic analysis",
-    ],
+    "dynamic analysis": ["dynamic analysis"],
     "engineering velocity": [
         "engineering velocity", "development velocity",
     ],
     "planning and refinement": [
         "planning", "refinement", "milestones",
-        "planning process",
     ],
     "reliability and error budgets": [
-        "reliability", "error budget", "service reliability",
+        "reliability", "error budget",
     ],
     "data science and machine learning": [
         "data science", "machine learning", "applied ml",
-        "ml ops",
     ],
     "customer escalations": [
         "customer escalation", "customer issue",
@@ -81,27 +75,10 @@ TOPIC_CONCEPTS = {
         "sample recordings", "recording preparation",
     ],
     "task assignments": [
-        "assigned", "responsible for", "will prepare",
-        "will complete",
+        "assigned", "responsible for",
+        "will prepare", "will complete",
     ],
 }
-
-
-TOPIC_SIGNAL_PATTERNS = [
-    r"\bwe discussed\b",
-    r"\bwe decided\b",
-    r"\bwe agreed\b",
-    r"\bwe are working on\b",
-    r"\bwe are planning\b",
-    r"\bthe team is\b",
-    r"\bthe next step\b",
-    r"\bwe need to\b",
-    r"\bwe will\b",
-    r"\bthe update\b",
-    r"\bthe issue\b",
-    r"\bthe plan\b",
-    r"\bthe proposal\b",
-]
 
 
 def tokenize(text: str) -> set[str]:
@@ -123,6 +100,35 @@ def format_action_assignee(item):
     return "Unassigned"
 
 
+def find_meeting(question: str, meetings, requested_meeting_id=None):
+    """Resolve a meeting by ID, title or ordinal number."""
+
+    if requested_meeting_id is not None:
+        return next(
+            (meeting for meeting in meetings
+             if meeting.id == requested_meeting_id),
+            None,
+        )
+
+    question_lower = question.lower()
+
+    for meeting in meetings:
+        title = (meeting.title or "").strip().lower()
+
+        if title and title in question_lower:
+            return meeting
+
+    ordinal = re.search(r"\bmeeting\s*(\d+)\b", question_lower)
+
+    if ordinal:
+        number = int(ordinal.group(1))
+
+        if 1 <= number <= len(meetings):
+            return meetings[number - 1]
+
+    return None
+
+
 def build_grouped_transcript(segments, meeting):
     """Combine consecutive incomplete transcript fragments."""
 
@@ -136,8 +142,7 @@ def build_grouped_transcript(segments, meeting):
 
         speaker = (
             segment.speaker.display_name
-            if segment.speaker
-            else None
+            if segment.speaker else None
         )
 
         previous = grouped[-1] if grouped else None
@@ -149,16 +154,11 @@ def build_grouped_transcript(segments, meeting):
 
         previous_is_incomplete = (
             previous is not None
-            and not re.search(
-                r'[.!?]["\']?$',
-                previous["text"],
-            )
+            and not re.search(r'[.!?]["\']?$', previous["text"])
         )
 
         previous_end = (
-            previous["end_seconds"]
-            if previous is not None
-            else None
+            previous["end_seconds"] if previous else None
         )
 
         current_start = segment.start_seconds
@@ -169,11 +169,7 @@ def build_grouped_transcript(segments, meeting):
             and current_start - previous_end <= 2.0
         )
 
-        if (
-            same_speaker
-            and previous_is_incomplete
-            and close_in_time
-        ):
+        if same_speaker and previous_is_incomplete and close_in_time:
             previous["text"] += " " + text
             previous["end_seconds"] = segment.end_seconds
         else:
@@ -198,32 +194,22 @@ def build_grouped_transcript(segments, meeting):
     ]
 
 
-def find_meeting(question: str, meetings, requested_meeting_id=None):
-    """Resolve a meeting ID, title or ordinal reference."""
+def collect_meeting_transcript(db, meetings):
+    """Retrieve transcript evidence for selected meetings."""
 
-    if requested_meeting_id is not None:
-        return next(
-            (m for m in meetings if m.id == requested_meeting_id),
-            None,
-        )
-
-    question_lower = question.lower()
+    results = []
 
     for meeting in meetings:
-        title = (meeting.title or "").strip().lower()
+        segments = db.scalars(
+            select(TranscriptSegment)
+            .options(selectinload(TranscriptSegment.speaker))
+            .where(TranscriptSegment.meeting_id == meeting.id)
+            .order_by(TranscriptSegment.start_seconds)
+        ).all()
 
-        if title and title in question_lower:
-            return meeting
+        results.extend(build_grouped_transcript(segments, meeting))
 
-    ordinal = re.search(r"\bmeeting\s*(\d+)\b", question_lower)
-
-    if ordinal:
-        number = int(ordinal.group(1))
-
-        if 1 <= number <= len(meetings):
-            return meetings[number - 1]
-
-    return None
+    return results
 
 
 def make_action_source(item, meeting):
@@ -254,6 +240,17 @@ def make_decision_source(decision, meeting):
     }
 
 
+def make_transcript_answer(title, sources):
+    return (
+        f"{title}\n"
+        + "\n".join(
+            f"- {source['evidence_text']} "
+            f"(Meeting: {source['meeting_title']})"
+            for source in sources
+        )
+    )
+
+
 def is_agenda_statement(text: str) -> bool:
     return any(
         re.search(pattern, text, re.IGNORECASE)
@@ -262,8 +259,6 @@ def is_agenda_statement(text: str) -> bool:
 
 
 def identify_topic_labels(text: str) -> list[str]:
-    """Identify meaningful topic concepts from transcript evidence."""
-
     text_lower = (text or "").lower()
     labels = []
 
@@ -274,9 +269,25 @@ def identify_topic_labels(text: str) -> list[str]:
     return labels
 
 
-def select_timeline_sources(sources, limit=12):
-    """Select evidence distributed across the meeting timeline."""
+def make_topic_results(transcript_sources):
+    topic_groups = {}
 
+    for source in transcript_sources:
+        labels = identify_topic_labels(source["evidence_text"])
+
+        for label in labels:
+            topic_groups.setdefault(label, [])
+
+            if len(topic_groups[label]) < 3:
+                topic_groups[label].append(source)
+
+    return [
+        {"label": label, "sources": evidence}
+        for label, evidence in topic_groups.items()
+    ]
+
+
+def select_timeline_sources(sources, limit=12):
     if len(sources) <= limit:
         return sources
 
@@ -284,8 +295,7 @@ def select_timeline_sources(sources, limit=12):
         sources,
         key=lambda source: (
             source["start_seconds"]
-            if source["start_seconds"] is not None
-            else 0
+            if source["start_seconds"] is not None else 0
         ),
     )
 
@@ -298,64 +308,6 @@ def select_timeline_sources(sources, limit=12):
         ordered[index]
         for index in sorted(selected_indices)
     ]
-
-
-def collect_meeting_transcript(db, meetings):
-    """Load transcript evidence only for the selected meeting scope."""
-
-    results = []
-
-    for meeting in meetings:
-        segments = db.scalars(
-            select(TranscriptSegment)
-            .options(selectinload(TranscriptSegment.speaker))
-            .where(TranscriptSegment.meeting_id == meeting.id)
-            .order_by(TranscriptSegment.start_seconds)
-        ).all()
-
-        results.extend(
-            build_grouped_transcript(segments, meeting)
-        )
-
-    return results
-
-
-def make_transcript_answer(title, sources):
-    return (
-        f"{title}\n"
-        + "\n".join(
-            f"- {source['evidence_text']} "
-            f"(Meeting: {source['meeting_title']})"
-            for source in sources
-        )
-    )
-
-
-def make_topic_results(transcript_sources):
-    """Group evidence under concise topic labels."""
-
-    topic_groups = {}
-
-    for source in transcript_sources:
-        labels = identify_topic_labels(
-            source["evidence_text"]
-        )
-
-        for label in labels:
-            topic_groups.setdefault(label, [])
-
-            if len(topic_groups[label]) < 3:
-                topic_groups[label].append(source)
-
-    results = []
-
-    for label, evidence in topic_groups.items():
-        results.append({
-            "label": label,
-            "sources": evidence,
-        })
-
-    return results
 
 
 def answer_project_question(
@@ -405,24 +357,19 @@ def answer_project_question(
         }
 
     selected_meetings = (
-        [selected_meeting]
-        if selected_meeting
-        else meetings
+        [selected_meeting] if selected_meeting else meetings
     )
 
-    selected_ids = [
-        meeting.id for meeting in selected_meetings
-    ]
+    selected_ids = [meeting.id for meeting in selected_meetings]
 
     meeting_by_id = {
-        meeting.id: meeting
-        for meeting in selected_meetings
+        meeting.id: meeting for meeting in selected_meetings
     }
 
     question_lower = question.lower()
     question_tokens = tokenize(question)
 
-    # 2. Identify question categories.
+    # 2. Detect question categories.
 
     asks_about_tasks = any(
         term in question_lower
@@ -438,29 +385,25 @@ def answer_project_question(
         term in question_lower
         for term in (
             "deadline", "due date", "pending", "due",
-            "remaining", "remain", "left",
-            "still working",
+            "remaining", "remain", "left", "still working",
         )
     )
 
     asks_about_agenda = any(
         term in question_lower
         for term in (
-            "agenda",
-            "purpose of this meeting",
+            "agenda", "purpose of this meeting",
             "objective of this meeting",
             "goal of this meeting",
             "what is this meeting about",
-            "what was the meeting about",
         )
     )
 
     asks_about_topics = any(
         term in question_lower
         for term in (
-            "topic", "topics", "subject",
-            "subjects", "what was discussed",
-            "what did they discuss",
+            "topic", "topics", "subject", "subjects",
+            "what was discussed", "what did they discuss",
         )
     )
 
@@ -475,19 +418,17 @@ def answer_project_question(
     asks_about_overview = any(
         term in question_lower
         for term in (
-            "what happened",
-            "summarize",
-            "summary",
-            "overview",
-            "discussed in",
-            "meeting summary",
+            "what happened", "summarize", "summary",
+            "overview", "discussed in", "meeting summary",
+            "what was discussed",
         )
     )
 
-    # 3. Task and deadline retrieval.
+    # 3. Retrieve action items when required.
+
+    actions = []
 
     if asks_about_tasks:
-
         actions = db.scalars(
             select(ActionItem)
             .options(selectinload(ActionItem.assignee))
@@ -495,6 +436,117 @@ def answer_project_question(
             .order_by(ActionItem.meeting_id, ActionItem.id)
         ).all()
 
+    # 4. Retrieve transcript when required.
+    # This happens before combined-question handling.
+
+    needs_transcript = (
+        asks_about_agenda
+        or asks_about_topics
+        or asks_about_overview
+        or not asks_about_decisions
+    )
+
+    transcript_sources = (
+        collect_meeting_transcript(db, selected_meetings)
+        if needs_transcript else []
+    )
+
+    # 5. COMBINED QUESTION HANDLING.
+    # This is the important fix.
+    # Discussion and task results are assembled together.
+    # Neither result is allowed to return early.
+
+    asks_about_discussion_and_tasks = (
+        asks_about_tasks
+        and (
+            asks_about_agenda
+            or asks_about_topics
+            or asks_about_overview
+        )
+    )
+
+    if asks_about_discussion_and_tasks:
+        answer_parts = []
+        sources = []
+
+        if transcript_sources:
+            discussion_sources = select_timeline_sources(
+                transcript_sources,
+                limit=12,
+            )
+
+            answer_parts.append("Meeting discussion:")
+
+            for source in discussion_sources:
+                timestamp = source["start_seconds"]
+
+                timestamp_text = (
+                    f"[{timestamp:.1f}s] "
+                    if timestamp is not None else ""
+                )
+
+                answer_parts.append(
+                    f"- {timestamp_text}{source['evidence_text']}"
+                )
+
+            sources.extend(discussion_sources)
+
+        else:
+            answer_parts.append(
+                "No transcript discussion evidence was found "
+                "in the selected meeting scope."
+            )
+
+        if asks_about_deadlines:
+            relevant_actions = [
+                item for item in actions
+                if (item.status or "").lower()
+                not in ("completed", "cancelled")
+            ]
+        else:
+            relevant_actions = actions
+
+        if relevant_actions:
+            answer_parts.append(
+                "\nPending tasks and their deadlines:"
+                if asks_about_deadlines
+                else "\nAction items:"
+            )
+
+            for item in relevant_actions:
+                meeting = meeting_by_id[item.meeting_id]
+
+                duration = (
+                    f"{item.estimated_duration_minutes} minutes"
+                    if item.estimated_duration_minutes is not None
+                    else "Not specified"
+                )
+
+                answer_parts.append(
+                    f"- {item.task_description}. "
+                    f"Assignee: {format_action_assignee(item)}. "
+                    f"Deadline: {format_deadline(item.due_date)}. "
+                    f"Estimated duration: {duration}. "
+                    f"Meeting: {meeting.title}."
+                )
+
+                sources.append(make_action_source(item, meeting))
+
+        else:
+            answer_parts.append(
+                "\nNo pending tasks were found in the selected meeting scope."
+                if asks_about_deadlines
+                else "\nNo action items were found in the selected meeting scope."
+            )
+
+        return {
+            "answer": "\n".join(answer_parts),
+            "sources": sources,
+        }
+
+    # 6. Task-only questions.
+
+    if asks_about_tasks:
         named_people = {
             item.assignee_name.strip().lower()
             for item in actions
@@ -503,8 +555,7 @@ def answer_project_question(
 
         matched_person = next(
             (
-                person
-                for person in named_people
+                person for person in named_people
                 if re.search(
                     rf"\b{re.escape(person)}\b",
                     question_lower,
@@ -524,7 +575,6 @@ def answer_project_question(
                 answer_parts = [
                     f"Tasks assigned to {matched_person.title()}:"
                 ]
-
                 sources = []
 
                 for item in relevant_actions:
@@ -543,9 +593,7 @@ def answer_project_question(
                         f"Meeting: {meeting.title}."
                     )
 
-                    sources.append(
-                        make_action_source(item, meeting)
-                    )
+                    sources.append(make_action_source(item, meeting))
 
                 return {
                     "answer": "\n".join(answer_parts),
@@ -559,38 +607,33 @@ def answer_project_question(
                 not in ("completed", "cancelled")
             ]
 
-            if pending:
-                answer_parts = [
-                    "Pending tasks and their deadlines:"
-                ]
-
-                sources = []
-
-                for item in pending:
-                    meeting = meeting_by_id[item.meeting_id]
-
-                    answer_parts.append(
-                        f"- {item.task_description}. "
-                        f"Assignee: {format_action_assignee(item)}. "
-                        f"Deadline: {format_deadline(item.due_date)}. "
-                        f"Meeting: {meeting.title}."
-                    )
-
-                    sources.append(
-                        make_action_source(item, meeting)
-                    )
-
+            if not pending:
                 return {
-                    "answer": "\n".join(answer_parts),
-                    "sources": sources,
+                    "answer": (
+                        "No pending tasks or deadlines were found "
+                        "in the selected meeting scope."
+                    ),
+                    "sources": [],
                 }
 
+            answer_parts = ["Pending tasks and their deadlines:"]
+            sources = []
+
+            for item in pending:
+                meeting = meeting_by_id[item.meeting_id]
+
+                answer_parts.append(
+                    f"- {item.task_description}. "
+                    f"Assignee: {format_action_assignee(item)}. "
+                    f"Deadline: {format_deadline(item.due_date)}. "
+                    f"Meeting: {meeting.title}."
+                )
+
+                sources.append(make_action_source(item, meeting))
+
             return {
-                "answer": (
-                    "No pending tasks or deadlines were found "
-                    "in the selected meeting scope."
-                ),
-                "sources": [],
+                "answer": "\n".join(answer_parts),
+                "sources": sources,
             }
 
         if actions:
@@ -616,34 +659,16 @@ def answer_project_question(
 
         return {
             "answer": (
-                "No action items were found in the selected "
-                "meeting scope."
+                "No action items were found in the selected meeting scope."
             ),
             "sources": [],
         }
 
-    # 4. Load transcript when required.
-
-    needs_transcript = (
-        asks_about_agenda
-        or asks_about_topics
-        or asks_about_overview
-        or not asks_about_decisions
-    )
-
-    transcript_sources = (
-        collect_meeting_transcript(db, selected_meetings)
-        if needs_transcript
-        else []
-    )
-
-    # 5. Explicit agenda and inferred focus areas.
+    # 7. Agenda questions.
 
     if asks_about_agenda:
-
         agenda_sources = [
-            source
-            for source in transcript_sources
+            source for source in transcript_sources
             if is_agenda_statement(source["evidence_text"])
         ]
 
@@ -661,14 +686,13 @@ def answer_project_question(
         if topic_groups:
             answer_parts = [
                 "No explicit agenda statement was found. "
-                "The following are inferred discussion focus areas:"
+                "Inferred discussion focus areas:"
             ]
 
             sources = []
 
             for group in topic_groups[:8]:
                 answer_parts.append(f"- {group['label'].title()}")
-
                 sources.extend(group["sources"])
 
             return {
@@ -684,10 +708,9 @@ def answer_project_question(
             "sources": [],
         }
 
-    # 6. Discussion topics.
+    # 8. Discussion-topic questions.
 
     if asks_about_topics:
-
         topic_groups = make_topic_results(transcript_sources)
 
         if topic_groups:
@@ -714,10 +737,9 @@ def answer_project_question(
             "sources": [],
         }
 
-    # 7. Decisions.
+    # 9. Decision questions.
 
     if asks_about_decisions:
-
         decisions = db.scalars(
             select(Decision)
             .where(Decision.meeting_id.in_(selected_ids))
@@ -751,16 +773,14 @@ def answer_project_question(
 
         return {
             "answer": (
-                "No recorded decisions were found in the selected "
-                "meeting scope."
+                "No recorded decisions were found in the selected scope."
             ),
             "sources": [],
         }
 
-    # 8. Meeting overview using the complete timeline.
+    # 10. Meeting overview questions.
 
     if asks_about_overview:
-
         if not transcript_sources:
             return {
                 "answer": (
@@ -780,9 +800,15 @@ def answer_project_question(
         ]
 
         for source in overview_sources:
+            timestamp = source["start_seconds"]
+
+            timestamp_text = (
+                f"[{timestamp:.1f}s] "
+                if timestamp is not None else ""
+            )
+
             answer_parts.append(
-                f"- [{source['start_seconds']}s] "
-                f"{source['evidence_text']} "
+                f"- {timestamp_text}{source['evidence_text']} "
                 f"(Meeting: {source['meeting_title']})"
             )
 
@@ -791,7 +817,7 @@ def answer_project_question(
             "sources": overview_sources,
         }
 
-    # 9. General transcript retrieval.
+    # 11. General transcript retrieval.
 
     segments = db.scalars(
         select(TranscriptSegment)
@@ -807,8 +833,7 @@ def answer_project_question(
 
     for segment in segments:
         segments_by_meeting.setdefault(
-            segment.meeting_id,
-            [],
+            segment.meeting_id, []
         ).append(segment)
 
     scored_sources = []
@@ -834,17 +859,15 @@ def answer_project_question(
             -item[0],
             item[1]["meeting_id"],
             item[1]["start_seconds"]
-            if item[1]["start_seconds"] is not None
-            else 0,
+            if item[1]["start_seconds"] is not None else 0,
         )
     )
 
     sources = [
-        source
-        for _, source in scored_sources[:8]
+        source for _, source in scored_sources[:8]
     ]
 
-    # 10. Relevant decisions.
+    # 12. Include relevant decisions.
 
     decisions = db.scalars(
         select(Decision)
@@ -861,10 +884,7 @@ def answer_project_question(
 
         if question_tokens.intersection(tokenize(decision_text)):
             meeting = meeting_by_id[decision.meeting_id]
-
-            sources.append(
-                make_decision_source(decision, meeting)
-            )
+            sources.append(make_decision_source(decision, meeting))
 
     if sources:
         scope_text = (
@@ -885,7 +905,7 @@ def answer_project_question(
             "sources": sources,
         }
 
-    # 11. No supporting evidence.
+    # 13. No supporting evidence.
 
     scope_description = (
         f"the meeting '{selected_meeting.title}'"
