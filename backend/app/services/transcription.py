@@ -2,8 +2,6 @@
 from pathlib import Path
 from threading import Lock
 
-from faster_whisper import WhisperModel
-
 
 MODEL_SIZE = "base"
 DEVICE = "cpu"
@@ -14,11 +12,14 @@ _model_lock = Lock()
 
 
 def get_whisper_model():
+    """Load Whisper only when transcription is requested."""
     global _model
 
     if _model is None:
         with _model_lock:
             if _model is None:
+                from faster_whisper import WhisperModel
+
                 _model = WhisperModel(
                     MODEL_SIZE,
                     device=DEVICE,
@@ -32,10 +33,14 @@ def transcribe_recording(
     audio_path: str,
     language: str | None = None,
 ) -> dict:
+    """Transcribe an audio recording using Faster-Whisper."""
+
     path = Path(audio_path)
 
     if not path.is_file():
-        raise FileNotFoundError("Meeting recording was not found.")
+        raise FileNotFoundError(
+            "Meeting recording was not found."
+        )
 
     model = get_whisper_model()
 
@@ -68,7 +73,9 @@ def transcribe_recording(
 
     return {
         "language": info.language,
-        "language_probability": float(info.language_probability),
+        "language_probability": float(
+            info.language_probability
+        ),
         "duration_seconds": float(info.duration),
         "segments": results,
     }

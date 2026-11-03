@@ -9,37 +9,17 @@ from app.core.config import settings
 # Maximum transcript characters sent in one Gemini request.
 MAX_CHUNK_CHARACTERS = 12000
 
-
 def get_gemini_client():
     if not settings.GEMINI_API_KEY:
-        raise RuntimeError("Gemini API key is not configured.")
-
-    return genai.Client(api_key=settings.GEMINI_API_KEY)
-
-
-def _parse_json_response(response):
-    text = (response.text or "").strip()
-
-    if not text:
-        raise RuntimeError("Gemini returned an empty response.")
-
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-
-    try:
-        result = json.loads(text)
-    except json.JSONDecodeError as error:
         raise RuntimeError(
-            "Gemini returned invalid JSON."
-        ) from error
-
-    if not isinstance(result, dict):
-        raise RuntimeError(
-            "Gemini response must be a JSON object."
+            "Gemini API key is not configured."
         )
 
-    return result
+    from google import genai
 
+    return genai.Client(
+        api_key=settings.GEMINI_API_KEY
+    )
 
 def test_gemini_connection():
     client = get_gemini_client()

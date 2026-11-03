@@ -2,11 +2,6 @@
 from pathlib import Path
 from threading import Lock
 
-import av
-import numpy as np
-import torch
-from pyannote.audio import Pipeline
-
 from app.core.config import settings
 
 
@@ -18,7 +13,7 @@ _pipeline_lock = Lock()
 
 
 def get_diarization_pipeline():
-    """Load the diarization pipeline once, using CPU inference."""
+    """Load Pyannote only when diarization is requested."""
     global _pipeline
 
     if not settings.HF_TOKEN:
@@ -29,6 +24,9 @@ def get_diarization_pipeline():
     if _pipeline is None:
         with _pipeline_lock:
             if _pipeline is None:
+                import torch
+                from pyannote.audio import Pipeline
+
                 pipeline = Pipeline.from_pretrained(
                     MODEL_ID,
                     token=settings.HF_TOKEN,
@@ -50,11 +48,17 @@ def load_audio_waveform(audio_path: str):
     Decode audio using PyAV instead of TorchCodec.
     Convert it to mono, 16 kHz float32 audio.
     """
+    import av
+    import numpy as np
+    import torch
+
     chunks = []
 
     with av.open(audio_path) as container:
         if not container.streams.audio:
-            raise RuntimeError("No audio stream found in recording.")
+            raise RuntimeError(
+                "No audio stream found in recording."
+            )
 
         audio_stream = container.streams.audio[0]
 
@@ -64,7 +68,9 @@ def load_audio_waveform(audio_path: str):
             rate=TARGET_SAMPLE_RATE,
         )
 
-        for frame in container.decode(audio=audio_stream.index):
+        for frame in container.decode(
+            audio=audio_stream.index
+        ):
             converted_frames = resampler.resample(frame)
 
             for converted in converted_frames:
@@ -82,7 +88,9 @@ def load_audio_waveform(audio_path: str):
             chunks.append(samples)
 
     if not chunks:
-        raise RuntimeError("Audio decoding produced no samples.")
+        raise RuntimeError(
+            "Audio decoding produced no samples."
+        )
 
     waveform = np.concatenate(chunks, axis=1)
     waveform = np.ascontiguousarray(waveform)
@@ -98,10 +106,11 @@ def diarize_recording(audio_path: str) -> dict:
     path = Path(audio_path)
 
     if not path.is_file():
-        raise FileNotFoundError("Meeting recording was not found.")
+        raise FileNotFoundError(
+            "Meeting recording was not found."
+        )
 
     waveform = load_audio_waveform(str(path))
-
     pipeline = get_diarization_pipeline()
 
     output = pipeline({
@@ -109,7 +118,11 @@ def diarize_recording(audio_path: str) -> dict:
         "sample_rate": TARGET_SAMPLE_RATE,
     })
 
-    annotation = getattr(output, "speaker_diarization", None)
+    annotation = getattr(
+        output,
+        "speaker_diarization",
+        None,
+    )
 
     if annotation is None:
         raise RuntimeError(
@@ -133,7 +146,9 @@ def diarize_recording(audio_path: str) -> dict:
             "speaker_label": str(speaker_label),
         })
 
-    turns.sort(key=lambda item: item["start_seconds"])
+    turns.sort(
+        key=lambda item: item["start_seconds"]
+    )
 
     labels = sorted({
         turn["speaker_label"]
@@ -159,9 +174,16 @@ def match_segments_to_speakers(
     assignments = []
 
     for transcript in transcript_segments:
-        transcript_start = float(transcript.start_seconds)
-        transcript_end = float(transcript.end_seconds)
-        transcript_duration = transcript_end - transcript_start
+        transcript_start = float(
+            transcript.start_seconds
+        )
+        transcript_end = float(
+            transcript.end_seconds
+        )
+
+        transcript_duration = (
+            transcript_end - transcript_start
+        )
 
         if transcript_duration <= 0:
             assignments.append(None)
@@ -172,14 +194,22 @@ def match_segments_to_speakers(
         for turn in speaker_turns:
             overlap = max(
                 0.0,
-                min(transcript_end, turn["end_seconds"])
-                - max(transcript_start, turn["start_seconds"]),
+                min(
+                    transcript_end,
+                    turn["end_seconds"],
+                )
+                - max(
+                    transcript_start,
+                    turn["start_seconds"],
+                ),
             )
 
             if overlap > 0:
                 label = turn["speaker_label"]
+
                 overlap_by_speaker[label] = (
-                    overlap_by_speaker.get(label, 0.0) + overlap
+                    overlap_by_speaker.get(label, 0.0)
+                    + overlap
                 )
 
         if not overlap_by_speaker:
@@ -194,7 +224,10 @@ def match_segments_to_speakers(
 
         best_label, best_overlap = ranked[0]
 
-        if best_overlap / transcript_duration < minimum_overlap_ratio:
+        if (
+            best_overlap / transcript_duration
+            < minimum_overlap_ratio
+        ):
             assignments.append(None)
             continue
 
