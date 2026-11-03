@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "meetgraph_ai"
+    POSTGRES_SSLMODE: str = "prefer"
+
     UPLOAD_DIR: str | None = None
     FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
@@ -32,6 +34,7 @@ class Settings(BaseSettings):
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
+            query={"sslmode": self.POSTGRES_SSLMODE},
         )
 
 
