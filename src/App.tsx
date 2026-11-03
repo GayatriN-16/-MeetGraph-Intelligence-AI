@@ -63,8 +63,8 @@ export default function App() {
   function renderPage() {
     if (!selectedProjectId) {
       return (
-        <section className="mx-auto mt-12 max-w-xl rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+        <section className="mx-auto mt-12 max-w-xl rounded-2xl border border-[#D8D5ED] bg-white p-10 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0EDFF] text-violet-700">
             <FolderOpen size={32} />
           </div>
 
@@ -101,7 +101,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F5F6FC] text-slate-900">
+    <div className="flex min-h-screen bg-[#E6E6FA] text-slate-900">
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
@@ -113,10 +113,10 @@ export default function App() {
           onUploadMeeting={() => setShowUploadModal(true)}
         />
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-[#F5F6FC] p-4 md:p-7">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-[#E6E6FA] p-4 md:p-7">
           {loading ? (
             <div className="flex min-h-[60vh] flex-col items-center justify-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0EDFF]">
                 <RefreshCw
                   size={26}
                   className="animate-spin text-violet-700"
@@ -159,7 +159,7 @@ export default function App() {
           )}
         </main>
 
-        <footer className="border-t border-slate-200 bg-white px-6 py-3">
+        <footer className="border-t border-[#D8D5ED] bg-white px-6 py-3">
           <p className="text-xs text-slate-500">
             MeetGraph AI · Meeting Intelligence Workspace
           </p>

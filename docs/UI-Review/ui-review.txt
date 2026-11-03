@@ -1,0 +1,1899 @@
+MEETGRAPH AI FRONTEND SOURCE REVIEW
+
+
+========== src\App.tsx ==========
+
+
+import React, { useMemo, useState } from 'react';
+
+import type {
+  NavigationTab,
+  Meeting,
+  Decision,
+  Task,
+  User,
+} from './types';
+
+import {
+  INITIAL_MEETINGS,
+  INITIAL_DECISIONS,
+  INITIAL_ACTION_ITEMS,
+  TIMELINE_CONFLICT,
+  EXTRACTION_PIPELINE,
+} from './data/mockData';
+
+import { Sidebar } from './components/Sidebar';
+import { TopHeader } from './components/TopHeader';
+import { Dashboard } from './components/Dashboard';
+import { MeetingsLibrary } from './components/MeetingsLibrary';
+import { ReactFlowKnowledgeGraph } from './components/ReactFlowKnowledgeGraph';
+import { TasksAndDecisions } from './components/TasksAndDecisions';
+import { AskAI } from './components/AskAI';
+import { ArchitecturePipeline } from './components/ArchitecturePipeline';
+import { ExternalIntegrations } from './components/ExternalIntegrations';
+import { AdminAuditLogs } from './components/AdminAuditLogs';
+import { ProjectsView } from './components/ProjectsView';
+import { SettingsView } from './components/SettingsView';
+import { NotificationsView } from './components/NotificationsView';
+
+import { MeetingDetailModal } from './components/MeetingDetailModal';
+import { ConflictEvidenceModal } from './components/ConflictEvidenceModal';
+import { UploadMeetingModal } from './components/UploadMeetingModal';
+import { AuthModal } from './components/AuthModal';
+
+const DEFAULT_USER: User = {
+  id: 'usr-admin-1',
+  email: 'alex.vance@meetgraph.ai',
+  name: 'Alex Vance',
+  role: 'Admin',
+  avatarInitials: 'AV',
+};
+
+const DEFAULT_PROJECT = 'Acme Engineering - Capstone v2.4';
+
+export default function App() {
+  // Application state
+  const [currentUser, setCurrentUser] = useState<User>(DEFAULT_USER);
+  const [currentTab, setCurrentTab] =
+    useState<NavigationTab>('dashboard');
+
+  const [selectedProject, setSelectedProject] =
+    useState<string>(DEFAULT_PROJECT);
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Meeting and intelligence data
+  const [meetings, setMeetings] =
+    useState<Meeting[]>(INITIAL_MEETINGS);
+
+  const [decisions, setDecisions] =
+    useState<Decision[]>(INITIAL_DECISIONS);
+
+  const [actionItems, setActionItems] =
+    useState<Task[]>(INITIAL_ACTION_ITEMS);
+
+  const timelineConflict = TIMELINE_CONFLICT;
+
+  // Modal state
+  const [selectedMeeting, setSelectedMeeting] =
+    useState<Meeting | null>(null);
+
+  const [showConflictModal, setShowConflictModal] =
+    useState(false);
+
+  const [showUploadModal, setShowUploadModal] =
+    useState(false);
+
+  const [showAuthModal, setShowAuthModal] =
+    useState(false);
+
+  const [askAIPrompt, setAskAIPrompt] = useState('');
+
+  // Filter meetings using the global search query
+  const filteredMeetings = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return meetings;
+    }
+
+    return meetings.filter((meeting) => {
+      const searchableText = [
+        meeting.title,
+        meeting.project,
+        meeting.summary,
+        meeting.audioFileName ?? '',
+        ...meeting.speakers.map((speaker) => speaker.name),
+        ...meeting.keyTakeaways,
+        ...(meeting.keyDiscussionPoints ?? []),
+        ...meeting.transcript.map((segment) => segment.text),
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [meetings, searchQuery]);
+
+  // Toggle task completion
+  const handleToggleActionItem = (id: string) => {
+    setActionItems((previousItems) =>
+      previousItems.map((item) =>
+        item.id === id
+          ? { ...item, completed: !item.completed }
+          : item,
+      ),
+    );
+  };
+
+  // Add a new task
+  const handleAddActionItem = (newItem: Task) => {
+    setActionItems((previousItems) => [
+      newItem,
+      ...previousItems,
+    ]);
+  };
+
+  // Handle meeting upload
+  const handleMeetingUploaded = (newMeeting: Meeting) => {
+    setMeetings((previousMeetings) => [
+      newMeeting,
+      ...previousMeetings,
+    ]);
+
+    setShowUploadModal(false);
+    setSelectedMeeting(newMeeting);
+  };
+
+  // Open AI assistant with meeting context
+  const handleAskAIAboutMeeting = (meetingTitle: string) => {
+    setSelectedMeeting(null);
+
+    setAskAIPrompt(
+      `Summarize key decisions and open questions from ${meetingTitle}`,
+    );
+
+    setCurrentTab('ask-ai');
+  };
+
+  // Resolve the current demonstration conflict
+  const handleResolveConflict = () => {
+    setShowConflictModal(false);
+
+    setActionItems((previousItems) =>
+      previousItems.map((item) =>
+        item.id === 'act-4'
+          ? {
+              ...item,
+              completed: true,
+              taskDescription:
+                '[RESOLVED] Synchronized Client Review target to Oct 28',
+            }
+          : item,
+      ),
+    );
+
+    setCurrentTab('tasks-decisions');
+  };
+
+  // Global meeting search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+
+    if (query.trim()) {
+      setCurrentTab('meetings');
+    }
+  };
+
+  // Open a meeting from the knowledge graph
+  const handleSelectMeetingFromGraph = (title: string) => {
+    const normalizedTitle = title.trim().toLowerCase();
+
+    if (!normalizedTitle) {
+      return;
+    }
+
+    const matchingMeeting = meetings.find((meeting) =>
+      meeting.title.toLowerCase().includes(normalizedTitle),
+    );
+
+    if (matchingMeeting) {
+      setSelectedMeeting(matchingMeeting);
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-[#f8f9ff] font-sans text-slate-800 selection:bg-violet-100 selection:text-violet-950">
+      <div className="flex min-h-screen w-full">
+
+        {/* Sidebar */}
+        <Sidebar
+          currentTab={currentTab}
+          currentUser={currentUser}
+          onSelectTab={setCurrentTab}
+          openUploadModal={() => setShowUploadModal(true)}
+        />
+
+        {/* Main application area */}
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+
+          {/* Header */}
+          <TopHeader
+            currentUser={currentUser}
+            onOpenAuthModal={() => setShowAuthModal(true)}
+            onSearch={handleSearch}
+            openUploadModal={() => setShowUploadModal(true)}
+            onSelectTab={setCurrentTab}
+            selectedProject={selectedProject}
+            setSelectedProject={setSelectedProject}
+          />
+
+          {/* Page content */}
+          <main className="min-w-0 flex-1 overflow-x-hidden pb-8">
+
+            {currentTab === 'dashboard' && (
+              <Dashboard
+                meetings={meetings}
+                decisions={decisions}
+                actionItems={actionItems}
+                timelineConflict={timelineConflict}
+                extractionPipeline={EXTRACTION_PIPELINE}
+                onSelectMeeting={setSelectedMeeting}
+                onOpenConflictModal={() =>
+                  setShowConflictModal(true)
+                }
+                onToggleActionItem={handleToggleActionItem}
+                onSelectTab={setCurrentTab}
+                openUploadModal={() =>
+                  setShowUploadModal(true)
+                }
+              />
+            )}
+
+            {currentTab === 'meetings' && (
+              <MeetingsLibrary
+                meetings={filteredMeetings}
+                onSelectMeeting={setSelectedMeeting}
+                openUploadModal={() =>
+                  setShowUploadModal(true)
+                }
+              />
+            )}
+
+            {currentTab === 'knowledge-graph' && (
+              <ReactFlowKnowledgeGraph
+                onSelectMeetingTitle={
+                  handleSelectMeetingFromGraph
+                }
+              />
+            )}
+
+            {currentTab === 'tasks-decisions' && (
+              <TasksAndDecisions
+                decisions={decisions}
+                actionItems={actionItems}
+                meetings={meetings}
+                onToggleActionItem={handleToggleActionItem}
+                onAddActionItem={handleAddActionItem}
+                onSelectMeeting={setSelectedMeeting}
+              />
+            )}
+
+            {currentTab === 'ask-ai' && (
+              <AskAI initialPrompt={askAIPrompt} />
+            )}
+
+            {currentTab === 'notifications' && (
+              <NotificationsView />
+            )}
+
+            {currentTab === 'architecture' && (
+              <ArchitecturePipeline />
+            )}
+
+            {currentTab === 'integrations' && (
+              <ExternalIntegrations />
+            )}
+
+            {currentTab === 'admin-audit' && (
+              <AdminAuditLogs />
+            )}
+
+            {currentTab === 'projects' && (
+              <ProjectsView />
+            )}
+
+            {currentTab === 'settings' && (
+              <SettingsView />
+            )}
+
+          </main>
+        </div>
+      </div>
+
+      {/* Meeting details */}
+      {selectedMeeting && (
+        <MeetingDetailModal
+          meeting={selectedMeeting}
+          onClose={() => setSelectedMeeting(null)}
+          onAskAIAboutMeeting={handleAskAIAboutMeeting}
+        />
+      )}
+
+      {/* Conflict evidence */}
+      {showConflictModal && (
+        <ConflictEvidenceModal
+          conflict={timelineConflict}
+          onClose={() => setShowConflictModal(false)}
+          onResolve={handleResolveConflict}
+        />
+      )}
+
+      {/* Meeting upload */}
+      {showUploadModal && (
+        <UploadMeetingModal
+          onClose={() => setShowUploadModal(false)}
+          onMeetingUploaded={handleMeetingUploaded}
+        />
+      )}
+
+      {/* Authentication */}
+      {showAuthModal && (
+        <AuthModal
+          currentUser={currentUser}
+          onClose={() => setShowAuthModal(false)}
+          onUserChanged={setCurrentUser}
+        />
+      )}
+    </div>
+  );
+}
+
+
+========== src\components\Dashboard.tsx ==========
+
+
+import React from 'react';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  AudioLines,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  FileAudio,
+  Network,
+  Plus,
+  Search,
+  ShieldAlert,
+  Sparkles,
+  Users,
+  XCircle,
+} from 'lucide-react';
+import type {
+  Meeting,
+  Decision,
+  ActionItem,
+  TimelineConflict,
+  ExtractionPipelineStep,
+  NavigationTab,
+} from '../types';
+
+interface DashboardProps {
+  meetings: Meeting[];
+  decisions: Decision[];
+  actionItems: ActionItem[];
+  timelineConflict: TimelineConflict;
+  extractionPipeline: ExtractionPipelineStep[];
+  onSelectMeeting: (meeting: Meeting) => void;
+  onOpenConflictModal: () => void;
+  onToggleActionItem: (id: string) => void;
+  onSelectTab: (tab: NavigationTab) => void;
+  openUploadModal: () => void;
+}
+
+const panelClass =
+  'rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/40';
+
+const sectionTitleClass = 'text-sm font-semibold text-slate-900';
+
+const formatDate = (value: string) => {
+  if (!value) return 'Date unavailable';
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+};
+
+const StatusPill: React.FC<{
+  children: React.ReactNode;
+  tone?: 'green' | 'amber' | 'rose' | 'violet' | 'slate';
+}> = ({ children, tone = 'slate' }) => {
+  const tones = {
+    green: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
+    amber: 'bg-amber-50 text-amber-700 ring-amber-600/15',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-600/15',
+    violet: 'bg-violet-50 text-violet-700 ring-violet-600/15',
+    slate: 'bg-slate-100 text-slate-600 ring-slate-500/15',
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
+};
+
+export const Dashboard: React.FC<DashboardProps> = ({
+  meetings,
+  decisions,
+  actionItems,
+  timelineConflict,
+  extractionPipeline,
+  onSelectMeeting,
+  onOpenConflictModal,
+  onToggleActionItem,
+  onSelectTab,
+  openUploadModal,
+}) => {
+  const openTasks = actionItems.filter((item) => !item.completed);
+
+  const verifiedDecisions = decisions.filter(
+    (decision) =>
+      decision.status === 'Verified' ||
+      decision.status === 'User Confirmed',
+  );
+
+  const needsReview = decisions.filter(
+    (decision) => decision.status === 'Needs Review',
+  );
+
+  const completedMeetings = meetings.filter(
+    (meeting) => meeting.graphStatus === 'Completed / Indexed',
+  );
+
+  const highPriorityTasks = openTasks.filter(
+    (item) => item.priority === 'High',
+  );
+
+  const recentMeetings = [...meetings]
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+
+      if (Number.isNaN(dateA)) return 1;
+      if (Number.isNaN(dateB)) return -1;
+
+      return dateB - dateA;
+    })
+    .slice(0, 4);
+
+  const hasRecords =
+    meetings.length > 0 || decisions.length > 0 || actionItems.length > 0;
+
+  return (
+    <div className="mx-auto w-full max-w-[1680px] space-y-7 px-4 py-6 text-slate-800 sm:px-6 lg:px-8">
+      <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <StatusPill tone="violet">Workspace overview</StatusPill>
+            <StatusPill>Sample workspace</StatusPill>
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            Your meeting intelligence
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+            Explore meeting records, decisions, assigned tasks, and
+            relationships across your available meeting history.
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onSelectTab('ask-ai')}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
+          >
+            <Sparkles className="h-4 w-4 text-violet-600" />
+            Ask AI
+          </button>
+
+          <button
+            type="button"
+            onClick={openUploadModal}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/20"
+          >
+            <Plus className="h-4 w-4" />
+            Upload meeting
+          </button>
+        </div>
+      </section>
+
+      <section className="flex items-start gap-3 rounded-xl border border-violet-100 bg-violet-50/70 p-4">
+        <Activity className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
+        <div>
+          <p className="text-sm font-semibold text-violet-950">
+            Demonstration workspace
+          </p>
+          <p className="mt-1 text-xs leading-5 text-violet-800/80">
+            Figures on this page are calculated from the records currently
+            loaded in the application. The existing dataset contains sample
+            records and does not represent verified production data or live
+            processing services.
+          </p>
+        </div>
+      </section>
+
+      <section
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        aria-label="Workspace summary"
+      >
+        <div className={`${panelClass} p-5`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Meetings available
+              </p>
+              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+                {meetings.length}
+              </p>
+            </div>
+            <div className="rounded-xl bg-violet-50 p-3 text-violet-600">
+              <CalendarDays className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-slate-500">
+            {completedMeetings.length} marked completed / indexed in sample data
+          </div>
+        </div>
+
+        <div className={`${panelClass} p-5`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Decisions recorded
+              </p>
+              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+                {decisions.length}
+              </p>
+            </div>
+            <div className="rounded-xl bg-emerald-50 p-3 text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span className="font-medium text-emerald-700">
+              {verifiedDecisions.length} confirmed in current records
+            </span>
+            {needsReview.length > 0 && (
+              <span>· {needsReview.length} need review</span>
+            )}
+          </div>
+        </div>
+
+        <div className={`${panelClass} p-5`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Open action items
+              </p>
+              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+                {openTasks.length}
+              </p>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-3 text-amber-700">
+              <Clock3 className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-slate-500">
+            <span className="font-medium text-amber-700">
+              {highPriorityTasks.length} high priority
+            </span>
+            {' · '}
+            {actionItems.length} total records
+          </div>
+        </div>
+
+        <div className={`${panelClass} p-5`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Knowledge graph
+              </p>
+              <p className="mt-3 text-xl font-bold tracking-tight text-slate-950">
+                Preview only
+              </p>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-3 text-sky-700">
+              <Network className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-slate-500">
+            Live database connection not verified
+          </div>
+        </div>
+      </section>
+
+      {!hasRecords && (
+        <section className={`${panelClass} px-5 py-12 text-center`}>
+          <FileAudio className="mx-auto h-10 w-10 text-violet-400" />
+          <h2 className="mt-4 text-lg font-semibold text-slate-900">
+            Start your meeting history
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+            Upload a meeting recording to begin adding records to this workspace.
+          </p>
+          <button
+            type="button"
+            onClick={openUploadModal}
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+          >
+            <Plus className="h-4 w-4" />
+            Upload first meeting
+          </button>
+        </section>
+      )}
+
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-12">
+        <div className="min-w-0 space-y-6 xl:col-span-7">
+          <section className={`${panelClass} overflow-hidden`}>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div>
+                <h2 className={sectionTitleClass}>Recent meetings</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Latest records currently loaded in this workspace
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectTab('meetings')}
+                className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700 hover:text-violet-900"
+              >
+                View library
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {recentMeetings.length === 0 ? (
+              <div className="px-5 py-12 text-center">
+                <FileAudio className="mx-auto h-8 w-8 text-slate-300" />
+                <p className="mt-3 text-sm font-medium text-slate-700">
+                  No meetings available
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Upload a recording to add a meeting to this workspace.
+                </p>
+                <button
+                  type="button"
+                  onClick={openUploadModal}
+                  className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700"
+                >
+                  Upload a meeting
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px] text-left text-sm">
+                  <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-5 py-3 font-semibold">Meeting</th>
+                      <th className="px-4 py-3 font-semibold">Date</th>
+                      <th className="px-4 py-3 font-semibold">Duration</th>
+                      <th className="px-5 py-3 text-right font-semibold">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recentMeetings.map((meeting) => (
+                      <tr
+                        key={meeting.id}
+                        className="transition hover:bg-violet-50/30"
+                      >
+                        <td className="px-5 py-4">
+                          <button
+                            type="button"
+                            onClick={() => onSelectMeeting(meeting)}
+                            className="text-left"
+                          >
+                            <span className="block max-w-[260px] font-semibold text-slate-800 hover:text-violet-700">
+                              {meeting.title}
+                            </span>
+                          </button>
+                          <span className="mt-1 block text-xs text-slate-500">
+                            {meeting.project}
+                          </span>
+                          <span className="mt-2 inline-flex">
+                            <StatusPill
+                              tone={
+                                meeting.graphStatus === 'Completed / Indexed'
+                                  ? 'green'
+                                  : meeting.graphStatus === 'Processing'
+                                    ? 'amber'
+                                    : 'slate'
+                              }
+                            >
+                              {meeting.graphStatus ?? 'Not indexed'}
+                            </StatusPill>
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-xs text-slate-600">
+                          {formatDate(meeting.date)}
+                          <span className="mt-1 block text-slate-400">
+                            {meeting.time}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-xs text-slate-600">
+                          {meeting.duration || 'Not available'}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => onSelectMeeting(meeting)}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+                          >
+                            View details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className={`${panelClass} p-5`}>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className={sectionTitleClass}>Recent decisions</h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Recorded decisions and their source meetings
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectTab('tasks-decisions')}
+                className="text-xs font-semibold text-violet-700 hover:text-violet-900"
+              >
+                All decisions
+              </button>
+            </div>
+
+            {decisions.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">
+                No decisions have been recorded yet.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {decisions.slice(0, 3).map((decision) => {
+                  const sourceMeeting = meetings.find(
+                    (meeting) => meeting.id === decision.sourceMeetingId,
+                  );
+
+                  return (
+                    <article
+                      key={decision.id}
+                      className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 transition hover:border-violet-100"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="min-w-0 flex-1 text-sm font-semibold leading-6 text-slate-800">
+                          {decision.title}
+                        </p>
+                        <StatusPill
+                          tone={
+                            decision.status === 'Verified' ||
+                            decision.status === 'User Confirmed'
+                              ? 'green'
+                              : decision.status === 'Needs Review'
+                                ? 'amber'
+                                : 'violet'
+                          }
+                        >
+                          {decision.status}
+                        </StatusPill>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5" />
+                          {decision.speaker.name}
+                        </span>
+                        {decision.category && <span>{decision.category}</span>}
+                        <span>Confidence: {decision.confidence}%</span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-3">
+                        <span className="text-xs text-slate-500">
+                          Source: {decision.sourceMeetingTitle}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={!sourceMeeting}
+                          onClick={() => {
+                            if (sourceMeeting) onSelectMeeting(sourceMeeting);
+                          }}
+                          className="text-xs font-semibold text-violet-700 hover:text-violet-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                        >
+                          View source · {decision.timecode}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <section className={`${panelClass} overflow-hidden`}>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div>
+                <h2 className={sectionTitleClass}>Action items</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Change task completion in the current workspace
+                </p>
+              </div>
+              <StatusPill tone={openTasks.length > 0 ? 'amber' : 'green'}>
+                {openTasks.length} open
+              </StatusPill>
+            </div>
+
+            {actionItems.length === 0 ? (
+              <p className="px-5 py-10 text-center text-sm text-slate-500">
+                No action items have been recorded yet.
+              </p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {actionItems.slice(0, 5).map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex cursor-pointer items-start gap-3 px-5 py-4 transition hover:bg-slate-50/80"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.completed}
+                      onChange={() => onToggleActionItem(item.id)}
+                      aria-label={`Mark ${item.taskDescription} ${
+                        item.completed ? 'incomplete' : 'complete'
+                      }`}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 accent-violet-600 focus:ring-violet-500"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block text-sm font-medium leading-5 ${
+                          item.completed
+                            ? 'text-slate-400 line-through'
+                            : 'text-slate-800'
+                        }`}
+                      >
+                        {item.taskDescription}
+                      </span>
+                      <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                        <span>{item.assignee.name}</span>
+                        <span>Due {item.dueDate || 'Not specified'}</span>
+                        <span>{item.sourceMeetingTitle}</span>
+                      </span>
+                    </span>
+                    <StatusPill
+                      tone={
+                        item.completed
+                          ? 'green'
+                          : item.priority === 'High'
+                            ? 'rose'
+                            : item.priority === 'Medium'
+                              ? 'amber'
+                              : 'slate'
+                      }
+                    >
+                      {item.completed ? 'Completed' : item.priority}
+                    </StatusPill>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {actionItems.length > 5 && (
+              <div className="border-t border-slate-100 px-5 py-3">
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('tasks-decisions')}
+                  className="text-sm font-semibold text-violet-700 hover:text-violet-900"
+                >
+                  View all {actionItems.length} tasks
+                  <ArrowRight className="ml-1 inline h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="min-w-0 space-y-6 xl:col-span-5">
+          <section className="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm shadow-rose-100/40">
+            <div className="flex items-start gap-3 bg-rose-50/70 p-5">
+              <div className="rounded-xl bg-rose-100 p-2.5 text-rose-700">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-semibold text-slate-900">
+                    Timeline conflict
+                  </h2>
+                  <StatusPill tone="rose">Sample evidence</StatusPill>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  This conflict is supplied by the demonstration dataset and
+                  has not been independently verified.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <h3 className="text-base font-semibold text-slate-900">
+                {timelineConflict.title}
+              </h3>
+
+              <p className="text-sm leading-6 text-slate-600">
+                {timelineConflict.description}
+              </p>
+
+              <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                {[timelineConflict.node1, timelineConflict.node2].map(
+                  (node, index) => (
+                    <div
+                      key={`${node.meetingTitle}-${index}`}
+                      className="flex items-start gap-3"
+                    >
+                      <span
+                        className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                          index === 0
+                            ? 'bg-violet-100 text-violet-700'
+                            : 'bg-rose-100 text-rose-700'
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-800">
+                          {node.meetingTitle}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {node.date} · {node.speaker}
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-slate-600">
+                          {node.quote}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-violet-700">
+                          Target: {node.targetDate}
+                        </p>
+                      </div>
+                    </div>
+                  ),
+                )}
+                <div className="border-t border-slate-200 pt-3 text-xs text-slate-500">
+                  Difference in sample data:{' '}
+                  <strong className="text-rose-700">
+                    {timelineConflict.deltaDays} days
+                  </strong>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onOpenConflictModal}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800 transition hover:bg-rose-100"
+              >
+                Review conflict evidence
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </section>
+
+          <section className={`${panelClass} p-5`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-xl bg-violet-50 p-2.5 text-violet-700">
+                  <Network className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className={sectionTitleClass}>Knowledge graph</h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Relationship exploration
+                  </p>
+                </div>
+              </div>
+              <StatusPill>Preview</StatusPill>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-dashed border-violet-200 bg-gradient-to-br from-violet-50 via-white to-sky-50 p-5">
+              <div className="mx-auto flex max-w-xs flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-violet-600 shadow-sm ring-1 ring-violet-100">
+                  <Network className="h-6 w-6" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-slate-800">
+                  Explore connected meeting knowledge
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Open the graph explorer to inspect the currently available
+                  sample nodes and relationships.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-800">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              A live Neo4j connection has not been verified.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onSelectTab('knowledge-graph')}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+            >
+              Open graph explorer
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </section>
+
+          <section className={`${panelClass} p-5`}>
+            <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
+              <div className="rounded-xl bg-sky-50 p-2.5 text-sky-700">
+                <AudioLines className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className={sectionTitleClass}>Processing activity</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Sample pipeline events, not live service telemetry
+                </p>
+              </div>
+            </div>
+
+            {extractionPipeline.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">
+                No processing activity is available.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {extractionPipeline.map((step) => {
+                  const completed = step.status === 'completed';
+                  const queued = step.status === 'queued';
+
+                  return (
+                    <div key={step.id} className="flex items-start gap-3">
+                      <div
+                        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                          completed
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : queued
+                              ? 'bg-slate-100 text-slate-500'
+                              : 'bg-sky-50 text-sky-700'
+                        }`}
+                      >
+                        {completed ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : queued ? (
+                          <XCircle className="h-4 w-4" />
+                        ) : (
+                          <Activity className="h-4 w-4" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <p className="text-sm font-medium text-slate-800">
+                            {step.title}
+                          </p>
+                          <span className="text-[11px] text-slate-400">
+                            {step.timeAgo}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          {step.subtitle}
+                        </p>
+                        <div className="mt-2">
+                          <StatusPill
+                            tone={
+                              completed
+                                ? 'green'
+                                : queued
+                                  ? 'slate'
+                                  : 'violet'
+                            }
+                          >
+                            {queued
+                              ? 'Queued in sample'
+                              : completed
+                                ? 'Completed in sample'
+                                : 'Processing in sample'}
+                          </StatusPill>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 text-xs leading-5 text-slate-500">
+              These events come from local sample data. They do not confirm
+              that transcription, speaker diarization, or graph indexing is
+              currently running.
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-violet-600" />
+              <h2 className={sectionTitleClass}>Find meeting intelligence</h2>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Explore meeting records or ask about decisions, responsibilities,
+              and the source evidence available in the current dataset.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => onSelectTab('meetings')}
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:border-violet-200 hover:text-violet-700"
+              >
+                <CalendarDays className="h-4 w-4" />
+                Meetings
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectTab('ask-ai')}
+                className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+              >
+                <Sparkles className="h-4 w-4" />
+                Ask AI
+              </button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+};
+
+
+========== src\components\Sidebar.tsx ==========
+
+
+import React from 'react';
+import {
+  AudioLines,
+  BrainCircuit,
+  CheckSquare,
+  ChevronRight,
+  Cpu,
+  FolderKanban,
+  LayoutDashboard,
+  Library,
+  Network,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  Workflow,
+  Layers3,
+  UploadCloud,
+  LogOut,
+} from 'lucide-react';
+import type { NavigationTab, User } from '../types';
+
+interface SidebarProps {
+  currentTab: NavigationTab;
+  currentUser: User;
+  onSelectTab: (tab: NavigationTab) => void;
+  openUploadModal: () => void;
+}
+
+const workspaceItems = [
+  { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+  { id: 'meetings', label: 'Meetings', icon: Library },
+  { id: 'knowledge-graph', label: 'Knowledge Graph', icon: Network },
+  { id: 'tasks-decisions', label: 'Tasks & Decisions', icon: CheckSquare },
+] as const;
+
+const intelligenceItems = [
+  { id: 'ask-ai', label: 'Ask AI', icon: Sparkles },
+  { id: 'projects', label: 'Projects', icon: FolderKanban },
+] as const;
+
+const systemItems = [
+  { id: 'architecture', label: 'Architecture', icon: Workflow },
+  { id: 'integrations', label: 'Integrations', icon: Layers3 },
+  { id: 'admin-audit', label: 'Audit Logs', icon: ShieldCheck },
+  { id: 'settings', label: 'Settings', icon: Settings2 },
+] as const;
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  currentUser,
+  onSelectTab,
+  openUploadModal,
+}) => {
+  const renderSection = (
+    title: string,
+    items: ReadonlyArray<{
+      id: NavigationTab;
+      label: string;
+      icon: React.ElementType;
+    }>,
+  ) => (
+    <section className="space-y-1">
+      <p className="px-3 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+        {title}
+      </p>
+
+      {items.map(({ id, label, icon: Icon }) => {
+        const active = currentTab === id;
+
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onSelectTab(id)}
+            aria-current={active ? 'page' : undefined}
+            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] transition-all duration-150 ${
+              active
+                ? 'bg-violet-50 font-semibold text-violet-700 ring-1 ring-inset ring-violet-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+            }`}
+          >
+            <Icon
+              className={`h-[18px] w-[18px] shrink-0 ${
+                active
+                  ? 'text-violet-600'
+                  : 'text-slate-400 group-hover:text-violet-600'
+              }`}
+            />
+            <span className="min-w-0 flex-1">{label}</span>
+            {active && (
+              <ChevronRight className="h-4 w-4 text-violet-500" />
+            )}
+          </button>
+        );
+      })}
+    </section>
+  );
+
+  return (
+    <aside className="sticky top-0 z-30 flex h-screen w-[248px] shrink-0 flex-col border-r border-slate-200/80 bg-white text-slate-800">
+      <div className="px-5 pb-5 pt-6">
+        <button
+          type="button"
+          onClick={() => onSelectTab('dashboard')}
+          className="flex items-center gap-3 text-left"
+          aria-label="MeetGraph AI home"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-500 text-white shadow-md shadow-violet-200/70">
+            <Cpu className="h-5 w-5" />
+          </span>
+          <span>
+            <span className="block text-[16px] font-bold tracking-tight text-slate-950">
+              MeetGraph AI
+            </span>
+            <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.19em] text-slate-400">
+              Meeting intelligence
+            </span>
+          </span>
+        </button>
+
+        <div className="mt-5 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50/60 p-3">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="h-4 w-4 shrink-0 text-violet-600" />
+            <span className="text-xs font-semibold text-violet-950">
+              Connected meeting memory
+            </span>
+          </div>
+          <p className="mt-1.5 pl-6 text-[11px] leading-4 text-slate-500">
+            Explore decisions, tasks and meeting history.
+          </p>
+        </div>
+      </div>
+
+      <div className="px-4 pb-3">
+        <button
+          type="button"
+          onClick={openUploadModal}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/20"
+        >
+          <UploadCloud className="h-[17px] w-[17px]" />
+          Upload a meeting
+        </button>
+      </div>
+
+      <nav
+        aria-label="Main navigation"
+        className="flex-1 space-y-1 overflow-y-auto px-3 pb-5"
+      >
+        {renderSection('Workspace', workspaceItems)}
+        {renderSection('Intelligence', intelligenceItems)}
+        {renderSection('System', systemItems)}
+
+        <div className="mx-3 mt-5 border-t border-slate-100 pt-4">
+          <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3">
+            <AudioLines className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+            <div>
+              <p className="text-xs font-semibold text-slate-700">
+                Meeting workspace
+              </p>
+              <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                Sample data is used until real services are connected.
+              </p>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="border-t border-slate-200/80 bg-white p-4">
+        <button
+          type="button"
+          onClick={() => onSelectTab('settings')}
+          className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-50"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-sm font-bold text-teal-700 ring-1 ring-inset ring-teal-100">
+            {currentUser.avatarInitials}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-semibold text-slate-800">
+              {currentUser.name}
+            </span>
+            <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+              {currentUser.role}
+            </span>
+          </span>
+          <LogOut className="h-4 w-4 shrink-0 text-slate-400" />
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+
+========== src\components\TopHeader.tsx ==========
+
+
+import React, { useState } from 'react';
+import {
+  Search,
+  Bell,
+  Building2,
+  ChevronDown,
+  ShieldCheck,
+  Check,
+  X,
+  Sparkles,
+  UploadCloud,
+} from 'lucide-react';
+import type { NavigationTab, User } from '../types';
+
+interface TopHeaderProps {
+  currentUser: User;
+  onOpenAuthModal: () => void;
+  onSearch: (query: string) => void;
+  openUploadModal: () => void;
+  selectedProject: string;
+  setSelectedProject: (project: string) => void;
+  unreadCount?: number;
+  onSelectTab: (tab: NavigationTab) => void;
+}
+
+const projects = [
+  'Acme Engineering - Capstone v2.4',
+  'Product Launch v1',
+  'Core Engine',
+  'Client Review Board',
+];
+
+export const TopHeader: React.FC<TopHeaderProps> = ({
+  currentUser,
+  onOpenAuthModal,
+  onSearch,
+  openUploadModal,
+  selectedProject,
+  setSelectedProject,
+  unreadCount = 0,
+  onSelectTab,
+}) => {
+  const [searchValue, setSearchValue] = useState('');
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchValue(query);
+    onSearch(query);
+  };
+
+  const clearSearch = () => {
+    setSearchValue('');
+    onSearch('');
+  };
+
+  return (
+    <header className="sticky top-0 z-40 flex min-h-[72px] w-full flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
+      {/* Search */}
+      <div className="min-w-[200px] flex-1">
+        <label className="relative block w-full max-w-[560px]">
+          <span className="sr-only">Search meetings, decisions and tasks</span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+
+          <input
+            type="search"
+            value={searchValue}
+            onChange={handleSearchChange}
+            placeholder="Search meetings, decisions and tasks..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-10 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-violet-200 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+          />
+
+          {searchValue && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </label>
+      </div>
+
+      {/* Header actions */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Project selector */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowProjectDropdown((open) => !open)}
+            aria-expanded={showProjectDropdown}
+            aria-haspopup="menu"
+            className="flex max-w-[220px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50/40"
+          >
+            <Building2 className="h-4 w-4 shrink-0 text-violet-600" />
+            <span className="truncate">{selectedProject}</span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+                showProjectDropdown ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {showProjectDropdown && (
+            <>
+              <button
+                type="button"
+                aria-label="Close project selector"
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setShowProjectDropdown(false)}
+              />
+
+              <div
+                role="menu"
+                className="absolute right-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10"
+              >
+                <div className="px-3 py-2">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Project workspace
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    Select a project scope
+                  </p>
+                </div>
+
+                {projects.map((project) => {
+                  const active = selectedProject === project;
+
+                  return (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      key={project}
+                      onClick={() => {
+                        setSelectedProject(project);
+                        setShowProjectDropdown(false);
+                      }}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs transition ${
+                        active
+                          ? 'bg-violet-50 font-semibold text-violet-700'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{project}</span>
+                      {active && (
+                        <Check className="h-4 w-4 shrink-0 text-violet-600" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Notifications */}
+        <button
+          type="button"
+          onClick={() => onSelectTab('notifications')}
+          title="Notifications"
+          aria-label={`Notifications${
+            unreadCount > 0 ? `, ${unreadCount} unread` : ''
+          }`}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-violet-700"
+        >
+          <Bell className="h-[18px] w-[18px]" />
+          {unreadCount > 0 && (
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+          )}
+        </button>
+
+        {/* Account */}
+        <button
+          type="button"
+          onClick={onOpenAuthModal}
+          aria-label={`Account: ${currentUser.name}`}
+          className="flex shrink-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-left transition hover:border-violet-200 hover:bg-violet-50/30"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 text-xs font-bold text-violet-700 ring-1 ring-inset ring-violet-200/70">
+            {currentUser.avatarInitials}
+          </span>
+
+          <span className="hidden min-w-0 sm:block">
+            <span className="block max-w-28 truncate text-xs font-semibold text-slate-800">
+              {currentUser.name}
+            </span>
+            <span className="mt-0.5 flex items-center gap-1 text-[10px] text-slate-500">
+              <ShieldCheck className="h-3 w-3 text-teal-600" />
+              {currentUser.role}
+            </span>
+          </span>
+        </button>
+
+        {/* Quick upload */}
+        <button
+          type="button"
+          onClick={openUploadModal}
+          className="hidden items-center gap-2 rounded-xl bg-violet-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/20 xl:flex"
+        >
+          <UploadCloud className="h-4 w-4" />
+          Upload meeting
+        </button>
+
+        {/* Ask AI shortcut */}
+        <button
+          type="button"
+          onClick={() => onSelectTab('ask-ai')}
+          aria-label="Open Ask AI"
+          title="Ask AI"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-100 bg-violet-50 text-violet-700 transition hover:border-violet-200 hover:bg-violet-100"
+        >
+          <Sparkles className="h-[18px] w-[18px]" />
+        </button>
+      </div>
+    </header>
+  );
+};
+
+
+========== src\index.css ==========
+
+
+@import "tailwindcss";
+
+/* =========================================================
+   MeetGraph AI — Global Design System
+   Tailwind CSS v4
+   ========================================================= */
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  --color-mint-50: #f0fdfa;
+  --color-mint-100: #ccfbf1;
+  --color-mint-200: #99f6e4;
+  --color-mint-500: #14b8a6;
+  --color-mint-600: #0d9488;
+  --color-mint-700: #0f766e;
+
+  --color-canvas: #f8f9ff;
+  --color-surface: #ffffff;
+  --color-ink: #20243a;
+  --color-muted: #64748b;
+  --color-line: #e7eaf2;
+}
+
+/* ---------- Global foundation ---------- */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    min-height: 100%;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-sans);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-size: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:enabled {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  input,
+  textarea,
+  select {
+    color: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background: #ddd6fe;
+    color: #4c1d95;
+  }
+
+  :focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
+  }
+}
+
+/* ---------- Application canvas ---------- */
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-canvas {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      ellipse at 75% 0%,
+      rgb(237 233 254 / 30%),
+      transparent 36rem
+    ),
+    var(--color-canvas);
+}
+
+.surface-card {
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 8px rgb(31 41 55 / 3%);
+}
+
+.surface-card-hover {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.surface-card-hover:hover {
+  border-color: #d8d2fa;
+  box-shadow: 0 8px 24px rgb(76 29 149 / 6%);
+}
+
+.muted-text {
+  color: var(--color-muted);
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 55%, #6366f1 100%);
+}
+
+.soft-brand-gradient {
+  background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+}
+
+.soft-mint-gradient {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+}
+
+/* ---------- Scrollbars ---------- */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d8ddeb transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #d8ddeb;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b9c2d5;
+  background-clip: padding-box;
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 220ms ease-out both;
+}
+
+/* ---------- Accessible reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Responsive adjustments ---------- */
+
+@media (max-width: 640px) {
+  body {
+    font-size: 13px;
+  }
+
+  .surface-card {
+    border-radius: 12px;
+  }
+}

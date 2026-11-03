@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
+
 import {
   CalendarDays,
   Clock3,
@@ -10,6 +11,8 @@ import {
   Trash2,
   X,
   AlertTriangle,
+  AudioLines,
+  Sparkles,
 } from 'lucide-react';
 
 import { api, type Meeting } from '../api/client';
@@ -89,20 +92,41 @@ export default function Meetings({ projectId }: MeetingsProps) {
     return meeting.mime_type?.startsWith('video/') ?? false;
   }
 
+  function getStatusStyle(status: string) {
+    const normalized = status.toLowerCase();
+
+    if (normalized.includes('transcrib') || normalized.includes('complete')) {
+      return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+    }
+
+    if (normalized.includes('process')) {
+      return 'bg-blue-50 text-blue-700 ring-blue-200';
+    }
+
+    if (normalized.includes('fail') || normalized.includes('error')) {
+      return 'bg-red-50 text-red-700 ring-red-200';
+    }
+
+    return 'bg-[#F0EDFF] text-violet-700 ring-[#DDD6FE]';
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-7">
+
+      {/* Page heading */}
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#A47A32]">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-700">
+            <Sparkles size={16} />
             Project Workspace
-          </p>
+          </div>
 
-          <h1 className="mt-2 text-3xl font-bold text-[#3F3022]">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Meetings
           </h1>
 
-          <p className="mt-2 text-sm text-[#766654]">
-            Manage uploaded recordings and meeting history.
+          <p className="mt-2 text-sm text-slate-600">
+            Manage recordings, explore meeting history and monitor processing.
           </p>
         </div>
 
@@ -110,7 +134,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
           type="button"
           onClick={() => void loadMeetings()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-[#DED3C3] bg-[#FFFDF9] px-4 py-2.5 text-sm font-semibold text-[#3F3022] shadow-sm transition hover:bg-[#EFE2C9] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-[#D8D5ED] bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-300 hover:bg-[#F5F3FF] hover:text-violet-700 disabled:opacity-50"
         >
           <RefreshCw
             size={16}
@@ -120,68 +144,148 @@ export default function Meetings({ projectId }: MeetingsProps) {
         </button>
       </section>
 
+      {/* Hero banner */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-800 via-violet-700 to-indigo-700 p-7 text-white shadow-lg shadow-violet-200/70 md:p-9">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium">
+              <AudioLines size={14} />
+              Meeting library
+            </span>
+
+            <h2 className="mt-5 text-2xl font-bold md:text-3xl">
+              Every conversation, organised.
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-violet-100">
+              Your project recordings are stored in one place, ready for
+              transcription and meeting intelligence.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+                {meetings.length} project recordings
+              </span>
+
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+                Searchable meeting history
+              </span>
+            </div>
+          </div>
+
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10">
+            <CalendarDays size={46} strokeWidth={1.5} />
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl" />
+      </section>
+
+      {/* Error message */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#DED3C3] bg-[#FFFDF9] p-5 shadow-sm">
-        <div>
-          <p className="text-sm text-[#766654]">Total recordings</p>
-          <p className="mt-1 text-2xl font-bold text-[#3F3022]">
-            {meetings.length}
-          </p>
+      {/* Recording summary and search */}
+      <section className="grid gap-4 md:grid-cols-[1fr_1.5fr]">
+        <div className="flex items-center gap-4 rounded-2xl border border-[#D8D5ED] bg-white p-5 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0EDFF] text-violet-700">
+            <FileAudio size={23} />
+          </div>
+
+          <div>
+            <p className="text-sm text-slate-600">
+              Total recordings
+            </p>
+
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {meetings.length}
+            </p>
+          </div>
         </div>
 
-        <div className="flex w-full max-w-sm items-center gap-2 rounded-lg border border-[#DED3C3] bg-[#F3EEE5] px-3 py-2.5">
-          <Search size={17} className="text-[#766654]" />
+        <div className="flex items-center gap-3 rounded-2xl border border-[#D8D5ED] bg-white p-4 shadow-sm focus-within:border-violet-400">
+          <Search size={19} className="shrink-0 text-slate-400" />
 
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search meetings..."
-            className="w-full bg-transparent text-sm text-[#3F3022] outline-none placeholder:text-[#93816D]"
+            placeholder="Search by meeting title or filename..."
+            aria-label="Search meetings"
+            className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
           />
+
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="rounded-lg p-1 text-slate-400 transition hover:bg-[#F0EDFF] hover:text-violet-700"
+              aria-label="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-[#DED3C3] bg-[#FFFDF9] shadow-sm">
-        <div className="border-b border-[#DED3C3] px-6 py-5">
-          <h2 className="font-bold text-[#3F3022]">Meeting Library</h2>
-          <p className="mt-1 text-xs text-[#766654]">
-            Recordings stored in this project
-          </p>
+      {/* Meeting library */}
+      <section className="overflow-hidden rounded-2xl border border-[#D8D5ED] bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE8F5] px-6 py-5">
+          <div>
+            <h2 className="font-bold text-slate-900">
+              Meeting Library
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-600">
+              Recordings stored in this project
+            </p>
+          </div>
+
+          <span className="rounded-full border border-[#DDD6FE] bg-[#F0EDFF] px-3 py-1.5 text-xs font-semibold text-violet-800">
+            {filteredMeetings.length} shown
+          </span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-[#766654]">
-            Loading recordings...
-          </div>
-        ) : filteredMeetings.length === 0 ? (
-          <div className="p-12 text-center">
-            <CalendarDays
-              size={32}
-              className="mx-auto text-[#A47A32]"
+          <div className="p-14 text-center">
+            <RefreshCw
+              size={27}
+              className="mx-auto animate-spin text-violet-600"
             />
 
-            <p className="mt-3 font-semibold text-[#3F3022]">
-              No matching meetings
+            <p className="mt-4 text-sm text-slate-600">
+              Loading your meeting recordings...
             </p>
+          </div>
+        ) : filteredMeetings.length === 0 ? (
+          <div className="p-14 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0EDFF] text-violet-600">
+              <CalendarDays size={30} />
+            </div>
 
-            <p className="mt-1 text-sm text-[#766654]">
-              Try another search or upload a recording.
+            <h3 className="mt-4 font-semibold text-slate-900">
+              {search ? 'No matching meetings' : 'No recordings yet'}
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+              {search
+                ? 'Try another search term.'
+                : 'Upload a meeting recording to start building your project intelligence.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#EAE1D4]">
+          <div className="divide-y divide-[#EAE8F5]">
             {filteredMeetings.map((meeting) => (
               <article
                 key={meeting.id}
-                className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:bg-[#F3EEE5]"
+                className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:bg-[#F5F3FF]"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="rounded-xl bg-[#EFE2C9] p-3 text-[#A47A32]">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0EDFF] text-violet-700">
                     {isVideo(meeting) ? (
                       <FileVideo size={23} />
                     ) : (
@@ -190,27 +294,29 @@ export default function Meetings({ projectId }: MeetingsProps) {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold text-[#3F3022]">
+                    <h3 className="truncate text-sm font-bold text-slate-900">
                       {meeting.title}
                     </h3>
 
-                    <p className="mt-1 truncate text-xs text-[#766654]">
+                    <p className="mt-1 truncate text-xs text-slate-600">
                       {meeting.original_filename}
                     </p>
 
-                    <p className="mt-1 text-xs text-[#93816D]">
+                    <p className="mt-1 text-xs text-slate-400">
                       Meeting ID: {meeting.id}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                  <span className="flex items-center gap-1.5 text-xs text-[#766654]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-xs text-slate-500">
                     <Clock3 size={14} />
                     {formatDuration(meeting.duration_seconds)}
                   </span>
 
-                  <span className="rounded-full bg-[#EFE2C9] px-3 py-1 text-xs font-semibold capitalize text-[#765522]">
+                  <span
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ring-1 ring-inset ${getStatusStyle(meeting.status)}`}
+                  >
                     {meeting.status.replaceAll('_', ' ')}
                   </span>
 
@@ -219,7 +325,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
                     onClick={() => setMeetingToDelete(meeting)}
                     aria-label={`Delete ${meeting.title}`}
                     title="Delete meeting"
-                    className="rounded-lg border border-red-200 p-2 text-red-600 transition hover:bg-red-50"
+                    className="rounded-xl border border-red-100 p-2.5 text-red-500 transition hover:border-red-200 hover:bg-red-50"
                   >
                     <Trash2 size={17} />
                   </button>
@@ -230,12 +336,18 @@ export default function Meetings({ projectId }: MeetingsProps) {
         )}
       </section>
 
+      {/* Delete confirmation */}
       {meetingToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3F3022]/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-[#DED3C3] bg-[#FFFDF9] p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-meeting-title"
+            className="w-full max-w-md rounded-2xl border border-[#D8D5ED] bg-white p-6 shadow-2xl"
+          >
             <div className="flex items-start justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                <AlertTriangle size={23} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <AlertTriangle size={24} />
               </div>
 
               <button
@@ -243,23 +355,26 @@ export default function Meetings({ projectId }: MeetingsProps) {
                 onClick={() => setMeetingToDelete(null)}
                 disabled={deleting}
                 aria-label="Close confirmation"
-                className="rounded-lg p-2 text-[#766654] hover:bg-[#EFE2C9] disabled:opacity-50"
+                className="rounded-lg p-2 text-slate-400 transition hover:bg-[#F0EDFF] hover:text-violet-700 disabled:opacity-50"
               >
                 <X size={19} />
               </button>
             </div>
 
-            <h2 className="mt-5 text-lg font-bold text-[#3F3022]">
+            <h2
+              id="delete-meeting-title"
+              className="mt-5 text-lg font-bold text-slate-900"
+            >
               Delete this meeting?
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-[#766654]">
+            <p className="mt-2 text-sm leading-6 text-slate-600">
               You are about to delete{' '}
-              <strong className="text-[#3F3022]">
+              <strong className="text-slate-800">
                 {meetingToDelete.title}
-              </strong>
-              . Its associated meeting data will also be affected.
-              This action cannot be undone.
+              </strong>.
+              Its associated meeting data will also be affected. This action
+              cannot be undone.
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
@@ -267,7 +382,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
                 type="button"
                 onClick={() => setMeetingToDelete(null)}
                 disabled={deleting}
-                className="rounded-lg border border-[#DED3C3] px-4 py-2.5 text-sm font-semibold text-[#3F3022] hover:bg-[#F3EEE5]"
+                className="rounded-xl border border-[#D8D5ED] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-[#F5F3FF] disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -276,11 +391,12 @@ export default function Meetings({ projectId }: MeetingsProps) {
                 type="button"
                 onClick={() => void handleDeleteMeeting()}
                 disabled={deleting}
-                className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
               >
                 {deleting && (
                   <RefreshCw size={15} className="animate-spin" />
                 )}
+
                 {deleting ? 'Deleting...' : 'Delete Meeting'}
               </button>
             </div>

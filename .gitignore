@@ -14,3 +14,13 @@ backend/**/*.pyc
 # Meeting recordings (local user data)
 backend/storage/uploads/*
 !backend/storage/uploads/.gitkeep
+
+# IDE settings
+.vscode/
+
+# Root-level Python environments
+.venv/
+venv/
+
+# Local project reports
+project_inventory.txt

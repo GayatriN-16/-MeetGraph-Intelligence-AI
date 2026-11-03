@@ -5,34 +5,48 @@
   font-family: Inter, ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  color: #3F3022;
-  background: #F3EEE5;
+  color: #172554;
+  background: #E6E6FA;
 
-  --mg-brown: #3F3022;
-  --mg-gold: #B58B3F;
-  --mg-cream: #F3EEE5;
-  --mg-white: #FFFDF9;
-  --mg-taupe: #766654;
+  /* Brand colors */
+  --mg-primary: #6D28D9;
+  --mg-primary-dark: #4C1D95;
+  --mg-secondary: #4F46E5;
 
-  --mg-border: #DED3C3;
-  --mg-gold-light: #EFE2C9;
-  --mg-gold-hover: #A47A32;
-  --mg-muted: #93816D;
+  /* Application surfaces */
+  --mg-background: #E6E6FA;
+  --mg-surface: #FFFFFF;
+  --mg-surface-muted: #F5F3FF;
+
+  /* Typography */
+  --mg-text: #172554;
+  --mg-muted: #64748B;
+
+  /* Borders and interactive states */
+  --mg-border: #D8D5ED;
+  --mg-purple-light: #F0EDFF;
+  --mg-purple-hover: #E5E0FF;
+
+  /* Status colors */
+  --mg-success: #059669;
+  --mg-warning: #D97706;
+  --mg-danger: #DC2626;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--mg-cream);
+  background: var(--mg-background);
 }
 
 body {
-  color: var(--mg-brown);
+  color: var(--mg-text);
 }
 
 button {
@@ -44,15 +58,64 @@ button:disabled {
   cursor: not-allowed;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font: inherit;
 }
 
 ::selection {
-  background: #E3C995;
-  color: #3F3022;
+  background: #C4B5FD;
+  color: #4C1D95;
 }
 
 #root {
   min-height: 100vh;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #A78BFA transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A78BFA;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Consistent keyboard focus */
+:focus-visible {
+  outline: 2px solid #8B5CF6;
+  outline-offset: 2px;
+}
+
+/* Shared visual language */
+.mg-card {
+  background: var(--mg-surface);
+  border: 1px solid var(--mg-border);
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(30, 27, 75, 0.05);
+}
+
+.mg-page {
+  min-height: 100%;
+  background: var(--mg-background);
+}
+
+.mg-gradient {
+  background: linear-gradient(
+    120deg,
+    #4C1D95 0%,
+    #6D28D9 52%,
+    #4F46E5 100%
+  );
 }

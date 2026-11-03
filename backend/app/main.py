@@ -8,6 +8,7 @@ from app.api.meetings import router as meetings_router
 from app.api.projects import router as projects_router
 from app.api.extraction import router as extraction_router
 from app.api.questions import router as questions_router
+from app.core.config import settings
 
 app = FastAPI(
     title="MeetGraph AI API",
@@ -19,12 +20,15 @@ app = FastAPI(
     version="1.1.0",
 )
 
+allowed_origins = [
+    origin.strip()
+    for origin in settings.FRONTEND_ORIGINS.split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

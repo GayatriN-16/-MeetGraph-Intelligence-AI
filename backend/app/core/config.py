@@ -9,8 +9,13 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "meetgraph_ai"
+    UPLOAD_DIR: str | None = None
+    FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     HF_TOKEN: str | None = None
+
+    GEMINI_API_KEY: str | None = None
+    GEMINI_MODEL: str = "gemini-3.8-flash"
 
     model_config = SettingsConfigDict(
         env_file=".env",

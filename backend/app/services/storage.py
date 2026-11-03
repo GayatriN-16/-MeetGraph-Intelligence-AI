@@ -4,9 +4,16 @@ from uuid import uuid4
 
 from fastapi import UploadFile, HTTPException
 
+from app.core.config import settings
+
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-UPLOAD_DIR = BACKEND_DIR / "storage" / "uploads"
+
+UPLOAD_DIR = (
+    Path(settings.UPLOAD_DIR).resolve()
+    if settings.UPLOAD_DIR
+    else BACKEND_DIR / "storage" / "uploads"
+)
 
 ALLOWED_EXTENSIONS = {
     ".mp3",
@@ -84,9 +91,7 @@ async def save_recording(upload: UploadFile) -> tuple[Path, int]:
 def delete_recording(storage_path: str) -> None:
     path = Path(storage_path).resolve()
 
-    # Never delete files outside our managed upload directory.
     if path.parent != UPLOAD_DIR.resolve():
         raise ValueError("Invalid recording storage path.")
 
     path.unlink(missing_ok=True)
-

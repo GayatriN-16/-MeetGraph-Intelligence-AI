@@ -9,6 +9,9 @@ import {
   ListChecks,
   RefreshCw,
   UserRound,
+  Sparkles,
+  Target,
+  CircleDashed,
 } from 'lucide-react';
 
 import {
@@ -49,17 +52,25 @@ function formatTimestamp(seconds: number | null) {
 }
 
 function getAssignee(item: ActionItem) {
-  if (item.assignee_name?.trim()) {
-    return item.assignee_name;
-  }
-
-  return 'Assignee not identified';
+  return item.assignee_name?.trim() || 'Assignee not identified';
 }
 
 function isCompleted(status: string) {
-  return ['completed', 'complete', 'done'].includes(
-    status.toLowerCase(),
-  );
+  return ['completed', 'complete', 'done'].includes(status.toLowerCase());
+}
+
+function getStatusStyle(status: string) {
+  const normalized = status.toLowerCase();
+
+  if (isCompleted(normalized)) {
+    return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+  }
+
+  if (normalized.includes('progress')) {
+    return 'bg-blue-50 text-blue-700 ring-blue-200';
+  }
+
+  return 'bg-amber-50 text-amber-700 ring-amber-200';
 }
 
 export default function TasksAndDecisions({
@@ -102,9 +113,9 @@ export default function TasksAndDecisions({
     return titles;
   }, [data]);
 
-  const filteredTasks = useMemo(() => {
-    const tasks = data?.action_items ?? [];
+  const tasks = data?.action_items ?? [];
 
+  const filteredTasks = useMemo(() => {
     if (filter === 'open') {
       return tasks.filter((task) => !isCompleted(task.status));
     }
@@ -114,27 +125,52 @@ export default function TasksAndDecisions({
     }
 
     return tasks;
-  }, [data, filter]);
+  }, [tasks, filter]);
 
-  const pendingCount =
-    data?.action_items.filter((item) => !isCompleted(item.status)).length ?? 0;
+  const pendingCount = tasks.filter(
+    (item) => !isCompleted(item.status),
+  ).length;
 
-  const completedCount =
-    data?.action_items.filter((item) => isCompleted(item.status)).length ?? 0;
+  const completedCount = tasks.filter(
+    (item) => isCompleted(item.status),
+  ).length;
+
+  const completionRate =
+    tasks.length > 0
+      ? Math.round((completedCount / tasks.length) * 100)
+      : 0;
+
+  const assignedCount = tasks.filter(
+    (item) => Boolean(item.assignee_name?.trim()),
+  ).length;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <RefreshCw size={28} className="animate-spin text-violet-600" />
+        <p className="mt-4 text-sm text-slate-500">
+          Loading project tasks and decisions...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-7">
+      {/* Page heading */}
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#A47A32]">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-600">
+            <Sparkles size={16} />
             Project Workspace
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#3F3022]">
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Tasks & Decisions
           </h1>
-          <p className="mt-2 text-sm text-[#766654]">
-            Track responsibilities, deadlines and decisions extracted from
-            your meeting recordings.
+
+          <p className="mt-2 text-sm text-slate-500">
+            Track responsibilities, deadlines and decisions from your meetings.
           </p>
         </div>
 
@@ -142,18 +178,15 @@ export default function TasksAndDecisions({
           type="button"
           onClick={() => void loadData()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-[#D9CBB7] bg-[#FFFDF9] px-4 py-2.5 text-sm font-semibold text-[#3F3022] shadow-sm transition hover:bg-[#EFE2C9] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 disabled:opacity-50"
         >
-          <RefreshCw
-            size={16}
-            className={loading ? 'animate-spin' : ''}
-          />
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           Refresh
         </button>
       </section>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle size={19} className="mt-0.5 shrink-0" />
           <div>
             <p className="font-semibold">Unable to load project intelligence</p>
@@ -162,43 +195,127 @@ export default function TasksAndDecisions({
         </div>
       )}
 
-      {loading ? (
-        <div className="rounded-xl border border-[#DED3C3] bg-[#FFFDF9] p-12 text-center">
-          <RefreshCw
-            size={25}
-            className="mx-auto animate-spin text-[#A47A32]"
-          />
-          <p className="mt-4 text-sm text-[#766654]">
-            Loading project tasks and decisions...
-          </p>
-        </div>
-      ) : data ? (
+      {data && (
         <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Hero banner */}
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-700 via-purple-600 to-indigo-600 p-7 text-white shadow-lg shadow-violet-200/60 md:p-9">
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
+              <div className="max-w-xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium">
+                  <Target size={14} />
+                  Project execution
+                </span>
+
+                <h2 className="mt-5 text-2xl font-bold md:text-3xl">
+                  Turn meeting discussions into action.
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-violet-100">
+                  Follow assigned responsibilities, review recorded deadlines
+                  and trace tasks back to their meeting evidence.
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+                    {tasks.length} action items
+                  </span>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+                    {assignedCount} with named assignees
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10">
+                <ListChecks size={46} strokeWidth={1.5} />
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl" />
+          </section>
+
+          {/* Statistics */}
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Total action items"
-              value={data.total_action_items}
+              value={tasks.length}
               icon={ListChecks}
+              color="violet"
+              caption="Extracted from meetings"
             />
             <StatCard
               label="Pending tasks"
               value={pendingCount}
               icon={Clock3}
+              color="amber"
+              caption="Require attention"
             />
             <StatCard
               label="Completed tasks"
               value={completedCount}
               icon={CheckCircle2}
+              color="emerald"
+              caption="Marked as completed"
+            />
+            <StatCard
+              label="Recorded decisions"
+              value={data.decisions.length}
+              icon={FileText}
+              color="blue"
+              caption="Extracted from discussions"
             />
           </section>
 
-          <section className="overflow-hidden rounded-xl border border-[#D9CBB7] bg-[#FFFDF9] shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E5DACA] px-6 py-5">
+          {/* Progress panels */}
+          <section className="grid gap-4 lg:grid-cols-2">
+            <ProgressPanel
+              title="Task completion"
+              description="Completion status of extracted action items"
+              percentage={completionRate}
+              detail={`${completedCount} of ${tasks.length} completed`}
+              icon={CheckCircle2}
+              color="violet"
+            />
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    Task distribution
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Current action item status
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600">
+                  <CircleDashed size={20} />
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <DistributionRow
+                  label="Pending"
+                  count={pendingCount}
+                  total={tasks.length}
+                  color="bg-amber-400"
+                />
+                <DistributionRow
+                  label="Completed"
+                  count={completedCount}
+                  total={tasks.length}
+                  color="bg-emerald-500"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Action items */}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
               <div>
-                <h2 className="font-bold text-[#3F3022]">
-                  Action Items
-                </h2>
-                <p className="mt-1 text-xs text-[#766654]">
+                <h2 className="font-bold text-slate-900">Action Items</h2>
+                <p className="mt-1 text-xs text-slate-500">
                   Tasks identified from project meeting recordings
                 </p>
               </div>
@@ -215,13 +332,18 @@ export default function TasksAndDecisions({
                     key={value}
                     type="button"
                     onClick={() => setFilter(value)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    className={`rounded-xl px-4 py-2 text-xs font-semibold transition ${
                       filter === value
-                        ? 'bg-[#4A3B2A] text-white'
-                        : 'border border-[#D9CBB7] bg-white text-[#6F5B45] hover:bg-[#F3EEE5]'
+                        ? 'bg-violet-600 text-white shadow-sm shadow-violet-200'
+                        : 'border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:bg-violet-50'
                     }`}
                   >
                     {label}
+                    {value === 'all'
+                      ? ` (${tasks.length})`
+                      : value === 'open'
+                        ? ` (${pendingCount})`
+                        : ` (${completedCount})`}
                   </button>
                 ))}
               </div>
@@ -229,21 +351,20 @@ export default function TasksAndDecisions({
 
             {filteredTasks.length === 0 ? (
               <div className="p-12 text-center">
-                <ListChecks
-                  size={32}
-                  className="mx-auto text-[#A47A32]"
-                />
-                <h3 className="mt-3 font-semibold text-[#3F3022]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
+                  <ListChecks size={27} />
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-900">
                   No tasks found
                 </h3>
-                <p className="mt-1 text-sm text-[#766654]">
+                <p className="mt-2 text-sm text-slate-500">
                   {filter === 'all'
                     ? 'No action items have been extracted yet.'
                     : `There are no ${filter} tasks.`}
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-[#EAE1D4]">
+              <div className="grid gap-4 p-5 md:p-6">
                 {filteredTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -258,35 +379,38 @@ export default function TasksAndDecisions({
             )}
           </section>
 
-          <section className="overflow-hidden rounded-xl border border-[#D9CBB7] bg-[#FFFDF9] shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#E5DACA] px-6 py-5">
+          {/* Decisions */}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
               <div>
-                <h2 className="font-bold text-[#3F3022]">
-                  Project Decisions
-                </h2>
-                <p className="mt-1 text-xs text-[#766654]">
+                <h2 className="font-bold text-slate-900">Project Decisions</h2>
+                <p className="mt-1 text-xs text-slate-500">
                   Decisions extracted from meeting discussions
                 </p>
               </div>
-              <FileText size={20} className="text-[#A47A32]" />
+
+              <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
+                <FileText size={20} />
+              </div>
             </div>
 
             {data.decisions.length === 0 ? (
-              <div className="p-10 text-center">
-                <FileText
-                  size={30}
-                  className="mx-auto text-[#A47A32]"
-                />
-                <h3 className="mt-3 font-semibold text-[#3F3022]">
+              <div className="p-12 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
+                  <FileText size={27} />
+                </div>
+
+                <h3 className="mt-4 font-semibold text-slate-900">
                   No decisions recorded yet
                 </h3>
-                <p className="mt-1 text-sm text-[#766654]">
-                  No decisions have been extracted from the available
-                  meeting recordings.
+
+                <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+                  No decisions have been extracted from the available meeting
+                  recordings.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-[#EAE1D4]">
+              <div className="grid gap-4 p-5 md:p-6">
                 {data.decisions.map((decision) => (
                   <DecisionCard
                     key={decision.id}
@@ -301,7 +425,7 @@ export default function TasksAndDecisions({
             )}
           </section>
         </>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -310,20 +434,141 @@ function StatCard({
   label,
   value,
   icon: Icon,
+  color,
+  caption,
 }: {
   label: string;
   value: number;
   icon: typeof ListChecks;
+  color: 'violet' | 'amber' | 'emerald' | 'blue';
+  caption: string;
 }) {
+  const styles = {
+    violet: 'bg-violet-100 text-violet-600',
+    amber: 'bg-amber-100 text-amber-600',
+    emerald: 'bg-emerald-100 text-emerald-600',
+    blue: 'bg-blue-100 text-blue-600',
+  };
+
   return (
-    <div className="rounded-xl border border-[#D9CBB7] bg-[#FFFDF9] p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-[#705D48]">{label}</p>
-        <div className="rounded-lg bg-[#EFE2C9] p-2.5">
-          <Icon size={19} className="text-[#966B25]" />
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div className={`rounded-xl p-2.5 ${styles[color]}`}>
+          <Icon size={20} />
         </div>
       </div>
-      <p className="mt-5 text-3xl font-bold text-[#3F3022]">{value}</p>
+
+      <p className="mt-5 text-3xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-xs text-slate-400">{caption}</p>
+    </div>
+  );
+}
+
+function ProgressPanel({
+  title,
+  description,
+  percentage,
+  detail,
+  icon: Icon,
+  color,
+}: {
+  title: string;
+  description: string;
+  percentage: number;
+  detail: string;
+  icon: typeof CheckCircle2;
+  color: 'violet';
+}) {
+  const barColor = color === 'violet' ? 'bg-violet-600' : 'bg-blue-600';
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="font-bold text-slate-900">{title}</h3>
+          <p className="mt-1 text-xs text-slate-500">{description}</p>
+        </div>
+
+        <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
+          <Icon size={20} />
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-end justify-between gap-3">
+        <p className="text-3xl font-bold text-slate-900">{percentage}%</p>
+        <p className="text-xs text-slate-500">{detail}</p>
+      </div>
+
+      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      <p className="mt-3 text-xs text-slate-400">
+        Based on action item statuses returned by the backend.
+      </p>
+    </div>
+  );
+}
+
+function DistributionRow({
+  label,
+  count,
+  total,
+  color,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  color: string;
+}) {
+  const percentage = total > 0 ? (count / total) * 100 : 0;
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-sm">
+        <span className="text-slate-600">{label}</span>
+        <span className="font-semibold text-slate-900">{count}</span>
+      </div>
+
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${color}`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EvidencePanel({
+  evidence,
+  start,
+  end,
+}: {
+  evidence: string;
+  start: string | null;
+  end: string | null;
+}) {
+  return (
+    <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/60 p-4">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700">
+        Meeting evidence
+      </p>
+
+      <p className="mt-2 text-sm leading-6 text-slate-700">
+        "{evidence}"
+      </p>
+
+      {(start || end) && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+          <Clock3 size={13} />
+          {start ?? 'Start unavailable'} - {end ?? 'End unavailable'}
+        </p>
+      )}
     </div>
   );
 }
@@ -340,63 +585,70 @@ function TaskCard({
   const end = formatTimestamp(task.end_seconds);
 
   return (
-    <article className="px-6 py-5 transition hover:bg-[#F8F3EA]">
+    <article className="rounded-2xl border border-slate-200 p-5 transition hover:border-violet-200 hover:shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold leading-6 text-[#3F3022]">
-            {task.task_description}
-          </h3>
-          <p className="mt-1 text-xs text-[#806C55]">
-            {meetingTitle} · Meeting ID: {task.meeting_id}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <div
+            className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+              completed
+                ? 'bg-emerald-50 text-emerald-600'
+                : 'bg-violet-50 text-violet-600'
+            }`}
+          >
+            {completed ? (
+              <CheckCircle2 size={20} />
+            ) : (
+              <ListChecks size={20} />
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold leading-6 text-slate-900">
+              {task.task_description}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              {meetingTitle} · Meeting ID: {task.meeting_id}
+            </p>
+          </div>
         </div>
 
         <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-            completed
-              ? 'bg-emerald-100 text-emerald-800'
-              : 'bg-[#EFE2C9] text-[#765522]'
-          }`}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ring-1 ring-inset ${getStatusStyle(task.status)}`}
         >
           {task.status.replaceAll('_', ' ')}
         </span>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-xs text-[#705D48]">
-        <span className="flex items-center gap-2">
-          <UserRound size={15} className="text-[#A47A32]" />
-          {getAssignee(task)}
-        </span>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <MetadataItem
+          icon={UserRound}
+          label="Assignee"
+          value={getAssignee(task)}
+        />
 
-        <span className="flex items-center gap-2">
-          <CalendarDays size={15} className="text-[#A47A32]" />
-          {formatDate(task.due_date)}
-        </span>
+        <MetadataItem
+          icon={CalendarDays}
+          label="Deadline"
+          value={formatDate(task.due_date)}
+        />
 
-        {task.estimated_duration_minutes != null && (
-          <span className="flex items-center gap-2">
-            <Clock3 size={15} className="text-[#A47A32]" />
-            {task.estimated_duration_minutes} minutes estimated
-          </span>
-        )}
+        <MetadataItem
+          icon={Clock3}
+          label="Estimated duration"
+          value={
+            task.estimated_duration_minutes != null
+              ? `${task.estimated_duration_minutes} minutes`
+              : 'Not specified'
+          }
+        />
       </div>
 
       {task.evidence_text && (
-        <div className="mt-4 rounded-lg border border-[#E5DACA] bg-[#F8F3EA] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#966B25]">
-            Meeting evidence
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[#51412F]">
-            "{task.evidence_text}"
-          </p>
-
-          {(start || end) && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-[#806C55]">
-              <Clock3 size={13} />
-              {start ?? 'Start unavailable'} - {end ?? 'End unavailable'}
-            </p>
-          )}
-        </div>
+        <EvidencePanel
+          evidence={task.evidence_text}
+          start={start}
+          end={end}
+        />
       )}
     </article>
   );
@@ -413,41 +665,63 @@ function DecisionCard({
   const end = formatTimestamp(decision.end_seconds);
 
   return (
-    <article className="px-6 py-5 hover:bg-[#F8F3EA]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-bold text-[#3F3022]">
-          {decision.title}
-        </h3>
-        <span className="rounded-full bg-[#EFE2C9] px-3 py-1 text-xs font-semibold capitalize text-[#765522]">
-          {decision.status}
+    <article className="rounded-2xl border border-slate-200 p-5 transition hover:border-blue-200 hover:shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <FileText size={20} />
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">
+              {decision.title}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              {meetingTitle} · Meeting ID: {decision.meeting_id}
+            </p>
+          </div>
+        </div>
+
+        <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold capitalize text-blue-700 ring-1 ring-inset ring-blue-200">
+          {decision.status.replaceAll('_', ' ')}
         </span>
       </div>
 
-      <p className="mt-1 text-xs text-[#806C55]">
-        {meetingTitle} · Meeting ID: {decision.meeting_id}
-      </p>
-
       {decision.description && (
-        <p className="mt-3 text-sm leading-6 text-[#51412F]">
+        <p className="mt-4 text-sm leading-6 text-slate-600">
           {decision.description}
         </p>
       )}
 
       {decision.evidence_text && (
-        <div className="mt-4 rounded-lg border border-[#E5DACA] bg-[#F8F3EA] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#966B25]">
-            Meeting evidence
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[#51412F]">
-            "{decision.evidence_text}"
-          </p>
-          {(start || end) && (
-            <p className="mt-2 text-xs text-[#806C55]">
-              {start ?? 'Start unavailable'} - {end ?? 'End unavailable'}
-            </p>
-          )}
-        </div>
+        <EvidencePanel
+          evidence={decision.evidence_text}
+          start={start}
+          end={end}
+        />
       )}
     </article>
+  );
+}
+
+function MetadataItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof UserRound;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3">
+      <Icon size={16} className="mt-0.5 shrink-0 text-violet-500" />
+      <div className="min-w-0">
+        <p className="text-[11px] text-slate-400">{label}</p>
+        <p className="mt-1 break-words text-xs font-semibold text-slate-700">
+          {value}
+        </p>
+      </div>
+    </div>
   );
 }
