@@ -8,9 +8,9 @@
 - Rutuja Jadhav
 - Yash Kumbhar
 
-**GitHub Repository:** [MeetGraph AI](https://github.com/GayatriN-16/-MeetGraph-Intelligence-AI)
+**GitHub Repository:** [MeetGraph AI](https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git)
 
-**Live Application:** [MeetGraph AI](https://ais-dev-l4aknxur6g64jcbniqpmfm-330250524849.asia-southeast1.run.app)
+**Live Application:** [MeetGraph AI](https://meet-graph-ai-preview.vercel.app/)
 
 ---
 
@@ -171,7 +171,7 @@ For complete request and response specifications, run the backend and visit `/do
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/GayatriN-16/-MeetGraph-Intelligence-AI.git
+git clone https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git
 
 cd -MeetGraph-Intelligence-AI
 ```
@@ -324,10 +324,10 @@ MeetGraph AI is a collaborative final-year engineering project developed by all 
 
 | Team Member | Role | Responsibilities |
 |---|---|---|
-| **Gayatri Nikam** | Frontend Development | Frontend architecture, dashboard development, UI design and user interface implementation |
-| **Vaibhav Pawar** | Backend Development | FastAPI backend development, REST APIs, database integration, backend testing and deployment |
-| **Rutuja Jadhav** | AI and Testing | Meeting intelligence, transcription workflow, AI-related functionality and application testing |
-| **Yash Kumbhar** | Documentation and Integration | Project documentation, technical documentation and integration support |
+| **Gayatri Nikam** | Frontend Development and Integration | Frontend architecture, dashboard development, backend testing and user interface implementation |
+| **Vaibhav Pawar** | Backend Development | FastAPI backend development, REST APIs, database integration, backend testing and deployment | AI-related Fuctionality |
+| **Rutuja Jadhav** | Testing | Meeting intelligence, transcription workflow, application testing |
+| **Yash Kumbhar** | Documentation| Project documentation, technical documentation|
 
 ### Shared Project Responsibilities
 
