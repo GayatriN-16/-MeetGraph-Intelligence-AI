@@ -2,7 +2,6 @@
 import json
 import re
 
-from google import genai
 from app.core.config import settings
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     Form,
@@ -14,7 +15,7 @@ from fastapi import (
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, SessionLocal
 from app.models import (
     Meeting,
     Project,
@@ -32,6 +33,68 @@ from app.services.diarization import (
 router = APIRouter(tags=["Meetings"])
 
 
+def process_transcription_background(
+    meeting_id: int,
+    storage_path: str,
+    language: str | None = None,
+):
+    """
+    Process transcription outside the upload/request lifecycle.
+    A separate database session is used by the background task.
+    """
+
+    with SessionLocal() as db:
+        try:
+            meeting = db.get(Meeting, meeting_id)
+
+            if not meeting:
+                return
+
+            result = transcribe_recording(
+                storage_path,
+                language,
+            )
+
+            db.execute(
+                delete(TranscriptSegment).where(
+                    TranscriptSegment.meeting_id == meeting_id
+                )
+            )
+
+            db.execute(
+                delete(Speaker).where(
+                    Speaker.meeting_id == meeting_id
+                )
+            )
+
+            for item in result["segments"]:
+                db.add(
+                    TranscriptSegment(
+                        meeting_id=meeting_id,
+                        start_seconds=item["start_seconds"],
+                        end_seconds=item["end_seconds"],
+                        text=item["text"],
+                        confidence=item["confidence"],
+                    )
+                )
+
+            meeting.duration_seconds = result["duration_seconds"]
+            meeting.status = "transcribed"
+            meeting.processing_error = None
+
+            db.commit()
+
+        except Exception as exc:
+            db.rollback()
+
+            failed_meeting = db.get(Meeting, meeting_id)
+
+            if failed_meeting:
+                failed_meeting.status = "failed"
+                failed_meeting.processing_error = str(exc)[:2000]
+                db.commit()
+
+
 @router.post(
     "/meetings/upload",
     response_model=MeetingResponse,
@@ -47,7 +110,10 @@ async def upload_meeting(
 
     if not project:
         await recording.close()
-        raise HTTPException(status_code=404, detail="Project not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found.",
+        )
 
     original_filename = Path(recording.filename or "").name
 
@@ -74,6 +140,7 @@ async def upload_meeting(
         db.add(meeting)
         db.commit()
         db.refresh(meeting)
+
     except Exception:
         db.rollback()
         delete_recording(str(storage_path))
@@ -82,7 +149,10 @@ async def upload_meeting(
     return meeting
 
 
-@router.get("/meetings", response_model=list[MeetingResponse])
+@router.get(
+    "/meetings",
+    response_model=list[MeetingResponse],
+)
 def list_meetings(
     project_id: int | None = None,
     db: Session = Depends(get_db),
@@ -95,7 +165,10 @@ def list_meetings(
     return db.scalars(query).all()
 
 
-@router.get("/meetings/{meeting_id}", response_model=MeetingResponse)
+@router.get(
+    "/meetings/{meeting_id}",
+    response_model=MeetingResponse,
+)
 def get_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
@@ -103,21 +176,31 @@ def get_meeting(
     meeting = db.get(Meeting, meeting_id)
 
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found.",
+        )
 
     return meeting
 
 
-@router.post("/meetings/{meeting_id}/transcribe")
-async def transcribe_meeting(
+@router.post(
+    "/meetings/{meeting_id}/transcribe",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def transcribe_meeting(
     meeting_id: int,
+    background_tasks: BackgroundTasks,
     language: str | None = None,
     db: Session = Depends(get_db),
 ):
     meeting = db.get(Meeting, meeting_id)
 
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found.",
+        )
 
     if meeting.status == "transcribing":
         raise HTTPException(
@@ -135,64 +218,18 @@ async def transcribe_meeting(
     meeting.processing_error = None
     db.commit()
 
-    try:
-        result = await asyncio.to_thread(
-            transcribe_recording,
-            meeting.storage_path,
-            language,
-        )
+    background_tasks.add_task(
+        process_transcription_background,
+        meeting.id,
+        meeting.storage_path,
+        language,
+    )
 
-        db.execute(
-            delete(TranscriptSegment).where(
-                TranscriptSegment.meeting_id == meeting_id
-            )
-        )
-        db.execute(
-            delete(Speaker).where(Speaker.meeting_id == meeting_id)
-        )
-
-        for item in result["segments"]:
-            db.add(
-                TranscriptSegment(
-                    meeting_id=meeting_id,
-                    start_seconds=item["start_seconds"],
-                    end_seconds=item["end_seconds"],
-                    text=item["text"],
-                    confidence=item["confidence"],
-                )
-            )
-
-        meeting.duration_seconds = result["duration_seconds"]
-        meeting.status = "transcribed"
-        meeting.processing_error = None
-
-        db.commit()
-
-        return {
-            "message": "Transcription completed successfully.",
-            "meeting_id": meeting_id,
-            "status": meeting.status,
-            "language": result["language"],
-            "language_probability": result["language_probability"],
-            "duration_seconds": result["duration_seconds"],
-            "segments_saved": len(result["segments"]),
-            "diarization_status": "not_started",
-        }
-
-    except Exception as exc:
-        db.rollback()
-
-        failed_meeting = db.get(Meeting, meeting_id)
-
-        if failed_meeting:
-            failed_meeting.status = "failed"
-            failed_meeting.processing_error = str(exc)[:2000]
-            db.commit()
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Transcription failed: {str(exc)}",
-        )
+    return {
+        "message": "Transcription has been queued.",
+        "meeting_id": meeting.id,
+        "status": "transcribing",
+    }
 
 
 @router.post("/meetings/{meeting_id}/diarize")
@@ -203,7 +240,10 @@ async def diarize_meeting(
     meeting = db.get(Meeting, meeting_id)
 
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found.",
+        )
 
     if not Path(meeting.storage_path).is_file():
         raise HTTPException(
@@ -237,9 +277,10 @@ async def diarize_meeting(
             result["turns"],
         )
 
-        # Remove previous speaker records so retries do not create duplicates.
         db.execute(
-            delete(Speaker).where(Speaker.meeting_id == meeting_id)
+            delete(Speaker).where(
+                Speaker.meeting_id == meeting_id
+            )
         )
         db.flush()
 
@@ -258,7 +299,10 @@ async def diarize_meeting(
 
         assigned_count = 0
 
-        for segment, label in zip(transcript_segments, assignments):
+        for segment, label in zip(
+            transcript_segments,
+            assignments,
+        ):
             segment.speaker_id = (
                 speaker_records.get(label)
                 if label is not None
@@ -282,7 +326,8 @@ async def diarize_meeting(
                         (
                             f"Speaker {index}"
                             for index, label in enumerate(
-                                result["speakers"], start=1
+                                result["speakers"],
+                                start=1,
                             )
                             if label == diarization_label
                         ),
@@ -317,7 +362,10 @@ def get_meeting_transcript(
     meeting = db.get(Meeting, meeting_id)
 
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found.",
+        )
 
     segments = db.scalars(
         select(TranscriptSegment)
@@ -361,7 +409,10 @@ def remove_meeting(
     meeting = db.get(Meeting, meeting_id)
 
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found.",
+        )
 
     storage_path = meeting.storage_path
 

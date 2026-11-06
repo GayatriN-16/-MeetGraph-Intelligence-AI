@@ -15,20 +15,28 @@ MONTHS = {
 }
 
 
-# Explicit action commitments only.
-ACTION_PATTERNS = [
-    re.compile(
-        r"\bI\s+will\s+(.+?)(?:[.!?]|$)",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b([A-Z][a-z]+)\s+will\s+(.+?)(?:[.!?]|$)"
-    ),
-    re.compile(
-        r"\b([A-Z][a-z]+),\s*I\s+will\s+(.+?)(?:[.!?]|$)",
-        re.IGNORECASE,
-    ),
-]
+# Explicit action commitment patterns.
+NAMED_FIRST_PERSON_PATTERN = re.compile(
+    r"^\s*"
+    r"([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})"
+    r"\s*:\s*I(?:\s+will|'ll)\s+(.+?)(?:[.!?]|$)"
+)
+
+NAMED_COMMA_COMMITMENT_PATTERN = re.compile(
+    r"^\s*"
+    r"([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})"
+    r"\s*,\s*I(?:\s+will|'ll)\s+(.+?)(?:[.!?]|$)"
+)
+
+NAMED_COMMITMENT_PATTERN = re.compile(
+    r"\b([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})"
+    r"\s+will\s+(.+?)(?:[.!?]|$)"
+)
+
+FIRST_PERSON_COMMITMENT_PATTERN = re.compile(
+    r"\bI(?:\s+will|'ll)\s+(.+?)(?:[.!?]|$)",
+    re.IGNORECASE,
+)
 
 
 # Explicit decision statements.
@@ -144,7 +152,7 @@ FILLER_PATTERNS = [
 
 
 def parse_deadline(text: str, year: int):
-    """Extract an explicit calendar deadline."""
+    """Extract an explicitly stated calendar deadline."""
 
     match = DEADLINE_PATTERN.search(text)
 
@@ -237,14 +245,9 @@ def build_utterances(segments, max_gap: float = 1.5):
         if utterances:
             previous = utterances[-1]
 
-            gap = (
-                segment.start_seconds
-                - previous["end_seconds"]
-            )
+            gap = segment.start_seconds - previous["end_seconds"]
 
-            same_speaker = (
-                speaker_id == previous["speaker_id"]
-            )
+            same_speaker = speaker_id == previous["speaker_id"]
 
             sentence_complete = bool(
                 re.search(
@@ -295,24 +298,44 @@ def extract_action(
     end: float,
     year: int,
 ):
-    """Extract explicit action commitments and their metadata."""
+    """Extract action commitments, assignees and metadata."""
 
     assignee_name = None
     description = None
 
-    # First-person commitment.
-    match = ACTION_PATTERNS[0].search(text)
+    # 1. Named first-person commitment:
+    # Rahul: I will handle the dashboard UI implementation.
+    match = NAMED_FIRST_PERSON_PATTERN.search(text)
 
     if match:
-        description = match.group(1).strip()
+        assignee_name = match.group(1).strip()
+        description = match.group(2).strip()
 
-    else:
-        # Named commitment.
-        match = ACTION_PATTERNS[1].search(text)
+    # 2. Named commitment with comma:
+    # Rahul, I will handle the dashboard UI implementation.
+    if not description:
+        match = NAMED_COMMA_COMMITMENT_PATTERN.search(text)
 
         if match:
             assignee_name = match.group(1).strip()
             description = match.group(2).strip()
+
+    # 3. Named third-person commitment:
+    # Rahul will complete the testing.
+    if not description:
+        match = NAMED_COMMITMENT_PATTERN.search(text)
+
+        if match:
+            assignee_name = match.group(1).strip()
+            description = match.group(2).strip()
+
+    # 4. Generic first-person commitment:
+    # I will prepare the project report.
+    if not description:
+        match = FIRST_PERSON_COMMITMENT_PATTERN.search(text)
+
+        if match:
+            description = match.group(1).strip()
 
     if not description:
         return None
@@ -322,7 +345,6 @@ def extract_action(
 
     description = DEADLINE_PATTERN.sub("", description)
     description = DURATION_PATTERN.sub("", description)
-
     description = description.strip(" ,.!?")
 
     if not description:
@@ -331,9 +353,7 @@ def extract_action(
     return {
         "task_description": description,
         "assignee_name": assignee_name,
-        "assignee_speaker_id": (
-            speaker_id if assignee_name is None else None
-        ),
+        "assignee_speaker_id": speaker_id,
         "due_date": deadline,
         "estimated_duration_minutes": duration,
         "evidence_text": text,
@@ -388,16 +408,12 @@ def extract_meeting_intelligence(segments, year: int):
     for utterance in utterances:
 
         original_text = utterance["text"].strip()
-
         text = clean_leading_filler(original_text)
 
         if is_filler(text):
             continue
 
-        # ---------------------------------------------
-        # Agenda extraction
-        # ---------------------------------------------
-
+        # Agenda extraction.
         agenda = extract_agenda(text)
 
         if agenda:
@@ -409,10 +425,7 @@ def extract_meeting_intelligence(segments, year: int):
                 "end_seconds": utterance["end_seconds"],
             })
 
-        # ---------------------------------------------
-        # Key discussion points
-        # ---------------------------------------------
-
+        # Key discussion points.
         normalized = text.lower()
 
         if any(
@@ -426,10 +439,7 @@ def extract_meeting_intelligence(segments, year: int):
                 "end_seconds": utterance["end_seconds"],
             })
 
-        # ---------------------------------------------
-        # Action item extraction
-        # ---------------------------------------------
-
+        # Action item extraction.
         action = extract_action(
             text,
             utterance["speaker_id"],
@@ -441,24 +451,17 @@ def extract_meeting_intelligence(segments, year: int):
         if action:
             action_items.append(action)
 
-        # ---------------------------------------------
-        # Decision extraction
-        # ---------------------------------------------
-
+        # Decision extraction.
         decision = extract_decision(utterance)
 
         if decision:
             decisions.append(decision)
 
-    # ---------------------------------------------
-    # Remove duplicate discussion points
-    # ---------------------------------------------
-
+    # Remove duplicate discussion points.
     unique_points = []
     seen = set()
 
     for point in key_points:
-
         key = re.sub(
             r"\s+",
             " ",
@@ -469,15 +472,11 @@ def extract_meeting_intelligence(segments, year: int):
             seen.add(key)
             unique_points.append(point)
 
-    # ---------------------------------------------
-    # Remove duplicate actions
-    # ---------------------------------------------
-
+    # Remove duplicate actions.
     unique_actions = []
     seen_actions = set()
 
     for action in action_items:
-
         key = (
             action["task_description"].lower().strip(),
             (action["assignee_name"] or "").lower().strip(),
@@ -488,25 +487,18 @@ def extract_meeting_intelligence(segments, year: int):
             seen_actions.add(key)
             unique_actions.append(action)
 
-    # ---------------------------------------------
-    # Remove duplicate decisions
-    # ---------------------------------------------
-
+    # Remove duplicate decisions.
     unique_decisions = []
     seen_decisions = set()
 
     for decision in decisions:
-
         key = decision["description"].lower().strip()
 
         if key not in seen_decisions:
             seen_decisions.add(key)
             unique_decisions.append(decision)
 
-    # ---------------------------------------------
-    # Agenda and summary
-    # ---------------------------------------------
-
+    # Agenda and summary.
     agenda_text = (
         agenda_candidates[0]["text"]
         if agenda_candidates
