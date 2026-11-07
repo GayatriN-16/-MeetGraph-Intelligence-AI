@@ -38,6 +38,13 @@ FIRST_PERSON_COMMITMENT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Collective commitments create an action item without assigning it to
+# the speaker or to any named participant.
+COLLECTIVE_COMMITMENT_PATTERN = re.compile(
+    r"\b(?:we|the\s+team)\s+(?:need\s+to|must|should|have\s+to|ought\s+to)\s+(.+?)(?:[.!?]|$)",
+    re.IGNORECASE,
+)
+
 
 # Explicit decision statements.
 DECISION_PATTERNS = [
@@ -329,7 +336,19 @@ def extract_action(
             assignee_name = match.group(1).strip()
             description = match.group(2).strip()
 
-    # 4. Generic first-person commitment:
+    # 4. Collective commitment:
+    # Vaibhav: We need to complete the dashboard frontend by November 15.
+    # This is a team-level task, so do not infer an individual assignee.
+    collective_commitment = False
+
+    if not description:
+        match = COLLECTIVE_COMMITMENT_PATTERN.search(text)
+
+        if match:
+            description = match.group(1).strip()
+            collective_commitment = True
+
+    # 5. Generic first-person commitment:
     # I will prepare the project report.
     if not description:
         match = FIRST_PERSON_COMMITMENT_PATTERN.search(text)
@@ -353,7 +372,7 @@ def extract_action(
     return {
         "task_description": description,
         "assignee_name": assignee_name,
-        "assignee_speaker_id": speaker_id,
+        "assignee_speaker_id": None if collective_commitment else speaker_id,
         "due_date": deadline,
         "estimated_duration_minutes": duration,
         "evidence_text": text,

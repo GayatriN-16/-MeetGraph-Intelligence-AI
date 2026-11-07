@@ -86,6 +86,23 @@ def tokenize(text: str) -> set[str]:
     return {word for word in words if word not in STOP_WORDS}
 
 
+def filter_actions_by_question(actions, question_tokens):
+    """Prefer action items whose descriptions match the question terms.
+
+    If the question has no meaningful overlap with any task description,
+    preserve the existing behavior and return all supplied actions.
+    """
+    if not actions or not question_tokens:
+        return actions
+
+    matched_actions = [
+        item for item in actions
+        if question_tokens.intersection(tokenize(item.task_description))
+    ]
+
+    return matched_actions or actions
+
+
 def format_deadline(value):
     return value.strftime("%d %B %Y") if value else "Not specified"
 
@@ -503,6 +520,10 @@ def answer_project_question(
                 if (item.status or "").lower()
                 not in ("completed", "cancelled")
             ]
+            relevant_actions = filter_actions_by_question(
+                relevant_actions,
+                question_tokens,
+            )
         else:
             relevant_actions = actions
 
@@ -606,6 +627,10 @@ def answer_project_question(
                 if (item.status or "").lower()
                 not in ("completed", "cancelled")
             ]
+            pending = filter_actions_by_question(
+                pending,
+                question_tokens,
+            )
 
             if not pending:
                 return {
