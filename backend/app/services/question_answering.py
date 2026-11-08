@@ -22,6 +22,27 @@ STOP_WORDS = {
 }
 
 
+COMPARISON_FILLER_WORDS = {
+    "hello", "hi", "hey", "everyone", "welcome", "thank", "thanks",
+    "you", "thankyou", "good", "morning", "afternoon", "evening",
+    "bye", "goodbye",
+}
+
+COMPARISON_GREETING_PATTERNS = (
+    r"^(?:hello|hi|hey)\\b",
+    r"^welcome\\b",
+    r"^thank(?:s| you)\\b",
+    r"^good\\s+(?:morning|afternoon|evening)\\b",
+    r"^(?:bye|goodbye)\\b",
+)
+
+COMPARISON_QUESTION_STARTERS = {
+    "what", "which", "who", "when", "where", "why", "how",
+    "can", "could", "would", "should", "do", "does", "did",
+    "is", "are", "was", "were",
+}
+
+
 AGENDA_PATTERNS = [
     r"\b(today|now)\s+we\s+(will|are going to|want to)\s+discuss\b",
     r"\b(the\s+)?agenda\s+(is|includes|for today)\b",
@@ -325,10 +346,50 @@ def select_timeline_sources(sources, limit=12):
         ordered[index]
         for index in sorted(selected_indices)
     ]
+def comparison_tokens(text: str) -> set[str]:
+    """Return normalized content terms for transcript comparison only."""
+    # Treat back-end and backend as the same term without changing the
+    # tokenization used by the existing single-meeting Q&A behavior.
+    normalized = re.sub(r"[-‐‑‒–—]", "", (text or "").lower())
+    return {
+        token for token in tokenize(normalized)
+        if token not in COMPARISON_FILLER_WORDS
+    }
+
+
+def is_comparison_candidate(text: str) -> bool:
+    """Exclude conversational filler and standalone questions from topic matching."""
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return False
+
+    lowered = cleaned.lower()
+    if any(
+        re.search(pattern, lowered, re.IGNORECASE)
+        for pattern in COMPARISON_GREETING_PATTERNS
+    ):
+        return False
+
+    # A question may request information about a topic, but it is not
+    # evidence that the topic was substantively discussed in that meeting.
+    tokens = re.findall(r"[a-zA-Z0-9]+", lowered)
+    if "?" in cleaned or (
+        tokens and tokens[0] in COMPARISON_QUESTION_STARTERS
+    ):
+        return False
+
+    return len(comparison_tokens(cleaned)) >= 3
+
+
 def calculate_text_similarity(first_text: str, second_text: str) -> float:
-    """Return Jaccard similarity for meaningful transcript terms."""
-    first_tokens = tokenize(first_text)
-    second_tokens = tokenize(second_text)
+    """Return Jaccard similarity for substantive transcript excerpts."""
+    if not is_comparison_candidate(first_text):
+        return 0.0
+    if not is_comparison_candidate(second_text):
+        return 0.0
+
+    first_tokens = comparison_tokens(first_text)
+    second_tokens = comparison_tokens(second_text)
 
     if not first_tokens or not second_tokens:
         return 0.0
@@ -411,16 +472,27 @@ def compare_meeting_sources(question: str, meetings, transcript_sources):
     first_meeting = meetings[first_number - 1]
     second_meeting = meetings[second_number - 1]
 
-    first_sources = [
+    first_transcript_sources = [
         item for item in transcript_sources
         if item["meeting_id"] == first_meeting.id
     ]
-    second_sources = [
+    second_transcript_sources = [
         item for item in transcript_sources
         if item["meeting_id"] == second_meeting.id
     ]
 
-    if not first_sources or not second_sources:
+    # Greetings, acknowledgments, closings and standalone questions are not
+    # treated as shared discussion topics or as unique substantive discussion.
+    first_sources = [
+        item for item in first_transcript_sources
+        if is_comparison_candidate(item["evidence_text"])
+    ]
+    second_sources = [
+        item for item in second_transcript_sources
+        if is_comparison_candidate(item["evidence_text"])
+    ]
+
+    if not first_transcript_sources or not second_transcript_sources:
         return {
             "answer": (
                 "Both meetings need transcript content before they can "
@@ -432,7 +504,7 @@ def compare_meeting_sources(question: str, meetings, transcript_sources):
     # An excerpt matches if at least one excerpt in the other meeting
     # has sufficient lexical overlap. This allows one topic to span
     # multiple transcript excerpts without forcing one-to-one pairing.
-    threshold = 0.25
+    threshold = 0.35
     first_matches = {}
     second_matches = {}
 
@@ -512,9 +584,12 @@ def compare_meeting_sources(question: str, meetings, transcript_sources):
             answer_parts.append("- No unmatched excerpts were found.")
 
     answer_parts.append(
-        "\nComparison method: lexical similarity between transcript excerpts. "
-        "Unmatched discussion is not proof that a topic was resolved, "
-        "completed, or abandoned."
+        "\nComparison method: normalized lexical similarity between "
+        "substantive transcript excerpts (minimum similarity: 0.35). "
+        "Greetings, acknowledgments, closing remarks and standalone questions "
+        "are excluded from topic matching. A lexical match indicates wording "
+        "overlap, not proof of identical meaning. Unmatched discussion is not "
+        "proof that a topic was resolved, completed, or abandoned."
     )
 
     unique_sources = []
