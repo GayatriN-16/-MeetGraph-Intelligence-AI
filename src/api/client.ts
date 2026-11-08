@@ -55,6 +55,7 @@ export interface Meeting {
   duration_seconds: number | null;
   meeting_date: string | null;
   status: string;
+  processing_error?: string | null;
   created_at: string;
 }
 
@@ -138,12 +139,36 @@ export interface DeleteMeetingResponse {
   meeting_id: number;
 }
 
+export interface TranscriptSegment {
+  id: number;
+  text: string;
+  start_seconds: number;
+  end_seconds: number;
+  speaker_id?: number | null;
+  speaker_name?: string | null;
+}
+
+export interface MeetingTranscript {
+  meeting_id: number;
+  title: string;
+  status: string;
+  segments: TranscriptSegment[];
+}
+
 export const api = {
   getProjects: () =>
     request<Project[]>('/projects'),
 
   getMeetings: (projectId: number) =>
     request<Meeting[]>(`/meetings?project_id=${projectId}`),
+
+  getMeeting: (meetingId: number) =>
+    request<Meeting>(`/meetings/${meetingId}`),
+
+  getMeetingTranscript: (meetingId: number) =>
+    request<MeetingTranscript>(
+      `/meetings/${meetingId}/transcript`,
+    ),
 
   getIntelligence: (projectId: number) =>
     request<ProjectIntelligence>(
@@ -181,6 +206,23 @@ export const api = {
     formData.append('recording', recording);
 
     return request<Meeting>('/meetings/upload', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  uploadTranscript: (
+    projectId: number,
+    title: string,
+    transcript: File,
+  ) => {
+    const formData = new FormData();
+
+    formData.append('project_id', String(projectId));
+    formData.append('title', title);
+    formData.append('transcript', transcript);
+
+    return request<Meeting>('/meetings/upload-transcript', {
       method: 'POST',
       body: formData,
     });

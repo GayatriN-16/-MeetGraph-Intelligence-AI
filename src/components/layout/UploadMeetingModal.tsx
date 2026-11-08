@@ -7,17 +7,40 @@ import {
   UploadCloud,
   FileAudio,
   FileVideo,
+  FileText,
   LoaderCircle,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
 
 import { api } from '../../api/client';
+import type { Meeting } from '../../api/client';
 
 interface UploadMeetingModalProps {
   projectId: number;
   onClose: () => void;
   onUploaded: () => void;
+}
+
+const POLLING_INTERVAL = 2500;
+const MAX_POLLING_TIME = 10 * 60 * 1000;
+
+function isTranscriptFile(file: File): boolean {
+  return /\.(txt|srt|vtt)$/i.test(file.name);
+}
+
+function isSupportedFile(file: File): boolean {
+  return (
+    file.type.startsWith('audio/') ||
+    file.type.startsWith('video/') ||
+    isTranscriptFile(file)
+  );
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
 }
 
 export default function UploadMeetingModal({
@@ -40,6 +63,71 @@ export default function UploadMeetingModal({
   const [transcriptionComplete, setTranscriptionComplete] =
     useState(false);
 
+  async function waitForTranscription(
+    meetingId: number,
+  ): Promise<Meeting> {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < MAX_POLLING_TIME) {
+      const meeting = await api.getMeeting(meetingId);
+
+      if (meeting.status === 'transcribed') {
+        return meeting;
+      }
+
+      if (meeting.status === 'failed') {
+        throw new Error(
+          meeting.processing_error ||
+          'Transcription failed. Please try again.',
+        );
+      }
+
+      setMessage(
+        meeting.status === 'transcribing'
+          ? 'Transcription is in progress. Please wait...'
+          : 'Waiting for transcription to start...',
+      );
+
+      await wait(POLLING_INTERVAL);
+    }
+
+    throw new Error(
+      'Transcription is taking longer than expected. Your upload is saved. You can retry checking its status.',
+    );
+  }
+
+  async function processRecording(meetingId: number) {
+    let meeting = await api.getMeeting(meetingId);
+
+    if (meeting.status === 'transcribed') {
+      return;
+    }
+
+    if (
+      meeting.status === 'uploaded' ||
+      meeting.status === 'failed'
+    ) {
+      setMessage('Starting transcription...');
+
+      try {
+        await api.transcribeMeeting(meetingId);
+      } catch (err) {
+        // A 409 can mean another transcription request
+        // has already started. Check the actual meeting status.
+        meeting = await api.getMeeting(meetingId);
+
+        if (
+          meeting.status !== 'transcribing' &&
+          meeting.status !== 'transcribed'
+        ) {
+          throw err;
+        }
+      }
+    }
+
+    await waitForTranscription(meetingId);
+  }
+
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -47,7 +135,7 @@ export default function UploadMeetingModal({
     setMessage('');
 
     if (!uploadedMeetingId && !file) {
-      setError('Please select an audio or video recording.');
+      setError('Please select a recording or transcript file.');
       return;
     }
 
@@ -56,39 +144,78 @@ export default function UploadMeetingModal({
       return;
     }
 
+    if (file && !isSupportedFile(file)) {
+      setError(
+        'Unsupported file. Select an audio, video, TXT, SRT or VTT file.',
+      );
+      return;
+    }
+
+    if (file && isTranscriptFile(file) && file.size > 10 * 1024 * 1024) {
+      setError('Transcript files must be smaller than 10 MB.');
+      return;
+    }
+
     try {
       setLoading(true);
 
       let meetingId = uploadedMeetingId;
 
-      // Step 1: Upload the recording only once.
-      if (meetingId === null) {
-        setMessage('Uploading your meeting recording...');
+      // Step 1: Upload the selected file only once.
+      if (meetingId === null && file) {
+        if (isTranscriptFile(file)) {
+          setMessage('Uploading and processing your transcript...');
 
-        const meeting = await api.uploadMeeting(
-          projectId,
-          title.trim(),
-          file!,
-        );
+          const meeting = await api.uploadTranscript(
+            projectId,
+            title.trim(),
+            file,
+          );
 
-        meetingId = meeting.id;
-        setUploadedMeetingId(meeting.id);
+          meetingId = meeting.id;
+          setUploadedMeetingId(meeting.id);
 
-        setMessage('Upload successful. Starting transcription...');
+          // Transcript uploads are already marked transcribed
+          // by the backend. No transcription request is needed.
+          if (meeting.status !== 'transcribed') {
+            throw new Error(
+              'Transcript was uploaded, but processing is not complete.',
+            );
+          }
+        } else {
+          setMessage('Uploading your meeting recording...');
+
+          const meeting = await api.uploadMeeting(
+            projectId,
+            title.trim(),
+            file,
+          );
+
+          meetingId = meeting.id;
+          setUploadedMeetingId(meeting.id);
+        }
       }
 
-      // Step 2: Transcribe the uploaded recording.
-      setMessage('Transcription is in progress. Please wait...');
+      if (meetingId === null) {
+        throw new Error('Unable to identify the uploaded meeting.');
+      }
 
-      await api.transcribeMeeting(meetingId);
+      // Step 2: Recordings require background transcription.
+      if (file && !isTranscriptFile(file)) {
+        await processRecording(meetingId);
+      } else if (!file) {
+        // Retry after a previous recording upload.
+        await processRecording(meetingId);
+      }
 
       setTranscriptionComplete(true);
-      setMessage('Meeting uploaded and transcription completed successfully.');
+      setMessage(
+        'Meeting uploaded and processed successfully.',
+      );
 
       window.setTimeout(() => {
         onUploaded();
       }, 1000);
-
     } catch (err) {
       setError(
         err instanceof Error
@@ -101,6 +228,11 @@ export default function UploadMeetingModal({
   }
 
   const isVideo = file?.type.startsWith('video/') ?? false;
+  const isTranscript = file ? isTranscriptFile(file) : false;
+
+  const fileLabel = isTranscript
+    ? 'Choose a transcript'
+    : 'Choose a recording';
 
   return (
     <div
@@ -124,7 +256,7 @@ export default function UploadMeetingModal({
             </h2>
 
             <p className="mt-1 text-xs text-[#766654]">
-              Add a recording to your project workspace.
+              Add a recording or transcript to your project workspace.
             </p>
           </div>
 
@@ -161,10 +293,10 @@ export default function UploadMeetingModal({
             />
           </div>
 
-          {/* Recording selection */}
+          {/* Recording or transcript selection */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-[#3F3022]">
-              Recording File
+              Recording or Transcript File
             </label>
 
             <label
@@ -176,7 +308,12 @@ export default function UploadMeetingModal({
             >
               {file ? (
                 <>
-                  {isVideo ? (
+                  {isTranscript ? (
+                    <FileText
+                      size={30}
+                      className="text-[#A47A32]"
+                    />
+                  ) : isVideo ? (
                     <FileVideo
                       size={30}
                       className="text-[#A47A32]"
@@ -195,6 +332,14 @@ export default function UploadMeetingModal({
                   <p className="mt-1 text-xs text-[#766654]">
                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
+
+                  <p className="mt-1 text-xs font-medium text-[#A47A32]">
+                    {isTranscript
+                      ? 'Transcript file'
+                      : isVideo
+                        ? 'Video recording'
+                        : 'Audio recording'}
+                  </p>
                 </>
               ) : (
                 <>
@@ -204,11 +349,11 @@ export default function UploadMeetingModal({
                   />
 
                   <p className="mt-3 text-sm font-semibold text-[#3F3022]">
-                    Choose a recording
+                    {fileLabel}
                   </p>
 
                   <p className="mt-1 text-xs text-[#766654]">
-                    Select an audio or video file from your computer.
+                    Select a file from your computer.
                   </p>
                 </>
               )}
@@ -216,18 +361,20 @@ export default function UploadMeetingModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="audio/*,video/*"
+                accept="audio/*,video/*,.txt,.srt,.vtt"
                 className="hidden"
                 disabled={loading || uploadedMeetingId !== null}
                 onChange={(event) => {
                   setFile(event.target.files?.[0] ?? null);
                   setError('');
+                  setMessage('');
                 }}
               />
             </label>
 
             <p className="mt-2 text-xs text-[#93816D]">
-              Supported formats depend on the backend transcription service.
+              Supported formats: audio, video, TXT, SRT and VTT.
+              Transcript files must be under 10 MB.
             </p>
           </div>
 
@@ -295,9 +442,11 @@ export default function UploadMeetingModal({
 
               {loading
                 ? 'Processing...'
-                : uploadedMeetingId
-                  ? 'Retry Transcription'
-                  : 'Upload & Process'}
+                : transcriptionComplete
+                  ? 'Completed'
+                  : uploadedMeetingId
+                    ? 'Retry Processing'
+                    : 'Upload & Process'}
             </button>
           </div>
         </form>
