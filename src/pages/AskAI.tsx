@@ -75,6 +75,33 @@ const suggestions = [
   },
 ];
 
+const comparisonSuggestions = [
+  {
+    title: 'Topics discussed in both',
+    question:
+      'What topics were discussed in both Meeting 1 and Meeting 2?',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Topics only in Meeting 1',
+    question:
+      'What topics were discussed only in Meeting 1 and not in Meeting 2?',
+    icon: FileText,
+  },
+  {
+    title: 'Topics only in Meeting 2',
+    question:
+      'What topics were discussed only in Meeting 2 and not in Meeting 1?',
+    icon: FileText,
+  },
+  {
+    title: 'Compare both meetings',
+    question:
+      'Compare the topics discussed in Meeting 1 and Meeting 2.',
+    icon: CheckCircle2,
+  },
+];
+
 function formatTime(seconds: number | null) {
   if (seconds == null) return null;
 
@@ -847,6 +874,56 @@ export default function AskAI({ projectId }: AskAIProps) {
             <p className="mt-2 text-xs leading-5 text-slate-500">
               Select a question to search your meeting records.
             </p>
+
+            {selectedMeetingId === 'all' && meetings.length >= 2 && (
+              <div className="mt-5 border-t border-[#EAE8F5] pt-4">
+                <div className="mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-violet-700">
+                    Cross-meeting comparison
+                  </h4>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Compare discussion across Meeting 1 and Meeting 2 using
+                    the evidence available in this project.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {comparisonSuggestions.map(
+                    ({ title, question: suggestedQuestion, icon: Icon }) => (
+                      <button
+                        key={title}
+                        type="button"
+                        disabled={loading || loadingMeetings}
+                        onClick={() => {
+                          setQuestion(suggestedQuestion);
+                          void submitQuestion(suggestedQuestion);
+                        }}
+                        className="group flex w-full items-start gap-3 rounded-xl border border-violet-200 bg-[#F5F3FF] p-3 text-left transition hover:border-violet-400 hover:bg-[#F0EDFF] disabled:opacity-50"
+                      >
+                        <div className="rounded-lg bg-white p-2 text-violet-700">
+                          <Icon size={16} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-800">
+                            {title}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500 group-hover:text-violet-700">
+                            {suggestedQuestion}
+                          </p>
+                        </div>
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+
+            {selectedMeetingId !== 'all' && (
+              <p className="mt-4 rounded-xl bg-[#F5F3FF] p-3 text-xs leading-5 text-slate-600">
+                To compare meetings, change Search scope to All project meetings.
+              </p>
+            )}
 
             <div className="mt-4 space-y-2">
               {suggestions.map(
