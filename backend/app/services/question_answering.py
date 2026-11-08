@@ -325,6 +325,256 @@ def select_timeline_sources(sources, limit=12):
         ordered[index]
         for index in sorted(selected_indices)
     ]
+def calculate_text_similarity(first_text: str, second_text: str) -> float:
+    """Return Jaccard similarity for meaningful transcript terms."""
+    first_tokens = tokenize(first_text)
+    second_tokens = tokenize(second_text)
+
+    if not first_tokens or not second_tokens:
+        return 0.0
+
+    intersection = first_tokens.intersection(second_tokens)
+    if len(intersection) < 2:
+        return 0.0
+
+    return len(intersection) / len(first_tokens.union(second_tokens))
+
+
+def extract_comparison_meeting_numbers(question: str) -> list[int]:
+    """Extract explicit ordinal meeting references in question order."""
+    return [
+        int(number)
+        for number in re.findall(
+            r"\bmeeting\s*(\d+)\b",
+            question or "",
+            flags=re.IGNORECASE,
+        )
+    ]
+
+
+def detect_comparison_mode(question: str) -> str:
+    """Determine which side(s) of a two-meeting comparison to return."""
+    text = (question or "").lower()
+
+    if any(term in text for term in (
+        "both meetings", "common topics", "topics in common",
+        "shared topics", "appeared in both", "discussed in both",
+        "overlap between",
+    )):
+        return "shared"
+
+    if re.search(
+        r"\b(?:in\s+)?meeting\s*\d+[\s\S]{0,50}\bbut\s+not\b",
+        text,
+    ):
+        return "first_only"
+
+    if any(term in text for term in (
+        "new topic", "new topics", "introduced",
+        "only appeared", "only discussed",
+        "not discussed in", "not covered in",
+    )):
+        return "second_only"
+
+    return "all"
+
+
+def compare_meeting_sources(question: str, meetings, transcript_sources):
+    """Compare two meetings using lexical transcript similarity."""
+    meeting_numbers = extract_comparison_meeting_numbers(question)
+    if len(meeting_numbers) < 2:
+        return None
+
+    first_number, second_number = meeting_numbers[:2]
+    invalid_number = next(
+        (
+            number for number in (first_number, second_number)
+            if number < 1 or number > len(meetings)
+        ),
+        None,
+    )
+    if invalid_number is not None:
+        return {
+            "answer": (
+                f"Meeting {invalid_number} was not found. "
+                f"This project contains {len(meetings)} meetings."
+            ),
+            "sources": [],
+        }
+
+    if first_number == second_number:
+        return {
+            "answer": "Please select two different meetings to compare.",
+            "sources": [],
+        }
+
+    first_meeting = meetings[first_number - 1]
+    second_meeting = meetings[second_number - 1]
+
+    first_sources = [
+        item for item in transcript_sources
+        if item["meeting_id"] == first_meeting.id
+    ]
+    second_sources = [
+        item for item in transcript_sources
+        if item["meeting_id"] == second_meeting.id
+    ]
+
+    if not first_sources or not second_sources:
+        return {
+            "answer": (
+                "Both meetings need transcript content before they can "
+                "be compared. Please check their transcription status."
+            ),
+            "sources": [],
+        }
+
+    # An excerpt matches if at least one excerpt in the other meeting
+    # has sufficient lexical overlap. This allows one topic to span
+    # multiple transcript excerpts without forcing one-to-one pairing.
+    threshold = 0.25
+    first_matches = {}
+    second_matches = {}
+
+    for first_index, first_source in enumerate(first_sources):
+        for second_index, second_source in enumerate(second_sources):
+            similarity = calculate_text_similarity(
+                first_source["evidence_text"],
+                second_source["evidence_text"],
+            )
+            if similarity >= threshold:
+                first_matches.setdefault(first_index, []).append(
+                    (similarity, second_index)
+                )
+                second_matches.setdefault(second_index, []).append(
+                    (similarity, first_index)
+                )
+
+    first_only = [
+        item for index, item in enumerate(first_sources)
+        if index not in first_matches
+    ]
+    second_only = [
+        item for index, item in enumerate(second_sources)
+        if index not in second_matches
+    ]
+
+    mode = detect_comparison_mode(question)
+    answer_parts = []
+    evidence_sources = []
+
+    if mode in ("shared", "all"):
+        answer_parts.append(
+            f"Discussion found in both {first_meeting.title} "
+            f"and {second_meeting.title}:"
+        )
+        if first_matches:
+            for first_index, matches in first_matches.items():
+                _, second_index = max(matches, key=lambda pair: pair[0])
+                first_source = first_sources[first_index]
+                second_source = second_sources[second_index]
+                answer_parts.append(
+                    f"- {first_source['evidence_text']} "
+                    f"(Evidence: {first_meeting.title})"
+                )
+                answer_parts.append(
+                    f"  Related evidence: {second_source['evidence_text']} "
+                    f"(Evidence: {second_meeting.title})"
+                )
+                evidence_sources.extend((first_source, second_source))
+        else:
+            answer_parts.append(
+                "- No sufficiently similar transcript excerpts were found."
+            )
+
+    if mode in ("first_only", "all"):
+        answer_parts.append(
+            f"\nDiscussion found in {first_meeting.title} without "
+            f"a matching excerpt in {second_meeting.title}:"
+        )
+        if first_only:
+            for item in first_only:
+                answer_parts.append(f"- {item['evidence_text']}")
+                evidence_sources.append(item)
+        else:
+            answer_parts.append("- No unmatched excerpts were found.")
+
+    if mode in ("second_only", "all"):
+        answer_parts.append(
+            f"\nDiscussion found in {second_meeting.title} without "
+            f"a matching excerpt in {first_meeting.title}:"
+        )
+        if second_only:
+            for item in second_only:
+                answer_parts.append(f"- {item['evidence_text']}")
+                evidence_sources.append(item)
+        else:
+            answer_parts.append("- No unmatched excerpts were found.")
+
+    answer_parts.append(
+        "\nComparison method: lexical similarity between transcript excerpts. "
+        "Unmatched discussion is not proof that a topic was resolved, "
+        "completed, or abandoned."
+    )
+
+    unique_sources = []
+    seen_sources = set()
+    for item in evidence_sources:
+        key = (
+            item["meeting_id"],
+            item["start_seconds"],
+            item["end_seconds"],
+            item["evidence_text"],
+        )
+        if key not in seen_sources:
+            seen_sources.add(key)
+            unique_sources.append(item)
+
+    return {
+        "answer": "\n".join(answer_parts),
+        "sources": unique_sources[:20],
+    }
+
+
+def answer_meeting_comparison(db, question: str, meetings):
+    """Load transcript evidence for the two meetings named in a comparison."""
+    meeting_numbers = extract_comparison_meeting_numbers(question)
+    if len(meeting_numbers) < 2:
+        return None
+
+    if any(
+        number < 1 or number > len(meetings)
+        for number in meeting_numbers[:2]
+    ):
+        return compare_meeting_sources(question, meetings, [])
+
+    selected_meetings = [
+        meetings[meeting_numbers[0] - 1],
+        meetings[meeting_numbers[1] - 1],
+    ]
+    transcript_sources = collect_meeting_transcript(db, selected_meetings)
+
+    return compare_meeting_sources(
+        question=question,
+        meetings=meetings,
+        transcript_sources=transcript_sources,
+    )
+
+
+def is_comparison_question(question: str) -> bool:
+    """Intercept only questions that clearly request a two-meeting comparison."""
+    if len(extract_comparison_meeting_numbers(question)) < 2:
+        return False
+
+    text = (question or "").lower()
+    comparison_terms = (
+        "between", "compare", "comparison", "compared",
+        "versus", " vs ", "both meetings", "common topics",
+        "topics in common", "shared topics", "appeared in both",
+        "discussed in both", "but not", "new topic", "new topics",
+        "introduced", "only discussed", "only appeared", "what changed",
+    )
+    return any(term in text for term in comparison_terms)
 
 
 def answer_project_question(
@@ -346,6 +596,16 @@ def answer_project_question(
             "answer": "This project does not contain any meetings yet.",
             "sources": [],
         }
+    # Handle explicit two-meeting comparisons before ordinal meeting lookup.
+    # A selected single-meeting scope follows the existing Q&A path.
+    if meeting_id is None and is_comparison_question(question):
+        comparison_result = answer_meeting_comparison(
+            db=db,
+            question=question,
+            meetings=meetings,
+        )
+        if comparison_result is not None:
+            return comparison_result
 
     selected_meeting = find_meeting(
         question,
