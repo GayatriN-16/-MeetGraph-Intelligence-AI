@@ -1,5 +1,4 @@
-﻿
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 import { api, type Project } from './api/client';
 import type { Page } from './types/index';
@@ -13,19 +12,41 @@ import Meetings from './pages/Meetings';
 import AskAI from './pages/AskAI';
 import TasksAndDecisions from './pages/TasksAndDecisions';
 import KnowledgeGraph from './pages/KnowledgeGraph';
+import LiveMeeting from './pages/LiveMeeting';
 
 import {
   FolderOpen,
   RefreshCw,
   AlertCircle,
+  ChartNoAxesCombined,
+  Settings,
 } from 'lucide-react';
+
+interface ComingSoonProps {
+  title: string;
+  description: string;
+  icon: typeof Settings;
+}
+
+function ComingSoon({ title, description, icon: Icon }: ComingSoonProps) {
+  return (
+    <section className="mx-auto mt-10 max-w-xl rounded-2xl border border-[var(--mg-border)] bg-white p-10 text-center shadow-[var(--mg-shadow-sm)]">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mg-primary-soft)] text-[var(--mg-navy)]">
+        <Icon size={30} strokeWidth={1.7} />
+      </div>
+      <h2 className="mt-5 text-xl font-semibold text-[var(--mg-navy)]">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-[var(--mg-text-secondary)]">{description}</p>
+      <span className="mt-5 inline-flex rounded-full border border-[var(--mg-border)] bg-[var(--mg-surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--mg-navy)]">
+        Coming soon
+      </span>
+    </section>
+  );
+}
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activePage, setActivePage] = useState<Page>('dashboard');
-  const [selectedProjectId, setSelectedProjectId] =
-    useState<number | null>(null);
-
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -35,44 +56,27 @@ export default function App() {
       try {
         setLoading(true);
         setError('');
-
         const data = await api.getProjects();
         setProjects(data);
-
-        if (data.length > 0) {
-          setSelectedProjectId(data[0].id);
-        }
+        if (data.length > 0) setSelectedProjectId(data[0].id);
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Unable to load projects.',
-        );
+        setError(err instanceof Error ? err.message : 'Unable to load projects.');
       } finally {
         setLoading(false);
       }
     }
-
     void loadProjects();
   }, []);
 
-  const selectedProject = projects.find(
-    (project) => project.id === selectedProjectId,
-  );
-
   function renderPage() {
-    if (!selectedProjectId) {
+    if (selectedProjectId === null) {
       return (
-        <section className="mx-auto mt-12 max-w-xl rounded-2xl border border-[#D8D5ED] bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0EDFF] text-violet-700">
-            <FolderOpen size={32} />
+        <section className="mx-auto mt-10 max-w-xl rounded-2xl border border-[var(--mg-border)] bg-white p-10 text-center shadow-[var(--mg-shadow-sm)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mg-primary-soft)] text-[var(--mg-navy)]">
+            <FolderOpen size={30} strokeWidth={1.7} />
           </div>
-
-          <h2 className="mt-5 text-xl font-bold text-slate-900">
-            No project found
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+          <h2 className="mt-5 text-xl font-semibold text-[var(--mg-navy)]">No workspace found</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--mg-text-secondary)]">
             Create a project before uploading and analysing meetings.
           </p>
         </section>
@@ -80,88 +84,77 @@ export default function App() {
     }
 
     switch (activePage) {
-      case 'dashboard':
-        return <Dashboard projectId={selectedProjectId} />;
-
-      case 'meetings':
-        return <Meetings projectId={selectedProjectId} />;
-
-      case 'assistant':
-        return <AskAI projectId={selectedProjectId} />;
-
-      case 'tasks':
-        return <TasksAndDecisions projectId={selectedProjectId} />;
-
-      case 'knowledge':
-        return <KnowledgeGraph projectId={selectedProjectId} />;
-
-      default:
-        return <Dashboard projectId={selectedProjectId} />;
+      case 'dashboard': return <Dashboard projectId={selectedProjectId} />;
+      case 'meetings': return <Meetings projectId={selectedProjectId} />;
+      case 'assistant': return <AskAI projectId={selectedProjectId} />;
+      case 'tasks': return <TasksAndDecisions projectId={selectedProjectId} />;
+      case 'knowledge': return <KnowledgeGraph projectId={selectedProjectId} />;
+      case 'live': return <LiveMeeting projectId={selectedProjectId} />;
+      case 'analytics':
+        return (
+          <ComingSoon
+            title="Project Analytics"
+            description="This section will present meeting trends, task completion, decision statistics and project activity using verified workspace data."
+            icon={ChartNoAxesCombined}
+          />
+        );
+      case 'settings':
+        return (
+          <ComingSoon
+            title="Workspace Settings"
+            description="Workspace preferences, account settings and configuration options will be available here."
+            icon={Settings}
+          />
+        );
+      default: return <Dashboard projectId={selectedProjectId} />;
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-[#E6E6FA] text-slate-900">
-      <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
-      />
-
+    <div className="flex min-h-screen bg-[var(--mg-background)] text-[var(--mg-text)]">
+      <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopHeader
-          projectName={selectedProject?.name ?? 'No project selected'}
+          projects={projects}
+          selectedProjectId={selectedProjectId}
+          onProjectChange={setSelectedProjectId}
+          onNavigate={setActivePage}
           onUploadMeeting={() => setShowUploadModal(true)}
         />
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-[#E6E6FA] p-4 md:p-7">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-[var(--mg-background)] p-4 md:p-7 xl:p-8">
           {loading ? (
             <div className="flex min-h-[60vh] flex-col items-center justify-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0EDFF]">
-                <RefreshCw
-                  size={26}
-                  className="animate-spin text-violet-700"
-                />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--mg-border)] bg-white text-[var(--mg-primary-strong)]">
+                <RefreshCw size={24} className="animate-spin" />
               </div>
-
-              <p className="mt-4 text-sm font-medium text-slate-600">
+              <p className="mt-4 text-sm font-medium text-[var(--mg-text-secondary)]">
                 Loading MeetGraph AI workspace...
               </p>
             </div>
           ) : error ? (
-            <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-red-200 bg-white p-6 shadow-sm">
+            <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-[var(--mg-border)] bg-white p-6 shadow-[var(--mg-shadow-sm)]">
               <div className="flex items-start gap-3">
-                <AlertCircle
-                  size={21}
-                  className="mt-0.5 shrink-0 text-red-600"
-                />
-
+                <AlertCircle size={21} className="mt-0.5 shrink-0 text-[var(--mg-danger)]" />
                 <div>
-                  <h2 className="font-semibold text-red-800">
-                    Unable to load workspace
-                  </h2>
-
-                  <p className="mt-2 text-sm text-red-700">
-                    {error}
-                  </p>
-
+                  <h2 className="font-semibold text-[var(--mg-navy)]">Unable to load workspace</h2>
+                  <p className="mt-2 text-sm text-[var(--mg-text-secondary)]">{error}</p>
                   <button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="mt-4 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+                    className="mt-4 rounded-lg bg-[var(--mg-navy)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#25436F]"
                   >
                     Retry
                   </button>
                 </div>
               </div>
             </div>
-          ) : (
-            renderPage()
-          )}
+          ) : renderPage()}
         </main>
 
-        <footer className="border-t border-[#D8D5ED] bg-white px-6 py-3">
-          <p className="text-xs text-slate-500">
-            MeetGraph AI · Meeting Intelligence Workspace
+        <footer className="border-t border-[var(--mg-border)] bg-white px-6 py-3">
+          <p className="text-xs text-[var(--mg-muted)]">
+            MeetGraph AI <span className="mx-1">·</span> Meeting Intelligence Workspace
           </p>
         </footer>
       </div>

@@ -1,10 +1,12 @@
-
 export type Page =
   | 'dashboard'
   | 'meetings'
+  | 'live'
   | 'assistant'
+  | 'knowledge'
   | 'tasks'
-  | 'knowledge';
+  | 'analytics'
+  | 'settings';
 
 export interface NavigationItem {
   id: Page;

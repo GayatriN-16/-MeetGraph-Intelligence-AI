@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   CalendarDays,
@@ -6,55 +5,54 @@ import {
   ListChecks,
   Network,
   AudioLines,
-  Sparkles,
+  ChartNoAxesCombined,
+  Settings,
+  Radio,
 } from 'lucide-react';
 
-import type { Page } from '../../types/index';
+import type { Page } from '../../types';
 
 interface SidebarProps {
   activePage: Page;
   onNavigate: (page: Page) => void;
 }
 
-const navigation = [
+const navigation: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
   { id: 'meetings', label: 'Meetings', icon: CalendarDays },
-  { id: 'assistant', label: 'Ask MeetGraph AI', icon: BrainCircuit },
-  { id: 'tasks', label: 'Tasks & Decisions', icon: ListChecks },
+  { id: 'live', label: 'Live Meeting', icon: Radio },
+  { id: 'assistant', label: 'AI Assistant', icon: BrainCircuit },
   { id: 'knowledge', label: 'Knowledge Graph', icon: Network },
-] as const;
+  { id: 'tasks', label: 'Tasks & Decisions', icon: ListChecks },
+  { id: 'analytics', label: 'Analytics', icon: ChartNoAxesCombined },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
 
-export default function Sidebar({
-  activePage,
-  onNavigate,
-}: SidebarProps) {
+export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
   return (
-    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-[#D8D5ED] bg-white text-[#172554]">
-
-      {/* Brand */}
-      <div className="flex h-[76px] items-center gap-3 border-b border-[#EAE8F5] px-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-700 to-indigo-600 text-white shadow-md shadow-violet-200">
-          <AudioLines size={21} />
+    <aside className="mg-sidebar sticky top-0 flex h-screen w-[238px] shrink-0 flex-col border-r border-[#EBC3D4] bg-white px-3">
+      <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-[#EBC3D4] px-2">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C65383] text-white shadow-sm">
+          <AudioLines size={21} strokeWidth={2.1} />
         </div>
 
-        <div>
-          <h1 className="text-base font-extrabold tracking-tight text-slate-900">
+        <div className="min-w-0">
+          <h1 className="truncate text-[15px] font-bold tracking-tight text-[#34303A]">
             MeetGraph AI
           </h1>
 
-          <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-violet-700">
-            Meeting Intelligence
+          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#89818B]">
+            Meeting intelligence
           </p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="px-3 pt-7">
-        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+      <div className="px-1 pt-7">
+        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#89818B]">
           Workspace
         </p>
 
-        <nav className="space-y-1.5">
+        <nav aria-label="Main navigation" className="space-y-1">
           {navigation.map(({ id, label, icon: Icon }) => {
             const active = activePage === id;
 
@@ -64,42 +62,50 @@ export default function Sidebar({
                 type="button"
                 onClick={() => onNavigate(id)}
                 aria-current={active ? 'page' : undefined}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-all duration-200 ${
+                className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-[13px] transition-colors duration-150 ${
                   active
-                    ? 'bg-gradient-to-r from-violet-700 to-indigo-600 text-white shadow-md shadow-violet-200'
-                    : 'text-slate-600 hover:bg-[#F0EDFF] hover:text-violet-800'
+                    ? 'border-[#C65383] bg-[#F8E1EB] font-semibold text-[#A83E6D]'
+                    : 'border-transparent font-medium text-[#55505A] hover:border-[#EBC3D4] hover:bg-[#FFF5F8] hover:text-[#A83E6D]'
                 }`}
               >
-                <Icon size={19} strokeWidth={active ? 2.3 : 2} />
+                <Icon
+                  size={18}
+                  strokeWidth={active ? 2.1 : 1.8}
+                  className={active ? 'text-[#A83E6D]' : 'text-[#89818B] group-hover:text-[#A83E6D]'}
+                />
+
                 <span>{label}</span>
+
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#A83E6D]" />
+                )}
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Bottom information */}
-      <div className="mt-auto px-3 pb-3">
-        <div className="rounded-2xl border border-[#DDD6FE] bg-gradient-to-br from-[#F0EDFF] to-[#E6E6FA] p-4">
-          <div className="flex items-center gap-2 text-violet-800">
-            <Sparkles size={16} />
+      <div className="mt-auto px-1 pb-5">
+        <div className="rounded-xl border border-[#EBC3D4] bg-[#F8E1EB] p-3.5">
+          <div className="flex items-center gap-2 text-[#A83E6D]">
+            <AudioLines size={15} className="text-[#A83E6D]" />
 
-            <p className="text-xs font-bold">
-              MeetGraph Intelligence
+            <p className="text-xs font-semibold">
+              Meeting intelligence
             </p>
           </div>
 
-          <p className="mt-2 text-xs leading-5 text-slate-600">
-            Your meetings, tasks and decisions in one intelligent workspace.
+          <p className="mt-2 text-[11px] leading-5 text-[#55505A]">
+            Meetings, tasks and decisions in one connected workspace.
           </p>
         </div>
 
-        <div className="mt-3 border-t border-[#EAE8F5] px-2 pt-3">
-          <p className="text-xs font-semibold text-slate-800">
+        <div className="mt-4 border-t border-[#EBC3D4] px-2 pt-4">
+          <p className="text-xs font-semibold text-[#34303A]">
             MeetGraph AI
           </p>
 
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-[#89818B]">
             Development workspace
           </p>
         </div>

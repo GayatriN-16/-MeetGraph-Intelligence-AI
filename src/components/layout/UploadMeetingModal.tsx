@@ -1,4 +1,3 @@
-
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -236,7 +235,7 @@ export default function UploadMeetingModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#3F3022]/55 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#34303A]/55 p-4 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (
           event.target === event.currentTarget &&
@@ -246,16 +245,16 @@ export default function UploadMeetingModal({
         }
       }}
     >
-      <section className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#DED3C3] bg-[#FFFDF9] shadow-2xl">
+      <section className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#EBC3D4] bg-[#FFFFFF] shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#DED3C3] px-6 py-5">
+        <div className="flex items-center justify-between border-b border-[#EBC3D4] px-6 py-5">
           <div>
-            <h2 className="text-lg font-bold text-[#3F3022]">
+            <h2 className="text-lg font-bold text-[#34303A]">
               Upload Meeting
             </h2>
 
-            <p className="mt-1 text-xs text-[#766654]">
+            <p className="mt-1 text-xs text-[#55505A]">
               Add a recording or transcript to your project workspace.
             </p>
           </div>
@@ -265,7 +264,7 @@ export default function UploadMeetingModal({
             onClick={onClose}
             disabled={loading}
             aria-label="Close upload dialog"
-            className="rounded-lg p-2 text-[#766654] transition hover:bg-[#EFE2C9] disabled:opacity-50"
+            className="rounded-lg p-2 text-[#55505A] transition hover:bg-[#FFF5F8] disabled:opacity-50"
           >
             <X size={19} />
           </button>
@@ -278,7 +277,7 @@ export default function UploadMeetingModal({
 
           {/* Meeting title */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[#3F3022]">
+            <label className="mb-2 block text-sm font-semibold text-[#34303A]">
               Meeting Title
             </label>
 
@@ -289,21 +288,21 @@ export default function UploadMeetingModal({
               placeholder="e.g. Project Progress Meeting"
               required
               disabled={loading || uploadedMeetingId !== null}
-              className="w-full rounded-lg border border-[#DED3C3] bg-white px-4 py-3 text-sm text-[#3F3022] outline-none transition focus:border-[#B58B3F] focus:ring-2 focus:ring-[#EFE2C9] disabled:bg-[#F3EEE5]"
+              className="w-full rounded-lg border border-[#EBC3D4] bg-white px-4 py-3 text-sm text-[#34303A] outline-none transition focus:border-[#C65383] focus:ring-2 focus:ring-[#F8E1EB] disabled:bg-[#FFF5F8]"
             />
           </div>
 
           {/* Recording or transcript selection */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[#3F3022]">
+            <label className="mb-2 block text-sm font-semibold text-[#34303A]">
               Recording or Transcript File
             </label>
 
             <label
-              className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#CBB994] bg-[#F8F5EF] p-7 text-center transition ${
+              className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#C65383] bg-[#FFF5F8] p-7 text-center transition ${
                 loading || uploadedMeetingId !== null
                   ? 'cursor-not-allowed opacity-60'
-                  : 'cursor-pointer hover:border-[#A47A32] hover:bg-[#EFE2C9]/50'
+                  : 'cursor-pointer hover:border-[#A83E6D] hover:bg-[#F8E1EB]'
               }`}
             >
               {file ? (
@@ -311,29 +310,29 @@ export default function UploadMeetingModal({
                   {isTranscript ? (
                     <FileText
                       size={30}
-                      className="text-[#A47A32]"
+                      className="text-[#A83E6D]"
                     />
                   ) : isVideo ? (
                     <FileVideo
                       size={30}
-                      className="text-[#A47A32]"
+                      className="text-[#A83E6D]"
                     />
                   ) : (
                     <FileAudio
                       size={30}
-                      className="text-[#A47A32]"
+                      className="text-[#A83E6D]"
                     />
                   )}
 
-                  <p className="mt-3 max-w-full break-all text-sm font-semibold text-[#3F3022]">
+                  <p className="mt-3 max-w-full break-all text-sm font-semibold text-[#34303A]">
                     {file.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-[#766654]">
+                  <p className="mt-1 text-xs text-[#55505A]">
                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
 
-                  <p className="mt-1 text-xs font-medium text-[#A47A32]">
+                  <p className="mt-1 text-xs font-medium text-[#A83E6D]">
                     {isTranscript
                       ? 'Transcript file'
                       : isVideo
@@ -345,14 +344,14 @@ export default function UploadMeetingModal({
                 <>
                   <UploadCloud
                     size={32}
-                    className="text-[#A47A32]"
+                    className="text-[#A83E6D]"
                   />
 
-                  <p className="mt-3 text-sm font-semibold text-[#3F3022]">
+                  <p className="mt-3 text-sm font-semibold text-[#34303A]">
                     {fileLabel}
                   </p>
 
-                  <p className="mt-1 text-xs text-[#766654]">
+                  <p className="mt-1 text-xs text-[#55505A]">
                     Select a file from your computer.
                   </p>
                 </>
@@ -372,7 +371,7 @@ export default function UploadMeetingModal({
               />
             </label>
 
-            <p className="mt-2 text-xs text-[#93816D]">
+            <p className="mt-2 text-xs text-[#89818B]">
               Supported formats: audio, video, TXT, SRT and VTT.
               Transcript files must be under 10 MB.
             </p>
@@ -392,7 +391,7 @@ export default function UploadMeetingModal({
 
           {/* Success and processing status */}
           {message && (
-            <div className="flex items-start gap-2 rounded-lg border border-[#D9C49D] bg-[#F4EBD9] p-3 text-sm text-[#765522]">
+            <div className="flex items-start gap-2 rounded-lg border border-[#EBC3D4] bg-[#F8E1EB] p-3 text-sm text-[#55505A]">
               {transcriptionComplete ? (
                 <CheckCircle2
                   size={17}
@@ -410,12 +409,12 @@ export default function UploadMeetingModal({
           )}
 
           {/* Footer buttons */}
-          <div className="flex justify-end gap-3 border-t border-[#DED3C3] pt-5">
+          <div className="flex justify-end gap-3 border-t border-[#EBC3D4] pt-5">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-lg border border-[#DED3C3] px-4 py-2.5 text-sm font-semibold text-[#3F3022] transition hover:bg-[#F3EEE5] disabled:opacity-50"
+              className="rounded-lg border border-[#EBC3D4] px-4 py-2.5 text-sm font-semibold text-[#34303A] transition hover:bg-[#FFF5F8] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -427,7 +426,7 @@ export default function UploadMeetingModal({
                 transcriptionComplete ||
                 (!uploadedMeetingId && (!file || !title.trim()))
               }
-              className="flex items-center gap-2 rounded-lg bg-[#A47A32] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#856027] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-[#C65383] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A83E6D] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <LoaderCircle

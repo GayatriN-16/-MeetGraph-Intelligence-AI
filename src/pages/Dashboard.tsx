@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -30,7 +29,6 @@ export default function Dashboard({ projectId }: DashboardProps) {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [intelligence, setIntelligence] =
     useState<ProjectIntelligence | null>(null);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -70,7 +68,6 @@ export default function Dashboard({ projectId }: DashboardProps) {
 
   const pendingTasks = intelligence?.pending_action_items ?? 0;
   const totalTasks = intelligence?.total_action_items ?? 0;
-
   const processedMeetings = intelligence?.processed_meetings ?? 0;
   const totalMeetings = intelligence?.total_meetings ?? meetings.length;
 
@@ -87,8 +84,7 @@ export default function Dashboard({ projectId }: DashboardProps) {
   const upcomingTasks = [...actionItems]
     .filter(
       (item) =>
-        item.status.toLowerCase() !== 'completed' &&
-        item.due_date,
+        item.status.toLowerCase() !== 'completed' && item.due_date,
     )
     .sort(
       (a, b) =>
@@ -101,36 +97,31 @@ export default function Dashboard({ projectId }: DashboardProps) {
     {
       label: 'Total Meetings',
       value: totalMeetings,
-      icon: CalendarDays,
-      color: 'bg-[#F0EDFF] text-violet-700',
       description: 'Recordings in workspace',
+      icon: CalendarDays,
     },
     {
       label: 'Processed Meetings',
       value: processedMeetings,
-      icon: CheckCircle2,
-      color: 'bg-emerald-100 text-emerald-700',
       description: 'Successfully transcribed',
+      icon: CheckCircle2,
     },
     {
       label: 'Pending Tasks',
       value: pendingTasks,
-      icon: Clock3,
-      color: 'bg-amber-100 text-amber-700',
       description: 'Require attention',
+      icon: Clock3,
     },
     {
       label: 'Decisions Recorded',
       value: decisions.length,
-      icon: FileText,
-      color: 'bg-blue-100 text-blue-700',
       description: 'Extracted from meetings',
+      icon: FileText,
     },
   ];
 
   function formatDuration(seconds: number | null) {
     if (seconds == null) return 'Duration unavailable';
-
     if (seconds < 60) return `${Math.round(seconds)} sec`;
 
     const minutes = Math.floor(seconds / 60);
@@ -153,72 +144,67 @@ export default function Dashboard({ projectId }: DashboardProps) {
     });
   }
 
-  function getStatusColor(status: string) {
+  function getStatusStyle(status: string) {
     const value = status.toLowerCase();
 
     if (value.includes('transcrib') || value.includes('process')) {
-      return 'bg-emerald-100 text-emerald-700';
+      return 'border border-emerald-200 bg-emerald-50 text-emerald-700';
     }
 
-    if (value.includes('error') || value.includes('fail')) {
-      return 'bg-red-100 text-red-700';
+    if (
+      value.includes('error') ||
+      value.includes('fail') ||
+      value.includes('interrupt')
+    ) {
+      return 'border border-red-200 bg-red-50 text-red-700';
     }
 
-    return 'bg-amber-100 text-amber-700';
+    if (value.includes('complete')) {
+      return 'border border-emerald-200 bg-emerald-50 text-emerald-700';
+    }
+
+    return 'border border-amber-200 bg-amber-50 text-amber-700';
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-7">
-
-      {/* Welcome banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-800 via-violet-700 to-indigo-700 p-7 text-white shadow-xl shadow-violet-200/70 md:p-9">
-        <div className="absolute -right-12 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-24 right-1/3 h-56 w-56 rounded-full bg-indigo-300/20 blur-3xl" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-violet-100">
-              <Sparkles size={14} />
-              Project intelligence workspace
+    <div className="mx-auto max-w-[1440px] space-y-7">
+      {/* Page introduction */}
+      <section className="flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-[#C6E5E6] bg-white px-6 py-6 shadow-[0_1px_3px_rgba(0,0,0,0.25)] md:px-8">
+        <div className="max-w-2xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-[#F3FAFA] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#187D87]">
+            <Sparkles size={13} />
+            Project workspace
+          </span>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#187D87] md:text-3xl">
+            Meeting overview
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[#55505A]">
+            Track meeting activity, follow action items and review decisions across your workspace.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-2 rounded-lg border border-[#C6E5E6] bg-[#DDF3F3] px-3 py-2 text-xs font-medium text-[#187D87]">
+              <AudioLines size={14} className="text-[#187D87]" />
+              {totalMeetings} project meetings
             </span>
-
-            <h1 className="mt-5 text-3xl font-extrabold tracking-tight md:text-4xl">
-              Meeting Intelligence
-            </h1>
-
-            <p className="mt-3 max-w-xl text-sm leading-6 text-violet-100 md:text-base">
-              Your meetings, responsibilities and decisions,
-              organised in one intelligent workspace.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <span className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-medium">
-                <AudioLines size={15} />
-                {totalMeetings} project meetings
-              </span>
-
-              <span className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-medium">
-                <ListChecks size={15} />
-                {totalTasks} action items
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-2 rounded-lg border border-[#C6E5E6] bg-[#DDF3F3] px-3 py-2 text-xs font-medium text-[#187D87]">
+              <ListChecks size={14} className="text-[#187D87]" />
+              {totalTasks} action items
+            </span>
           </div>
-
-          <div className="hidden h-28 w-28 items-center justify-center rounded-3xl border border-white/20 bg-white/10 md:flex">
-            <TrendingUp size={55} className="text-white" />
-          </div>
+        </div>
+        <div className="hidden h-16 w-16 items-center justify-center rounded-2xl bg-[#187D87] text-white md:flex">
+          <TrendingUp size={29} strokeWidth={1.7} />
         </div>
       </section>
 
       {/* Page heading */}
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-lg font-semibold text-[#187D87]">
             Workspace Overview
           </h2>
-
-          <p className="mt-1 text-sm text-slate-600">
-            Live information retrieved from your project.
+          <p className="mt-1 text-sm text-[#55505A]">
+            Project information retrieved from your workspace.
           </p>
         </div>
 
@@ -226,21 +212,20 @@ export default function Dashboard({ projectId }: DashboardProps) {
           type="button"
           onClick={() => void loadDashboard()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-xl border border-[#D8D5ED] bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-300 hover:bg-[#F5F3FF] hover:text-violet-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-[#C6E5E6] bg-white px-4 py-2.5 text-xs font-semibold text-[#55505A] transition hover:border-[#269BA5] hover:bg-[#DDF3F3] disabled:opacity-50"
         >
           <RefreshCw
-            size={16}
+            size={15}
             className={loading ? 'animate-spin' : ''}
           />
           Refresh
         </button>
       </section>
 
-      {/* Error message */}
+      {/* Error */}
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle size={19} className="mt-0.5 shrink-0" />
-
           <div>
             <p className="font-semibold">Unable to load project data</p>
             <p className="mt-1">{error}</p>
@@ -249,13 +234,12 @@ export default function Dashboard({ projectId }: DashboardProps) {
       )}
 
       {loading ? (
-        <div className="rounded-2xl border border-[#D8D5ED] bg-white p-12 text-center shadow-sm">
+        <div className="rounded-xl border border-[#C6E5E6] bg-white p-12 text-center">
           <RefreshCw
-            size={26}
-            className="mx-auto animate-spin text-violet-600"
+            size={25}
+            className="mx-auto animate-spin text-[#269BA5]"
           />
-
-          <p className="mt-4 text-sm text-slate-600">
+          <p className="mt-4 text-sm text-[#55505A]">
             Loading your meeting intelligence...
           </p>
         </div>
@@ -263,120 +247,107 @@ export default function Dashboard({ projectId }: DashboardProps) {
         <>
           {/* Statistics */}
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {stats.map(({ label, value, icon: Icon, color, description }) => (
+            {stats.map(({ label, value, description, icon: Icon }) => (
               <article
                 key={label}
-                className="rounded-2xl border border-[#D8D5ED] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100"
+                className="rounded-xl border border-[#C6E5E6] bg-white p-5 shadow-[0_1px_3px_rgba(48,50,56,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(48,50,56,0.08)]"
               >
                 <div className="flex items-center justify-between">
-                  <div className={`rounded-xl p-3 ${color}`}>
-                    <Icon size={21} />
+                  <div className="rounded-lg bg-[#DDF3F3] p-3 text-[#187D87]">
+                    <Icon size={20} strokeWidth={1.8} />
                   </div>
-
-                  <ArrowUpRight size={18} className="text-slate-300" />
+                  <ArrowUpRight size={17} className="text-[#89818B]" />
                 </div>
 
-                <p className="mt-5 text-3xl font-extrabold text-slate-900">
+                <p className="mt-5 text-3xl font-semibold tracking-tight text-[#187D87]">
                   {value}
                 </p>
-
-                <p className="mt-1 text-sm font-semibold text-slate-700">
+                <p className="mt-1 text-sm font-semibold text-[#187D87]">
                   {label}
                 </p>
-
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#89818B]">
                   {description}
                 </p>
               </article>
             ))}
           </section>
 
-          {/* Progress panels */}
+          {/* Progress */}
           <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-
-            {/* Meeting processing */}
-            <article className="rounded-2xl border border-[#D8D5ED] bg-white p-6 shadow-sm">
+            <article className="rounded-xl border border-[#C6E5E6] bg-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900">
+                  <h3 className="text-sm font-semibold text-[#187D87]">
                     Meeting Processing
                   </h3>
-
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-[#55505A]">
                     Transcription progress across this project
                   </p>
                 </div>
-
-                <div className="rounded-xl bg-[#F0EDFF] p-3 text-violet-700">
-                  <AudioLines size={21} />
+                <div className="rounded-lg bg-[#DDF3F3] p-3 text-[#187D87]">
+                  <AudioLines size={20} />
                 </div>
               </div>
 
               <div className="mt-7 flex items-end justify-between">
-                <p className="text-3xl font-extrabold text-slate-900">
+                <p className="text-3xl font-semibold text-[#187D87]">
                   {processingRate}%
                 </p>
-
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-[#55505A]">
                   {processedMeetings} of {totalMeetings} processed
                 </p>
               </div>
 
-              <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#F0EDFF]">
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#DDF3F3]">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 transition-all duration-700"
+                  className="h-full rounded-full bg-[#269BA5] transition-all duration-700"
                   style={{ width: `${processingRate}%` }}
                 />
               </div>
 
-              <p className="mt-4 text-xs text-slate-500">
-                Based on the processing status reported by the backend.
+              <p className="mt-4 text-xs text-[#89818B]">
+                Based on processing status reported by the backend.
               </p>
             </article>
 
-            {/* Task completion */}
-            <article className="rounded-2xl border border-[#D8D5ED] bg-white p-6 shadow-sm">
+            <article className="rounded-xl border border-[#C6E5E6] bg-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900">
+                  <h3 className="text-sm font-semibold text-[#187D87]">
                     Task Completion
                   </h3>
-
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-[#55505A]">
                     Current action item status
                   </p>
                 </div>
-
-                <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
-                  <CircleCheck size={21} />
+                <div className="rounded-lg bg-[#DDF3F3] p-3 text-[#187D87]">
+                  <CircleCheck size={20} />
                 </div>
               </div>
 
               <div className="mt-7 flex items-end justify-between">
-                <p className="text-3xl font-extrabold text-slate-900">
+                <p className="text-3xl font-semibold text-[#187D87]">
                   {taskCompletionRate}%
                 </p>
-
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-[#55505A]">
                   {completedTasks} of {totalTasks} completed
                 </p>
               </div>
 
-              <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#DDF3F3]">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700"
+                  className="h-full rounded-full bg-[#269BA5] transition-all duration-700"
                   style={{ width: `${taskCompletionRate}%` }}
                 />
               </div>
 
               <div className="mt-4 flex flex-wrap gap-4 text-xs">
-                <span className="flex items-center gap-1.5 text-amber-600">
-                  <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="flex items-center gap-1.5 text-[#187D87]">
+                  <span className="h-2 w-2 rounded-full bg-[#269BA5]" />
                   {pendingTasks} pending
                 </span>
-
-                <span className="flex items-center gap-1.5 text-emerald-600">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="flex items-center gap-1.5 text-[#187D87]">
+                  <span className="h-2 w-2 rounded-full bg-[#63866B]" />
                   {completedTasks} completed
                 </span>
               </div>
@@ -385,68 +356,59 @@ export default function Dashboard({ projectId }: DashboardProps) {
 
           {/* Recent meetings and deadlines */}
           <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-
-            {/* Recent meetings */}
-            <article className="overflow-hidden rounded-2xl border border-[#D8D5ED] bg-white shadow-sm xl:col-span-2">
-              <div className="flex items-center justify-between border-b border-[#EAE8F5] px-6 py-5">
+            <article className="overflow-hidden rounded-xl border border-[#C6E5E6] bg-white xl:col-span-2">
+              <div className="flex items-center justify-between border-b border-[#C6E5E6] px-6 py-5">
                 <div>
-                  <h3 className="font-bold text-slate-900">
+                  <h3 className="text-sm font-semibold text-[#187D87]">
                     Recent Meetings
                   </h3>
-
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-[#55505A]">
                     Your latest uploaded recordings
                   </p>
                 </div>
-
-                <CalendarDays size={21} className="text-violet-600" />
+                <CalendarDays size={20} className="text-[#187D87]" />
               </div>
 
               {meetings.length === 0 ? (
                 <div className="p-10 text-center">
                   <CalendarDays
-                    size={32}
-                    className="mx-auto text-violet-400"
+                    size={30}
+                    className="mx-auto text-[#187D87]"
                   />
-
-                  <p className="mt-3 font-semibold text-slate-800">
+                  <p className="mt-3 text-sm font-semibold text-[#187D87]">
                     No meetings yet
                   </p>
-
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-xs text-[#89818B]">
                     Upload your first recording to get started.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-[#EAE8F5]">
-                  {meetings.slice(0, 5).map((meeting) => (
+                <div className="divide-y divide-[#C6E5E6]">
+                  {meetings.slice(0, 5).map((meeting: Meeting) => (
                     <div
                       key={meeting.id}
-                      className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 transition hover:bg-[#F5F3FF]"
+                      className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 transition-colors hover:bg-[#F3FAFA]"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="rounded-xl bg-[#F0EDFF] p-3 text-violet-700">
-                          <AudioLines size={19} />
+                        <div className="rounded-lg bg-[#DDF3F3] p-3 text-[#187D87]">
+                          <AudioLines size={18} />
                         </div>
-
                         <div className="min-w-0">
-                          <h4 className="truncate text-sm font-semibold text-slate-800">
+                          <h4 className="truncate text-sm font-semibold text-[#187D87]">
                             {meeting.title}
                           </h4>
-
-                          <p className="mt-1 truncate text-xs text-slate-500">
+                          <p className="mt-1 truncate text-xs text-[#89818B]">
                             {meeting.original_filename}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-[#55505A]">
                           {formatDuration(meeting.duration_seconds)}
                         </span>
-
                         <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-bold capitalize ${getStatusColor(meeting.status)}`}
+                          className={`rounded-full px-3 py-1 text-[10px] font-semibold capitalize ${getStatusStyle(meeting.status)}`}
                         >
                           {meeting.status.replaceAll('_', ' ')}
                         </span>
@@ -457,20 +419,17 @@ export default function Dashboard({ projectId }: DashboardProps) {
               )}
             </article>
 
-            {/* Upcoming tasks */}
-            <article className="overflow-hidden rounded-2xl border border-[#D8D5ED] bg-white shadow-sm">
-              <div className="border-b border-[#EAE8F5] px-5 py-5">
+            <article className="overflow-hidden rounded-xl border border-[#C6E5E6] bg-white">
+              <div className="border-b border-[#C6E5E6] px-5 py-5">
                 <div className="flex items-center gap-2">
-                  <div className="rounded-lg bg-amber-100 p-2 text-amber-700">
-                    <Clock3 size={18} />
+                  <div className="rounded-lg bg-[#187D87] p-2 text-white">
+                    <Clock3 size={17} />
                   </div>
-
-                  <h3 className="font-bold text-slate-900">
+                  <h3 className="text-sm font-semibold text-[#187D87]">
                     Upcoming Deadlines
                   </h3>
                 </div>
-
-                <p className="mt-2 text-xs text-slate-600">
+                <p className="mt-2 text-xs text-[#55505A]">
                   Pending tasks with recorded due dates
                 </p>
               </div>
@@ -478,32 +437,28 @@ export default function Dashboard({ projectId }: DashboardProps) {
               {upcomingTasks.length === 0 ? (
                 <div className="p-7 text-center">
                   <CheckCircle2
-                    size={28}
-                    className="mx-auto text-emerald-500"
+                    size={27}
+                    className="mx-auto text-[#63866B]"
                   />
-
-                  <p className="mt-3 text-sm font-semibold text-slate-700">
+                  <p className="mt-3 text-sm font-semibold text-[#187D87]">
                     No upcoming deadlines
                   </p>
-
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#89818B]">
                     No pending tasks with due dates were found.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-[#EAE8F5]">
+                <div className="divide-y divide-[#C6E5E6]">
                   {upcomingTasks.map((task) => (
                     <div key={task.id} className="px-5 py-4">
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-sm font-semibold text-[#187D87]">
                         {task.task_description}
                       </p>
-
                       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs text-violet-700">
+                        <span className="text-xs text-[#187D87]">
                           {task.assignee_name || 'Unassigned'}
                         </span>
-
-                        <span className="rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                        <span className="rounded-md bg-[#DDF3F3] px-2 py-1 text-[10px] font-semibold text-[#187D87]">
                           {formatDate(task.due_date)}
                         </span>
                       </div>

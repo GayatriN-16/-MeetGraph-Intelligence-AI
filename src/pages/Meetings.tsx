@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -107,7 +106,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
       return 'bg-red-50 text-red-700 ring-red-200';
     }
 
-    return 'bg-[#F0EDFF] text-violet-700 ring-[#DDD6FE]';
+    return 'border border-[#C6E5E6] bg-[#F3FAFA] text-[#55505A] ring-[#C6E5E6]';
   }
 
   return (
@@ -116,16 +115,16 @@ export default function Meetings({ projectId }: MeetingsProps) {
       {/* Page heading */}
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-700">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#269BA5]">
             <Sparkles size={16} />
             Project Workspace
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-[#187D87]">
             Meetings
           </h1>
 
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-[#89818B]">
             Manage recordings, explore meeting history and monitor processing.
           </p>
         </div>
@@ -134,7 +133,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
           type="button"
           onClick={() => void loadMeetings()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-xl border border-[#D8D5ED] bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-300 hover:bg-[#F5F3FF] hover:text-violet-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-4 py-2.5 text-sm font-semibold text-[#187D87] shadow-sm transition hover:border-[#269BA5] hover:bg-[#F3FAFA] hover:text-[#269BA5] disabled:opacity-50"
         >
           <RefreshCw
             size={16}
@@ -145,41 +144,41 @@ export default function Meetings({ projectId }: MeetingsProps) {
       </section>
 
       {/* Hero banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-800 via-violet-700 to-indigo-700 p-7 text-white shadow-lg shadow-violet-200/70 md:p-9">
+      <section className="relative overflow-hidden rounded-3xl border border-[#C6E5E6] bg-[#DDF3F3] p-7 text-[#187D87] shadow-sm md:p-9">
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
           <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium">
-              <AudioLines size={14} />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-white px-3 py-1.5 text-xs font-medium text-[#55505A]">
+              <AudioLines size={14} className="text-[#269BA5]" />
               Meeting library
             </span>
 
-            <h2 className="mt-5 text-2xl font-bold md:text-3xl">
+            <h2 className="mt-5 text-2xl font-bold text-[#187D87] md:text-3xl">
               Every conversation, organised.
             </h2>
 
-            <p className="mt-3 text-sm leading-6 text-violet-100">
+            <p className="mt-3 text-sm leading-6 text-[#55505A]">
               Your project recordings are stored in one place, ready for
               transcription and meeting intelligence.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+              <span className="rounded-full border border-[#C6E5E6] bg-white px-3 py-2 text-xs text-[#187D87]">
                 {meetings.length} project recordings
               </span>
 
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs">
+              <span className="rounded-full border border-[#C6E5E6] bg-white px-3 py-2 text-xs text-[#187D87]">
                 Searchable meeting history
               </span>
             </div>
           </div>
 
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10">
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-[#C6E5E6] bg-white text-[#269BA5] shadow-sm">
             <CalendarDays size={46} strokeWidth={1.5} />
           </div>
         </div>
 
-        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-indigo-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[#269BA5]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-white/60 blur-3xl" />
       </section>
 
       {/* Error message */}
@@ -192,38 +191,38 @@ export default function Meetings({ projectId }: MeetingsProps) {
 
       {/* Recording summary and search */}
       <section className="grid gap-4 md:grid-cols-[1fr_1.5fr]">
-        <div className="flex items-center gap-4 rounded-2xl border border-[#D8D5ED] bg-white p-5 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0EDFF] text-violet-700">
+        <div className="flex items-center gap-4 rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#C6E5E6] bg-[#DDF3F3] text-[#269BA5]">
             <FileAudio size={23} />
           </div>
 
           <div>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[#89818B]">
               Total recordings
             </p>
 
-            <p className="mt-1 text-2xl font-bold text-slate-900">
+            <p className="mt-1 text-2xl font-bold text-[#187D87]">
               {meetings.length}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-[#D8D5ED] bg-white p-4 shadow-sm focus-within:border-violet-400">
-          <Search size={19} className="shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 rounded-2xl border border-[#C6E5E6] bg-white p-4 shadow-sm focus-within:border-[#269BA5]">
+          <Search size={19} className="shrink-0 text-[#89818B]" />
 
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by meeting title or filename..."
             aria-label="Search meetings"
-            className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-sm text-[#187D87] outline-none placeholder:text-[#89818B]"
           />
 
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="rounded-lg p-1 text-slate-400 transition hover:bg-[#F0EDFF] hover:text-violet-700"
+              className="rounded-lg p-1 text-[#89818B] transition hover:bg-[#DDF3F3] hover:text-[#269BA5]"
               aria-label="Clear search"
             >
               <X size={16} />
@@ -233,19 +232,19 @@ export default function Meetings({ projectId }: MeetingsProps) {
       </section>
 
       {/* Meeting library */}
-      <section className="overflow-hidden rounded-2xl border border-[#D8D5ED] bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE8F5] px-6 py-5">
+      <section className="overflow-hidden rounded-2xl border border-[#C6E5E6] bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#C6E5E6] px-6 py-5">
           <div>
-            <h2 className="font-bold text-slate-900">
+            <h2 className="font-bold text-[#187D87]">
               Meeting Library
             </h2>
 
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-[#89818B]">
               Recordings stored in this project
             </p>
           </div>
 
-          <span className="rounded-full border border-[#DDD6FE] bg-[#F0EDFF] px-3 py-1.5 text-xs font-semibold text-violet-800">
+          <span className="rounded-full border border-[#C6E5E6] bg-[#DDF3F3] px-3 py-1.5 text-xs font-semibold text-[#187D87]">
             {filteredMeetings.length} shown
           </span>
         </div>
@@ -254,38 +253,38 @@ export default function Meetings({ projectId }: MeetingsProps) {
           <div className="p-14 text-center">
             <RefreshCw
               size={27}
-              className="mx-auto animate-spin text-violet-600"
+              className="mx-auto animate-spin text-[#269BA5]"
             />
 
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-[#89818B]">
               Loading your meeting recordings...
             </p>
           </div>
         ) : filteredMeetings.length === 0 ? (
           <div className="p-14 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0EDFF] text-violet-600">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#C6E5E6] bg-[#DDF3F3] text-[#269BA5]">
               <CalendarDays size={30} />
             </div>
 
-            <h3 className="mt-4 font-semibold text-slate-900">
+            <h3 className="mt-4 font-semibold text-[#187D87]">
               {search ? 'No matching meetings' : 'No recordings yet'}
             </h3>
 
-            <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+            <p className="mx-auto mt-2 max-w-sm text-sm text-[#89818B]">
               {search
                 ? 'Try another search term.'
                 : 'Upload a meeting recording to start building your project intelligence.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#EAE8F5]">
+          <div className="divide-y divide-[#C6E5E6]">
             {filteredMeetings.map((meeting) => (
               <article
                 key={meeting.id}
-                className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:bg-[#F5F3FF]"
+                className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:bg-[#F3FAFA]"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0EDFF] text-violet-700">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#C6E5E6] bg-[#DDF3F3] text-[#269BA5]">
                     {isVideo(meeting) ? (
                       <FileVideo size={23} />
                     ) : (
@@ -294,22 +293,22 @@ export default function Meetings({ projectId }: MeetingsProps) {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-bold text-slate-900">
+                    <h3 className="truncate text-sm font-bold text-[#187D87]">
                       {meeting.title}
                     </h3>
 
-                    <p className="mt-1 truncate text-xs text-slate-600">
+                    <p className="mt-1 truncate text-xs text-[#55505A]">
                       {meeting.original_filename}
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[#89818B]">
                       Meeting ID: {meeting.id}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5 text-xs text-[#89818B]">
                     <Clock3 size={14} />
                     {formatDuration(meeting.duration_seconds)}
                   </span>
@@ -338,12 +337,12 @@ export default function Meetings({ projectId }: MeetingsProps) {
 
       {/* Delete confirmation */}
       {meetingToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#187D87]/50 p-4 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-meeting-title"
-            className="w-full max-w-md rounded-2xl border border-[#D8D5ED] bg-white p-6 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-[#C6E5E6] bg-white p-6 shadow-2xl"
           >
             <div className="flex items-start justify-between">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
@@ -355,7 +354,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
                 onClick={() => setMeetingToDelete(null)}
                 disabled={deleting}
                 aria-label="Close confirmation"
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-[#F0EDFF] hover:text-violet-700 disabled:opacity-50"
+                className="rounded-lg p-2 text-[#89818B] transition hover:bg-[#DDF3F3] hover:text-[#269BA5] disabled:opacity-50"
               >
                 <X size={19} />
               </button>
@@ -363,14 +362,14 @@ export default function Meetings({ projectId }: MeetingsProps) {
 
             <h2
               id="delete-meeting-title"
-              className="mt-5 text-lg font-bold text-slate-900"
+              className="mt-5 text-lg font-bold text-[#187D87]"
             >
               Delete this meeting?
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-[#55505A]">
               You are about to delete{' '}
-              <strong className="text-slate-800">
+              <strong className="text-[#187D87]">
                 {meetingToDelete.title}
               </strong>.
               Its associated meeting data will also be affected. This action
@@ -382,7 +381,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
                 type="button"
                 onClick={() => setMeetingToDelete(null)}
                 disabled={deleting}
-                className="rounded-xl border border-[#D8D5ED] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-[#F5F3FF] disabled:opacity-50"
+                className="rounded-xl border border-[#C6E5E6] px-4 py-2.5 text-sm font-semibold text-[#187D87] transition hover:bg-[#F3FAFA] disabled:opacity-50"
               >
                 Cancel
               </button>
