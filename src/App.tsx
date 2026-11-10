@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from 'react';
+﻿
+import { useEffect, useState } from 'react';
 
 import { api, type Project } from './api/client';
 import type { Page } from './types/index';
@@ -13,35 +14,14 @@ import AskAI from './pages/AskAI';
 import TasksAndDecisions from './pages/TasksAndDecisions';
 import KnowledgeGraph from './pages/KnowledgeGraph';
 import LiveMeeting from './pages/LiveMeeting';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
 import {
   FolderOpen,
   RefreshCw,
   AlertCircle,
-  ChartNoAxesCombined,
-  Settings,
 } from 'lucide-react';
-
-interface ComingSoonProps {
-  title: string;
-  description: string;
-  icon: typeof Settings;
-}
-
-function ComingSoon({ title, description, icon: Icon }: ComingSoonProps) {
-  return (
-    <section className="mx-auto mt-10 max-w-xl rounded-2xl border border-[var(--mg-border)] bg-white p-10 text-center shadow-[var(--mg-shadow-sm)]">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mg-primary-soft)] text-[var(--mg-navy)]">
-        <Icon size={30} strokeWidth={1.7} />
-      </div>
-      <h2 className="mt-5 text-xl font-semibold text-[var(--mg-navy)]">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--mg-text-secondary)]">{description}</p>
-      <span className="mt-5 inline-flex rounded-full border border-[var(--mg-border)] bg-[var(--mg-surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--mg-navy)]">
-        Coming soon
-      </span>
-    </section>
-  );
-}
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -56,15 +36,25 @@ export default function App() {
       try {
         setLoading(true);
         setError('');
+
         const data = await api.getProjects();
+
         setProjects(data);
-        if (data.length > 0) setSelectedProjectId(data[0].id);
+
+        if (data.length > 0) {
+          setSelectedProjectId(data[0].id);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unable to load projects.');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Unable to load projects.',
+        );
       } finally {
         setLoading(false);
       }
     }
+
     void loadProjects();
   }, []);
 
@@ -75,7 +65,11 @@ export default function App() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mg-primary-soft)] text-[var(--mg-navy)]">
             <FolderOpen size={30} strokeWidth={1.7} />
           </div>
-          <h2 className="mt-5 text-xl font-semibold text-[var(--mg-navy)]">No workspace found</h2>
+
+          <h2 className="mt-5 text-xl font-semibold text-[var(--mg-navy)]">
+            No workspace found
+          </h2>
+
           <p className="mt-2 text-sm leading-6 text-[var(--mg-text-secondary)]">
             Create a project before uploading and analysing meetings.
           </p>
@@ -84,35 +78,42 @@ export default function App() {
     }
 
     switch (activePage) {
-      case 'dashboard': return <Dashboard projectId={selectedProjectId} />;
-      case 'meetings': return <Meetings projectId={selectedProjectId} />;
-      case 'assistant': return <AskAI projectId={selectedProjectId} />;
-      case 'tasks': return <TasksAndDecisions projectId={selectedProjectId} />;
-      case 'knowledge': return <KnowledgeGraph projectId={selectedProjectId} />;
-      case 'live': return <LiveMeeting projectId={selectedProjectId} />;
+      case 'dashboard':
+        return <Dashboard projectId={selectedProjectId} />;
+
+      case 'meetings':
+        return <Meetings projectId={selectedProjectId} />;
+
+      case 'assistant':
+        return <AskAI projectId={selectedProjectId} />;
+
+      case 'tasks':
+        return <TasksAndDecisions projectId={selectedProjectId} />;
+
+      case 'knowledge':
+        return <KnowledgeGraph projectId={selectedProjectId} />;
+
+      case 'live':
+        return <LiveMeeting projectId={selectedProjectId} />;
+
       case 'analytics':
-        return (
-          <ComingSoon
-            title="Project Analytics"
-            description="This section will present meeting trends, task completion, decision statistics and project activity using verified workspace data."
-            icon={ChartNoAxesCombined}
-          />
-        );
+        return <Analytics projectId={selectedProjectId} />;
+
       case 'settings':
-        return (
-          <ComingSoon
-            title="Workspace Settings"
-            description="Workspace preferences, account settings and configuration options will be available here."
-            icon={Settings}
-          />
-        );
-      default: return <Dashboard projectId={selectedProjectId} />;
+        return <Settings projectId={selectedProjectId} />;
+
+      default:
+        return <Dashboard projectId={selectedProjectId} />;
     }
   }
 
   return (
     <div className="flex min-h-screen bg-[var(--mg-background)] text-[var(--mg-text)]">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        onNavigate={setActivePage}
+      />
+
       <div className="flex min-w-0 flex-1 flex-col">
         <TopHeader
           projects={projects}
@@ -128,6 +129,7 @@ export default function App() {
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--mg-border)] bg-white text-[var(--mg-primary-strong)]">
                 <RefreshCw size={24} className="animate-spin" />
               </div>
+
               <p className="mt-4 text-sm font-medium text-[var(--mg-text-secondary)]">
                 Loading MeetGraph AI workspace...
               </p>
@@ -135,10 +137,20 @@ export default function App() {
           ) : error ? (
             <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-[var(--mg-border)] bg-white p-6 shadow-[var(--mg-shadow-sm)]">
               <div className="flex items-start gap-3">
-                <AlertCircle size={21} className="mt-0.5 shrink-0 text-[var(--mg-danger)]" />
+                <AlertCircle
+                  size={21}
+                  className="mt-0.5 shrink-0 text-[var(--mg-danger)]"
+                />
+
                 <div>
-                  <h2 className="font-semibold text-[var(--mg-navy)]">Unable to load workspace</h2>
-                  <p className="mt-2 text-sm text-[var(--mg-text-secondary)]">{error}</p>
+                  <h2 className="font-semibold text-[var(--mg-navy)]">
+                    Unable to load workspace
+                  </h2>
+
+                  <p className="mt-2 text-sm text-[var(--mg-text-secondary)]">
+                    {error}
+                  </p>
+
                   <button
                     type="button"
                     onClick={() => window.location.reload()}
@@ -149,7 +161,9 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ) : renderPage()}
+          ) : (
+            renderPage()
+          )}
         </main>
 
         <footer className="border-t border-[var(--mg-border)] bg-white px-6 py-3">
