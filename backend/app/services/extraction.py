@@ -41,7 +41,9 @@ FIRST_PERSON_COMMITMENT_PATTERN = re.compile(
 # Collective commitments create an action item without assigning it to
 # the speaker or to any named participant.
 COLLECTIVE_COMMITMENT_PATTERN = re.compile(
-    r"\b(?:we|the\s+team)\s+(?:need\s+to|must|should|have\s+to|ought\s+to)\s+(.+?)(?:[.!?]|$)",
+    r"\b(?:we|the\s+team|the\s+development\s+team)\s+"
+    r"(?:will|need\s+to|must|should|have\s+to|ought\s+to)\s+"
+    r"(.+?)(?:[.!?]|$)",
     re.IGNORECASE,
 )
 
@@ -74,6 +76,10 @@ DECISION_PATTERNS = [
     ),
     re.compile(
         r"\bwe have decided to\s+(.+?)(?:[.!?]|$)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bthe\s+team\s+agreed\s+to\s+(.+?)(?:[.!?]|$)",
         re.IGNORECASE,
     ),
 ]
@@ -117,7 +123,7 @@ AGENDA_PATTERNS = [
 
 
 DEADLINE_PATTERN = re.compile(
-    r"\bby\s+(January|February|March|April|May|June|"
+    r"\b(?:by|before|on)\s+(January|February|March|April|May|June|"
     r"July|August|September|October|November|December)"
     r"\s+(\d{1,2})(?:st|nd|rd|th)?"
     r"(?:,?\s+(\d{4}))?\b",
@@ -327,18 +333,8 @@ def extract_action(
             assignee_name = match.group(1).strip()
             description = match.group(2).strip()
 
-    # 3. Named third-person commitment:
-    # Rahul will complete the testing.
-    if not description:
-        match = NAMED_COMMITMENT_PATTERN.search(text)
-
-        if match:
-            assignee_name = match.group(1).strip()
-            description = match.group(2).strip()
-
-    # 4. Collective commitment:
-    # Vaibhav: We need to complete the dashboard frontend by November 15.
-    # This is a team-level task, so do not infer an individual assignee.
+    # 3. Collective commitment. Check this before the broad named pattern,
+    # otherwise "The development team will ..." can look like a person's name.
     collective_commitment = False
 
     if not description:
@@ -347,6 +343,15 @@ def extract_action(
         if match:
             description = match.group(1).strip()
             collective_commitment = True
+
+    # 4. Named third-person commitment:
+    # Rahul will complete the testing.
+    if not description:
+        match = NAMED_COMMITMENT_PATTERN.search(text)
+
+        if match:
+            assignee_name = match.group(1).strip()
+            description = match.group(2).strip()
 
     # 5. Generic first-person commitment:
     # I will prepare the project report.

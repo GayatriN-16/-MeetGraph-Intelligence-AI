@@ -21,10 +21,13 @@ from app.models import (
     Project,
     Speaker,
     TranscriptSegment,
+    ActionItem,
+    Decision,
 )
 from app.schemas.meeting import MeetingResponse
 from app.services.storage import save_recording, delete_recording
 from app.services.transcription import transcribe_recording
+from app.services.extraction import extract_meeting_intelligence
 from app.services.diarization import (
     diarize_recording,
     match_segments_to_speakers,
@@ -38,11 +41,9 @@ def process_transcription_background(
     storage_path: str,
     language: str | None = None,
 ):
-    """
-    Process transcription outside the upload/request lifecycle.
-    A separate database session is used by the background task.
-    """
+    """Transcribe a meeting and persist its extracted intelligence."""
 
+    # Phase 1: transcribe and persist the transcript.
     with SessionLocal() as db:
         try:
             meeting = db.get(Meeting, meeting_id)
@@ -50,21 +51,23 @@ def process_transcription_background(
             if not meeting:
                 return
 
-            result = transcribe_recording(
-                storage_path,
-                language,
-            )
+            result = transcribe_recording(storage_path, language)
 
+            # Remove intelligence records before deleting old speakers,
+            # because action items and decisions may reference speaker IDs.
+            db.execute(
+                delete(ActionItem).where(ActionItem.meeting_id == meeting_id)
+            )
+            db.execute(
+                delete(Decision).where(Decision.meeting_id == meeting_id)
+            )
             db.execute(
                 delete(TranscriptSegment).where(
                     TranscriptSegment.meeting_id == meeting_id
                 )
             )
-
             db.execute(
-                delete(Speaker).where(
-                    Speaker.meeting_id == meeting_id
-                )
+                delete(Speaker).where(Speaker.meeting_id == meeting_id)
             )
 
             for item in result["segments"]:
@@ -74,24 +77,88 @@ def process_transcription_background(
                         start_seconds=item["start_seconds"],
                         end_seconds=item["end_seconds"],
                         text=item["text"],
-                        confidence=item["confidence"],
+                        confidence=item.get("confidence"),
                     )
                 )
 
             meeting.duration_seconds = result["duration_seconds"]
             meeting.status = "transcribed"
             meeting.processing_error = None
-
             db.commit()
 
         except Exception as exc:
             db.rollback()
-
             failed_meeting = db.get(Meeting, meeting_id)
-
             if failed_meeting:
                 failed_meeting.status = "failed"
                 failed_meeting.processing_error = str(exc)[:2000]
+                db.commit()
+            return
+
+    # Phase 2: extract and persist action items and decisions.
+    try:
+        with SessionLocal() as db:
+            meeting = db.get(Meeting, meeting_id)
+            if not meeting:
+                raise RuntimeError("Meeting not found during intelligence extraction.")
+
+            segments = db.scalars(
+                select(TranscriptSegment)
+                .where(TranscriptSegment.meeting_id == meeting_id)
+                .order_by(TranscriptSegment.start_seconds)
+            ).all()
+
+            if not segments:
+                raise RuntimeError("No transcript segments were saved for this meeting.")
+
+            year = meeting.created_at.year if meeting.created_at else 2026
+            intelligence = extract_meeting_intelligence(segments, year)
+
+            # The old records were cleared before transcript replacement.
+            # Persist only records returned by the canonical extractor.
+            for item in intelligence.get("action_items", []):
+                db.add(
+                    ActionItem(
+                        meeting_id=meeting_id,
+                        task_description=item["task_description"],
+                        assignee_name=item.get("assignee_name"),
+                        assignee_speaker_id=item.get("assignee_speaker_id"),
+                        due_date=item.get("due_date"),
+                        estimated_duration_minutes=item.get(
+                            "estimated_duration_minutes"
+                        ),
+                        evidence_text=item.get("evidence_text"),
+                        start_seconds=item.get("start_seconds"),
+                        end_seconds=item.get("end_seconds"),
+                    )
+                )
+
+            for item in intelligence.get("decisions", []):
+                db.add(
+                    Decision(
+                        meeting_id=meeting_id,
+                        title=item["title"],
+                        description=item.get("description"),
+                        speaker_id=item.get("speaker_id"),
+                        evidence_text=item.get("evidence_text"),
+                        start_seconds=item.get("start_seconds"),
+                        end_seconds=item.get("end_seconds"),
+                        confidence=item.get("confidence"),
+                    )
+                )
+
+            db.commit()
+
+    except Exception as exc:
+        # Preserve the successfully saved transcript and expose the failure.
+        with SessionLocal() as db:
+            failed_meeting = db.get(Meeting, meeting_id)
+            if failed_meeting:
+                failed_meeting.status = "transcribed"
+                failed_meeting.processing_error = (
+                    "Transcript saved, but intelligence extraction failed: "
+                    + str(exc)[:1800]
+                )
                 db.commit()
 
 
