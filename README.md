@@ -1,3 +1,4 @@
+
 # MeetGraph AI – Enterprise Meeting Intelligence Platform
 
 **Final Year BE Computer Engineering Project**
@@ -8,7 +9,7 @@
 - Rutuja Jadhav
 - Yash Kumbhar
 
-**GitHub Repository:** [MeetGraph AI](https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git)
+**GitHub Repository:** [MeetGraph AI](https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview)
 
 **Live Application:** [MeetGraph AI](https://meet-graph-ai-preview.vercel.app/)
 
@@ -16,30 +17,32 @@
 
 ## 1. Project Overview
 
-MeetGraph AI is an AI-powered meeting intelligence platform designed to reduce the effort required to review and manage meeting discussions.
+MeetGraph AI is an AI-powered meeting intelligence platform designed to simplify the process of reviewing, understanding, and managing meeting discussions.
 
-Users can upload meeting recordings, process audio into timestamped transcripts, identify speakers, generate AI-powered meeting summaries, extract action items and decisions, and ask questions about individual meetings or an entire project.
+Users can upload meeting recordings, generate timestamped transcripts, identify speakers, create AI-powered meeting summaries, extract action items and decisions, and ask questions about individual meetings or an entire project.
 
-The platform aims to create a connected knowledge base from multiple meetings, helping users retrieve important information without manually reviewing complete recordings.
+The platform transforms meeting conversations into structured and searchable information, helping users retrieve important details without manually reviewing complete recordings.
 
 ### Problem Statement
 
-Organizations conduct multiple meetings to discuss projects, assign responsibilities, make decisions and track progress. However, important information is often distributed across recordings, notes and conversations.
+Organizations conduct multiple meetings to discuss projects, assign responsibilities, make decisions, and track progress. However, important information is often distributed across recordings, notes, and conversations.
 
-MeetGraph AI addresses this problem by providing a centralized platform for meeting transcription, information extraction, summaries and evidence-based question answering.
+Manually reviewing these recordings is time-consuming and makes it difficult to retrieve specific decisions, assigned tasks, and discussion details.
+
+MeetGraph AI addresses this problem through centralized meeting transcription, information extraction, summarization, and evidence-based question answering.
 
 ## 2. Key Features
 
 - **Meeting Management:** Upload and manage multiple meeting recordings under a project.
 - **Audio Transcription:** Convert supported audio and video recordings into text using Faster-Whisper.
 - **Speaker Diarization:** Identify different speakers and associate transcript segments with speaker information using pyannote.audio.
-- **AI Meeting Summaries:** Generate structured meeting summaries, discussion topics and key points using Google Gemini.
-- **Action Item Extraction:** Identify tasks, assigned people and explicitly mentioned deadlines.
+- **AI Meeting Summaries:** Generate structured meeting summaries, discussion topics, and key points using Google Gemini.
+- **Action Item Extraction:** Identify tasks, assigned people, and explicitly mentioned deadlines.
 - **Decision Extraction:** Extract meeting decisions from available transcript evidence.
-- **Project Intelligence Dashboard:** View meeting statistics, processing status, action items and decisions.
-- **Ask AI:** Ask questions about a selected meeting or multiple meetings within a project.
-- **Evidence-Based Responses:** Retrieve supporting transcript excerpts with meeting references, speaker information and timestamps.
-- **Meeting-Specific Intelligence:** Review the discussion, topics and extracted information from individual meetings.
+- **Project Intelligence Dashboard:** View meeting statistics, processing information, action items, and decisions.
+- **Ask AI:** Ask natural-language questions about a selected meeting or multiple meetings within a project.
+- **Evidence-Based Responses:** Retrieve supporting transcript excerpts with meeting references, speaker information, and timestamps.
+- **Meeting-Specific Intelligence:** Review discussions, topics, summaries, and extracted information from individual meetings.
 
 ## 3. Technology Stack
 
@@ -61,70 +64,77 @@ MeetGraph AI addresses this problem by providing a centralized platform for meet
 ## 4. System Architecture
 
 ```text
-                 USER
-                   |
-                   v
-       REACT + TYPESCRIPT FRONTEND
-                   |
-             REST API Requests
-                   |
-                   v
-             FASTAPI BACKEND
-                   |
-          +--------+---------+
-          |                  |
-          v                  v
-     POSTGRESQL          AUDIO STORAGE
-          |                  |
-          |                  v
-          |          AUDIO PREPROCESSING
-          |                  |
-          |                  v
-          |          FASTER-WHISPER
-          |                  |
-          |                  v
-          |          SPEAKER DIARIZATION
-          |             (pyannote)
-          |                  |
-          |                  v
-          |        TIMESTAMPED TRANSCRIPT
-          |                  |
-          |                  v
-          |          GEMINI AI ANALYSIS
-          |                  |
-          |          +-------+-------+
-          |          |       |       |
-          |          v       v       v
-          |        SUMMARY  TOPICS  INSIGHTS
-          |          |       |       |
-          |          +-------+-------+
-          |                  |
-          v                  v
-       PROJECT DATA     QUESTION ANSWERING
-          |                  |
-          +--------+---------+
-                   |
-                   v
-          FRONTEND RESULTS
+                       USER
+                         |
+                         v
+              REACT + TYPESCRIPT FRONTEND
+                         |
+                    REST API Requests
+                         |
+                         v
+                  FASTAPI BACKEND
+                         |
+                +--------+---------+
+                |                  |
+                v                  v
+           POSTGRESQL         AUDIO STORAGE
+                |                  |
+                |                  v
+                |          AUDIO PREPROCESSING
+                |                  |
+                |                  v
+                |           FASTER-WHISPER
+                |                  |
+                |                  v
+                |          SPEAKER DIARIZATION
+                |             (pyannote)
+                |                  |
+                |                  v
+                |        TIMESTAMPED TRANSCRIPT
+                |                  |
+                |                  v
+                |           GEMINI AI ANALYSIS
+                |                  |
+                |          +-------+-------+
+                |          |       |       |
+                |          v       v       v
+                |       SUMMARY  TOPICS  INSIGHTS
+                |          |       |       |
+                |          +-------+-------+
+                |                  |
+                v                  v
+           PROJECT DATA     QUESTION ANSWERING
+                |                  |
+                +--------+---------+
+                         |
+                         v
+                  FRONTEND RESULTS
 ```
 
-**Architecture note:** PostgreSQL stores application data. Audio files are stored using the configured filesystem storage directory. Gemini provides AI-powered meeting summaries, while the current question-answering implementation uses local transcript and extracted evidence retrieval.
+### Architecture Notes
 
-Neo4j, ChromaDB and GraphRAG are planned extensions and should not be considered implemented components of the current version.
+- PostgreSQL stores application data.
+- Audio files are stored using the configured filesystem storage directory.
+- Faster-Whisper handles speech-to-text transcription.
+- pyannote.audio supports speaker diarization.
+- Google Gemini provides AI-powered meeting summaries and analysis.
+- The current question-answering implementation uses local transcript and extracted evidence retrieval.
+
+**Planned architecture extensions:** Neo4j, ChromaDB, and GraphRAG are future development components. They should not be considered implemented components of the current version.
 
 ## 5. Application Modules
 
 ### Dashboard
 
-Provides an overview of project meetings, processing information, extracted tasks and decisions.
+Provides an overview of project meetings, processing information, extracted tasks, and decisions.
 
 ### Meetings
 
-Allows users to upload, view and manage meeting recordings.
+Allows users to upload, view, and manage meeting recordings.
 
 ### Meeting Intelligence
 
-Processes meeting recordings and presents transcripts, summaries, discussion topics and extracted information.
+Processes meeting recordings and presents transcripts, summaries, discussion topics, and extracted information.
 
 ### Ask AI
 
@@ -132,7 +142,7 @@ Allows users to ask natural-language questions about one meeting or across meeti
 
 ### Tasks and Decisions
 
-Displays extracted action items, assignees, deadlines and meeting decisions.
+Displays extracted action items, assignees, deadlines, and meeting decisions.
 
 ### Knowledge Graph
 
@@ -160,9 +170,11 @@ For complete request and response specifications, run the backend and visit `/do
 
 ## 7. Getting Started
 
+Follow these steps to set up MeetGraph AI locally.
+
 ### Prerequisites
 
-- Python 3.10
+- Python 3.10 or a compatible version supported by the backend dependencies
 - Node.js and npm
 - PostgreSQL
 - Google Gemini API key
@@ -171,9 +183,9 @@ For complete request and response specifications, run the backend and visit `/do
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git
+git clone https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git MeetGraph-Intelligence-AI
 
-cd -MeetGraph-Intelligence-AI
+cd MeetGraph-Intelligence-AI
 ```
 
 ### Step 2: Configure the Backend
@@ -184,7 +196,7 @@ cd backend
 python -m venv .venv
 ```
 
-Activate the environment on Windows:
+Activate the virtual environment on Windows:
 
 ```powershell
 .venv\Scripts\Activate.ps1
@@ -200,7 +212,7 @@ pip install -r requirements.txt
 
 Create `backend/.env` using `backend/.env.example` as a reference.
 
-Configure the following values:
+Configure the required values:
 
 ```env
 POSTGRES_USER=your_database_user
@@ -215,17 +227,23 @@ GEMINI_API_KEY=your_gemini_api_key
 GEMINI_MODEL=your_configured_gemini_model
 ```
 
-Do not upload `.env` or API keys to GitHub.
+Use the actual environment variable names expected by the backend configuration.
 
-### Step 4: Run Database Migrations
+**Important:** Never upload `.env` files, API keys, passwords, or access tokens to GitHub.
 
-From the `backend` directory:
+### Step 4: Configure the Database
+
+Create the PostgreSQL database using the name configured in your environment variables.
+
+Run database migrations from the `backend` directory:
 
 ```bash
 alembic upgrade head
 ```
 
 ### Step 5: Start the Backend
+
+From the `backend` directory:
 
 ```bash
 uvicorn app.main:app --reload
@@ -260,11 +278,11 @@ http://localhost:5173
 
 The frontend uses the Vite development proxy to communicate with the local FastAPI backend.
 
-### Step 7: Build the Frontend
+### Step 7: Build and Verify the Frontend
 
 ```bash
-npm run build
 npm run lint
+npm run build
 ```
 
 ## 8. Repository Structure
@@ -278,12 +296,13 @@ MeetGraph-Intelligence-AI/
 │   │   ├── core/
 │   │   ├── models/
 │   │   ├── schemas/
-│   │   └── services/
-│   │       ├── extraction.py
-│   │       ├── gemini_service.py
-│   │       ├── question_answering.py
-│   │       ├── diarization.py
-│   │       └── storage.py
+│   │   ├── services/
+│   │   │   ├── extraction.py
+│   │   │   ├── gemini_service.py
+│   │   │   ├── question_answering.py
+│   │   │   ├── diarization.py
+│   │   │   └── storage.py
+│   │   └── main.py
 │   │
 │   ├── migrations/
 │   ├── scripts/
@@ -318,22 +337,24 @@ MeetGraph-Intelligence-AI/
 └── vite.config.ts
 ```
 
+The structure above highlights the main application directories and selected files. Additional files and modules may exist in the repository.
+
 ## 9. Team Members and Contributions
 
-MeetGraph AI is a collaborative final-year engineering project developed by all four team members. Each member contributed to a different area of the project.
+MeetGraph AI is a collaborative final-year engineering project developed by four team members.
 
-| Team Member | Role | Responsibilities |
+| Team Member | Primary Role | Responsibilities |
 |---|---|---|
-| **Gayatri Nikam** | Frontend Development and Integration | Frontend architecture, dashboard development, backend testing and user interface implementation |
-| **Vaibhav Pawar** | Backend Development | FastAPI backend development, REST APIs, database integration, backend testing and deployment | AI-related Fuctionality |
-| **Rutuja Jadhav** | Testing | Meeting intelligence, transcription workflow, application testing |
-| **Yash Kumbhar** | Documentation| Project documentation, technical documentation|
+| **Gayatri Nikam** | Frontend Development and Integration | Frontend architecture, dashboard development, backend testing, and user interface implementation |
+| **Vaibhav Pawar** | Backend Development and AI Functionality | FastAPI backend development, REST APIs, database integration, AI-related functionality, backend testing, and deployment |
+| **Rutuja Jadhav** | Testing and Transcription | Meeting intelligence, transcription workflow, and application testing |
+| **Yash Kumbhar** | Documentation | Project documentation and technical documentation |
 
 ### Shared Project Responsibilities
 
-All team members contributed to the overall development process through project discussions, requirement understanding, coordination, testing and review.
+All team members contributed to the overall development process through project discussions, requirement understanding, coordination, testing, and review.
 
-**Credits and Recognition:** All four members are equally recognized as developers and contributors to MeetGraph AI. Individual responsibilities are documented to acknowledge each member's work and contribution to the project.
+All four members are acknowledged as developers and contributors to MeetGraph AI. The responsibilities listed above describe their primary areas of contribution.
 
 ## 10. Future Scope
 
@@ -345,21 +366,23 @@ The following capabilities are planned extensions beyond the currently implement
 - Live meeting capture and transcription through a browser extension.
 - Advanced cross-meeting decision and timeline conflict detection.
 - Integrations with collaboration and project management platforms.
-- Enhanced user authentication, role-based permissions and audit logging.
+- Enhanced user authentication, role-based permissions, and audit logging.
 - Persistent cloud-based recording storage and scalable processing.
 
 ## 11. Testing and Verification
 
-The current development version has undergone the following local checks:
+The development workflow includes the following verification activities:
 
 - Python backend compilation.
-- Backend automated test suite: 20 tests passed.
+- Backend automated test suite.
 - Frontend production build using Vite.
 - TypeScript verification using `npm run lint`.
 - Local PostgreSQL connectivity verification.
 - Local recording storage verification.
 
-These results describe the tested local development environment and do not independently certify every production deployment capability.
+Testing results should be reported using the latest test execution rather than a fixed historical test count.
+
+These checks describe the tested development environment and do not independently certify every production deployment capability.
 
 ## 12. Credits and Acknowledgements
 
@@ -370,14 +393,12 @@ MeetGraph AI is a collaborative final-year BE Computer Engineering project devel
 3. **Rutuja Jadhav**
 4. **Yash Kumbhar**
 
-All four members are recognized as contributors and developers of MeetGraph AI. The project represents our collective effort in planning, designing, developing, integrating and testing the application.
+We acknowledge the open-source communities and technologies that supported this project, including React, FastAPI, PostgreSQL, Faster-Whisper, pyannote.audio, and Google Gemini.
 
-We acknowledge the open-source communities and technologies that supported this project, including React, FastAPI, PostgreSQL, Faster-Whisper, pyannote.audio and Google Gemini.
+---
 
 **Project Name:** MeetGraph AI – Enterprise Meeting Intelligence Platform
 
 **Project Type:** Final Year BE Computer Engineering Project
-
----
 
 *MeetGraph AI: Transforming meeting conversations into searchable organizational knowledge.*
