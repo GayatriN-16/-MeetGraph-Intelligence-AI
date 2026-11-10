@@ -72,7 +72,16 @@ export default function Meetings({ projectId }: MeetingsProps) {
     }
   }
 
-  const filteredMeetings = meetings.filter((meeting) =>
+  // Display numbers follow chronological order; database IDs remain unchanged.
+  const orderedMeetings = [...meetings].sort((a, b) => {
+    const dateA = new Date(a.meeting_date ?? a.created_at).getTime();
+    const dateB = new Date(b.meeting_date ?? b.created_at).getTime();
+
+    if (dateA !== dateB) return dateA - dateB;
+    return a.id - b.id;
+  });
+
+  const filteredMeetings = orderedMeetings.filter((meeting) =>
     `${meeting.title} ${meeting.original_filename}`
       .toLowerCase()
       .includes(search.toLowerCase()),
@@ -302,7 +311,7 @@ export default function Meetings({ projectId }: MeetingsProps) {
                     </p>
 
                     <p className="mt-1 text-xs text-[#89818B]">
-                      Meeting ID: {meeting.id}
+                      Meeting {orderedMeetings.findIndex((item) => item.id === meeting.id) + 1}
                     </p>
                   </div>
                 </div>

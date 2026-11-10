@@ -59,6 +59,22 @@ export default function Dashboard({ projectId }: DashboardProps) {
     void loadDashboard();
   }, [loadDashboard]);
 
+  // Display numbers follow chronological order; database IDs remain unchanged.
+  const orderedMeetings = [...meetings].sort((a, b) => {
+    const dateA = new Date(a.meeting_date ?? a.created_at).getTime();
+    const dateB = new Date(b.meeting_date ?? b.created_at).getTime();
+
+    if (dateA !== dateB) return dateA - dateB;
+    return a.id - b.id;
+  });
+
+  const meetingNumberById = new Map(
+    orderedMeetings.map((meeting, index) => [meeting.id, index + 1]),
+  );
+
+  // Keep the dashboard's recent-meetings section newest-first.
+  const recentMeetings = [...orderedMeetings].reverse().slice(0, 5);
+
   const actionItems = intelligence?.action_items ?? [];
   const decisions = intelligence?.decisions ?? [];
 
@@ -384,7 +400,7 @@ export default function Dashboard({ projectId }: DashboardProps) {
                 </div>
               ) : (
                 <div className="divide-y divide-[#C6E5E6]">
-                  {meetings.slice(0, 5).map((meeting: Meeting) => (
+                  {recentMeetings.map((meeting: Meeting) => (
                     <div
                       key={meeting.id}
                       className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 transition-colors hover:bg-[#F3FAFA]"
@@ -398,7 +414,7 @@ export default function Dashboard({ projectId }: DashboardProps) {
                             {meeting.title}
                           </h4>
                           <p className="mt-1 truncate text-xs text-[#89818B]">
-                            {meeting.original_filename}
+                            Meeting {meetingNumberById.get(meeting.id)} · {meeting.original_filename}
                           </p>
                         </div>
                       </div>

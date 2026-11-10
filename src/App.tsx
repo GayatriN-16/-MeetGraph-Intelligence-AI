@@ -30,6 +30,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     async function loadProjects() {
@@ -58,10 +59,53 @@ export default function App() {
     void loadProjects();
   }, []);
 
+  // Close the mobile drawer when the screen changes to desktop size.
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+
+    function handleScreenChange(event: MediaQueryListEvent) {
+      if (event.matches) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleScreenChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleScreenChange);
+    };
+  }, []);
+
+  // Prevent background scrolling while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [mobileMenuOpen]);
+
+  function handleNavigate(page: Page) {
+    setActivePage(page);
+    setMobileMenuOpen(false);
+  }
+
   function renderPage() {
     if (selectedProjectId === null) {
       return (
-        <section className="mx-auto mt-10 max-w-xl rounded-2xl border border-[var(--mg-border)] bg-white p-10 text-center shadow-[var(--mg-shadow-sm)]">
+        <section className="mx-auto mt-6 w-full max-w-xl rounded-2xl border border-[var(--mg-border)] bg-white p-5 text-center shadow-[var(--mg-shadow-sm)] sm:mt-10 sm:p-10">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mg-primary-soft)] text-[var(--mg-navy)]">
             <FolderOpen size={30} strokeWidth={1.7} />
           </div>
@@ -108,46 +152,61 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--mg-background)] text-[var(--mg-text)]">
+    <div className="flex min-h-screen w-full overflow-x-clip bg-[var(--mg-background)] text-[var(--mg-text)]">
+      {/* Desktop sidebar and mobile navigation drawer */}
       <Sidebar
         activePage={activePage}
-        onNavigate={setActivePage}
+        onNavigate={handleNavigate}
+        isMobileOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Mobile drawer backdrop */}
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] md:hidden"
+        />
+      )}
+
+      {/* Main application */}
+      <div className="flex min-h-screen min-w-0 w-full flex-1 flex-col md:w-[calc(100%-238px)]">
         <TopHeader
           projects={projects}
           selectedProjectId={selectedProjectId}
           onProjectChange={setSelectedProjectId}
-          onNavigate={setActivePage}
+          onNavigate={(page) => handleNavigate(page)}
           onUploadMeeting={() => setShowUploadModal(true)}
+          onMenuClick={() => setMobileMenuOpen(true)}
         />
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-[var(--mg-background)] p-4 md:p-7 xl:p-8">
+        <main className="min-h-0 min-w-0 w-full flex-1 overflow-x-clip bg-[var(--mg-background)] p-3 sm:p-4 md:overflow-y-auto md:p-7 xl:p-8">
           {loading ? (
             <div className="flex min-h-[60vh] flex-col items-center justify-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--mg-border)] bg-white text-[var(--mg-primary-strong)]">
                 <RefreshCw size={24} className="animate-spin" />
               </div>
 
-              <p className="mt-4 text-sm font-medium text-[var(--mg-text-secondary)]">
+              <p className="mt-4 text-center text-sm font-medium text-[var(--mg-text-secondary)]">
                 Loading MeetGraph AI workspace...
               </p>
             </div>
           ) : error ? (
-            <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-[var(--mg-border)] bg-white p-6 shadow-[var(--mg-shadow-sm)]">
+            <div className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-[var(--mg-border)] bg-white p-5 shadow-[var(--mg-shadow-sm)] sm:mt-10 sm:p-6">
               <div className="flex items-start gap-3">
                 <AlertCircle
                   size={21}
                   className="mt-0.5 shrink-0 text-[var(--mg-danger)]"
                 />
 
-                <div>
+                <div className="min-w-0">
                   <h2 className="font-semibold text-[var(--mg-navy)]">
                     Unable to load workspace
                   </h2>
 
-                  <p className="mt-2 text-sm text-[var(--mg-text-secondary)]">
+                  <p className="mt-2 break-words text-sm text-[var(--mg-text-secondary)]">
                     {error}
                   </p>
 
@@ -166,8 +225,8 @@ export default function App() {
           )}
         </main>
 
-        <footer className="border-t border-[var(--mg-border)] bg-white px-6 py-3">
-          <p className="text-xs text-[var(--mg-muted)]">
+        <footer className="w-full border-t border-[var(--mg-border)] bg-white px-3 py-3 sm:px-6">
+          <p className="text-center text-[10px] text-[var(--mg-muted)] sm:text-left sm:text-xs">
             MeetGraph AI <span className="mx-1">·</span> Meeting Intelligence Workspace
           </p>
         </footer>
