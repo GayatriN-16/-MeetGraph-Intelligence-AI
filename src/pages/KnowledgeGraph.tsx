@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
@@ -58,16 +59,16 @@ function createGraphData(data: ProjectIntelligence): {
         label: `Meeting: ${meeting.title}`,
       },
       style: {
-        background: '#DDF3F3',
-        backgroundColor: '#DDF3F3',
-        color: '#187D87',
-        border: '1px solid #269BA5',
+        background: '#F0E9FF',
+        backgroundColor: '#F0E9FF',
+        color: '#5135E8',
+        border: '1px solid #6810D9',
         borderRadius: 14,
         padding: 16,
         width: 250,
         fontSize: 13,
         fontWeight: 700,
-        boxShadow: '0 5px 15px rgba(24, 125, 135, 0.07)',
+        boxShadow: '0 5px 15px rgba(104, 16, 217, 0.10)',
       },
     });
   });
@@ -90,14 +91,14 @@ function createGraphData(data: ProjectIntelligence): {
       },
       style: {
         background: '#FFFFFF',
-        color: '#187D87',
-        border: '1px solid #C6E5E6',
+        color: '#17152B',
+        border: '1px solid #E2DDF5',
         borderRadius: 12,
         padding: 14,
         width: 250,
         fontSize: 12,
         fontWeight: 600,
-        boxShadow: '0 5px 15px rgba(24, 125, 135, 0.06)',
+        boxShadow: '0 5px 15px rgba(37, 33, 59, 0.08)',
       },
     });
 
@@ -108,12 +109,12 @@ function createGraphData(data: ProjectIntelligence): {
         target: taskId,
         animated: true,
         style: {
-          stroke: '#269BA5',
+          stroke: '#6810D9',
           strokeWidth: 2,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: '#269BA5',
+          color: '#6810D9',
         },
       });
     }
@@ -136,15 +137,15 @@ function createGraphData(data: ProjectIntelligence): {
             label: `Person: ${assignee}`,
           },
           style: {
-            background: '#F3FAFA',
-            color: '#187D87',
-            border: '1px solid #B4DCDD',
+            background: '#F0E9FF',
+            color: '#625D7A',
+            border: '1px solid #E2DDF5',
             borderRadius: 12,
             padding: 14,
             width: 190,
             fontSize: 12,
             fontWeight: 700,
-            boxShadow: '0 5px 15px rgba(24, 125, 135, 0.06)',
+            boxShadow: '0 5px 15px rgba(37, 33, 59, 0.08)',
           },
         });
       }
@@ -154,12 +155,12 @@ function createGraphData(data: ProjectIntelligence): {
         source: taskId,
         target: assigneeId,
         style: {
-          stroke: '#269BA5',
+          stroke: '#6810D9',
           strokeWidth: 2,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: '#269BA5',
+          color: '#6810D9',
         },
       });
     }
@@ -179,15 +180,15 @@ function createGraphData(data: ProjectIntelligence): {
         label: `Decision: ${decision.title}`,
       },
       style: {
-        background: '#DDF3F3',
-        color: '#187D87',
-        border: '1px solid #269BA5',
+        background: '#F0E9FF',
+        color: '#5135E8',
+        border: '1px solid #6810D9',
         borderRadius: 12,
         padding: 14,
         width: 240,
         fontSize: 12,
         fontWeight: 600,
-        boxShadow: '0 5px 15px rgba(24, 125, 135, 0.06)',
+        boxShadow: '0 5px 15px rgba(104, 16, 217, 0.10)',
       },
     });
 
@@ -197,12 +198,12 @@ function createGraphData(data: ProjectIntelligence): {
         source: meetingId,
         target: decisionId,
         style: {
-          stroke: '#269BA5',
+          stroke: '#6810D9',
           strokeWidth: 2,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: '#269BA5',
+          color: '#6810D9',
         },
       });
     }
@@ -265,44 +266,44 @@ export default function KnowledgeGraph({
       value: intelligence?.meetings.length ?? 0,
       detail: 'Recorded discussions',
       icon: CalendarDays,
-      color: 'bg-[#DDF3F3] text-[#269BA5]',
+      color: 'bg-[#F0E9FF] text-[#5135E8]',
     },
     {
       label: 'Action Items',
       value: intelligence?.action_items.length ?? 0,
       detail: 'Identified responsibilities',
       icon: ListChecks,
-      color: 'bg-[#F3FAFA] text-[#55505A]',
+      color: 'bg-[#F0E9FF] text-[#625D7A]',
     },
     {
       label: 'Assignees',
       value: assigneeCount,
       detail: 'Named participants',
       icon: UserRound,
-      color: 'bg-[#F3FAFA] text-[#55505A]',
+      color: 'bg-[#F0E9FF] text-[#625D7A]',
     },
     {
       label: 'Decisions',
       value: intelligence?.decisions.length ?? 0,
       detail: 'Recorded decisions',
       icon: FileText,
-      color: 'bg-[#DDF3F3] text-[#269BA5]',
+      color: 'bg-[#F0E9FF] text-[#5135E8]',
     },
   ];
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#DDF3F3]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0E9FF]">
           <RefreshCw
-            className="animate-spin text-[#269BA5]"
+            className="animate-spin text-[#6810D9]"
             size={28}
           />
         </div>
-        <p className="mt-4 text-sm font-semibold text-[#187D87]">
+        <p className="mt-4 text-sm font-semibold text-[#17152B]">
           Building your knowledge graph...
         </p>
-        <p className="mt-1 text-xs text-[#89818B]">
+        <p className="mt-1 text-xs text-[#89849F]">
           Connecting meetings, tasks and participants
         </p>
       </div>
@@ -311,15 +312,15 @@ export default function KnowledgeGraph({
 
   if (error) {
     return (
-      <section className="rounded-2xl border border-red-200 bg-white p-8">
-        <h2 className="font-bold text-red-800">
+      <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-8">
+        <h2 className="font-bold text-[#DC2626]">
           Unable to load knowledge graph
         </h2>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p className="mt-2 text-sm text-[#DC2626]">{error}</p>
         <button
           type="button"
           onClick={() => void loadGraph()}
-          className="mt-5 rounded-xl bg-[#187D87] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#269BA5]"
+          className="mt-5 rounded-xl bg-[#6810D9] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5135E8]"
         >
           Retry
         </button>
@@ -329,42 +330,41 @@ export default function KnowledgeGraph({
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-7">
-
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-[26px] border border-[#C6E5E6] bg-white px-7 py-9 text-[#187D87] shadow-sm md:px-9">
-        <div className="absolute -right-12 -top-28 h-80 w-80 rounded-full bg-[#269BA5]/20 blur-3xl" />
-        <div className="absolute bottom-[-100px] right-[25%] h-60 w-60 rounded-full bg-[#DDF3F3]/80 blur-3xl" />
+      <section className="relative overflow-hidden rounded-[26px] border border-[#6810D9]/20 bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-7 py-9 text-white shadow-[0_8px_24px_rgba(81,53,232,0.16)] md:px-9">
+        <div className="pointer-events-none absolute -right-12 -top-28 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-[-100px] right-[25%] h-60 w-60 rounded-full bg-white/10 blur-3xl" />
 
         <div className="relative flex flex-wrap items-center justify-between gap-8">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-[#F3FAFA] px-3 py-1.5 text-xs font-semibold text-[#55505A]">
-              <Sparkles size={14} className="text-[#269BA5]" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white">
+              <Sparkles size={14} className="text-white" />
               Project intelligence workspace
             </span>
 
-            <h1 className="mt-5 text-3xl font-bold tracking-tight text-[#187D87] md:text-4xl">
+            <h1 className="mt-5 text-3xl font-bold tracking-tight text-white md:text-4xl">
               Knowledge Graph
             </h1>
 
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[#55505A] md:text-base">
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/85 md:text-base">
               Discover how your meetings, responsibilities,
               participants and decisions connect in one
               intelligent workspace.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <span className="rounded-xl border border-[#C6E5E6] bg-[#F3FAFA] px-4 py-2 text-xs font-semibold text-[#187D87]">
-                <Network size={14} className="mr-2 inline text-[#269BA5]" />
+              <span className="rounded-xl border border-white/20 bg-white/15 px-4 py-2 text-xs font-semibold text-white">
+                <Network size={14} className="mr-2 inline text-white" />
                 {nodeCount} graph nodes
               </span>
-              <span className="rounded-xl border border-[#C6E5E6] bg-[#F3FAFA] px-4 py-2 text-xs font-semibold text-[#187D87]">
-                <ArrowUpRight size={14} className="mr-2 inline text-[#269BA5]" />
+              <span className="rounded-xl border border-white/20 bg-white/15 px-4 py-2 text-xs font-semibold text-white">
+                <ArrowUpRight size={14} className="mr-2 inline text-white" />
                 {edgeCount} connections
               </span>
             </div>
           </div>
 
-          <div className="hidden h-28 w-28 items-center justify-center rounded-3xl border border-[#C6E5E6] bg-[#DDF3F3] text-[#269BA5] shadow-sm md:flex">
+          <div className="hidden h-28 w-28 items-center justify-center rounded-3xl border border-white/20 bg-white/15 text-white shadow-sm md:flex">
             <Network size={55} strokeWidth={1.5} />
           </div>
         </div>
@@ -375,24 +375,24 @@ export default function KnowledgeGraph({
         {stats.map(({ label, value, detail, icon: Icon, color }) => (
           <div
             key={label}
-            className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="flex items-center justify-between">
               <div className={`rounded-xl p-3 ${color}`}>
                 <Icon size={21} />
               </div>
-              <ArrowUpRight size={18} className="text-[#89818B]" />
+              <ArrowUpRight size={18} className="text-[#89849F]" />
             </div>
 
-            <p className="mt-5 text-3xl font-bold text-[#187D87]">
+            <p className="mt-5 text-3xl font-bold text-[#17152B]">
               {value}
             </p>
 
-            <p className="mt-1 text-sm font-semibold text-[#187D87]">
+            <p className="mt-1 text-sm font-semibold text-[#17152B]">
               {label}
             </p>
 
-            <p className="mt-1 text-xs text-[#89818B]">
+            <p className="mt-1 text-xs text-[#89849F]">
               {detail}
             </p>
           </div>
@@ -400,19 +400,19 @@ export default function KnowledgeGraph({
       </section>
 
       {/* Graph section */}
-      <section className="overflow-hidden rounded-2xl border border-[#C6E5E6] bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#C6E5E6] px-6 py-5">
+      <section className="overflow-hidden rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2DDF5] px-6 py-5">
           <div>
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-[#DDF3F3] p-2 text-[#269BA5]">
+              <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
                 <Network size={19} />
               </div>
-              <h2 className="text-lg font-bold text-[#187D87]">
+              <h2 className="text-lg font-bold text-[#17152B]">
                 Project Relationship Map
               </h2>
             </div>
 
-            <p className="mt-2 text-xs text-[#89818B]">
+            <p className="mt-2 text-xs text-[#89849F]">
               {nodeCount} nodes · {edgeCount} connections
             </p>
           </div>
@@ -421,7 +421,7 @@ export default function KnowledgeGraph({
             type="button"
             onClick={() => void loadGraph()}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-4 py-2.5 text-sm font-semibold text-[#187D87] shadow-sm transition hover:border-[#269BA5] hover:bg-[#F3FAFA] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-[#E2DDF5] bg-[#F0E9FF] px-4 py-2.5 text-sm font-semibold text-[#17152B] shadow-sm transition hover:border-[#6810D9] hover:bg-[#F0E9FF] disabled:opacity-50"
           >
             <RefreshCw size={16} />
             Refresh Graph
@@ -430,19 +430,19 @@ export default function KnowledgeGraph({
 
         {nodeCount === 0 ? (
           <div className="flex min-h-[400px] flex-col items-center justify-center px-6 text-center">
-            <div className="rounded-2xl bg-[#DDF3F3] p-5 text-[#269BA5]">
+            <div className="rounded-2xl bg-[#F0E9FF] p-5 text-[#6810D9]">
               <Network size={38} />
             </div>
-            <h3 className="mt-5 text-lg font-bold text-[#187D87]">
+            <h3 className="mt-5 text-lg font-bold text-[#17152B]">
               No graph data available
             </h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-[#89818B]">
+            <p className="mt-2 max-w-md text-sm leading-6 text-[#89849F]">
               Upload and process meeting recordings to create
               connections between meetings, tasks and participants.
             </p>
           </div>
         ) : (
-          <div className="h-[650px] w-full bg-[#F3FAFA]">
+          <div className="h-[650px] w-full bg-[#F8F5FF]">
             <ReactFlow
               nodes={graph.nodes}
               edges={graph.edges}
@@ -456,27 +456,27 @@ export default function KnowledgeGraph({
               proOptions={{ hideAttribution: false }}
             >
               <Background
-                color="#C6E5E6"
+                color="#E2DDF5"
                 gap={22}
                 size={1}
                 variant={BackgroundVariant.Dots}
               />
 
               <Controls
-                className="!overflow-hidden !rounded-xl !border-[#C6E5E6] !bg-white !shadow-md"
+                className="!overflow-hidden !rounded-xl !border-[#E2DDF5] !bg-[#FFFFFF] !shadow-md"
               />
 
               <MiniMap
                 pannable
                 zoomable
                 nodeColor={(node) => {
-                  if (node.id.startsWith('meeting-')) return '#DDF3F3';
+                  if (node.id.startsWith('meeting-')) return '#F0E9FF';
                   if (node.id.startsWith('task-')) return '#FFFFFF';
-                  if (node.id.startsWith('assignee-')) return '#B4DCDD';
-                  return '#C6E5E6';
+                  if (node.id.startsWith('assignee-')) return '#F0E9FF';
+                  return '#E2DDF5';
                 }}
-                maskColor="rgba(243, 250, 250, 0.7)"
-                className="!overflow-hidden !rounded-xl !border-[#C6E5E6] !bg-white"
+                maskColor="rgba(248, 245, 255, 0.75)"
+                className="!overflow-hidden !rounded-xl !border-[#E2DDF5] !bg-[#FFFFFF]"
               />
             </ReactFlow>
           </div>
@@ -484,30 +484,30 @@ export default function KnowledgeGraph({
       </section>
 
       {/* Legend */}
-      <section className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-bold text-[#187D87]">
+            <h3 className="font-bold text-[#17152B]">
               Graph Legend
             </h3>
-            <p className="mt-1 text-xs text-[#89818B]">
+            <p className="mt-1 text-xs text-[#89849F]">
               Understand the different relationship types.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-x-6 gap-y-3">
             {[
-              ['#DDF3F3', 'Meetings'],
+              ['#F0E9FF', 'Meetings'],
               ['#FFFFFF', 'Action Items'],
-              ['#B4DCDD', 'Assignees'],
-              ['#C6E5E6', 'Decisions'],
+              ['#F0E9FF', 'Assignees'],
+              ['#E2DDF5', 'Decisions'],
             ].map(([color, label]) => (
               <div key={label} className="flex items-center gap-2">
                 <span
-                  className="h-3.5 w-3.5 rounded-md border border-[#C6E5E6]"
+                  className="h-3.5 w-3.5 rounded-md border border-[#E2DDF5]"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-xs font-medium text-[#55505A]">
+                <span className="text-xs font-medium text-[#625D7A]">
                   {label}
                 </span>
               </div>

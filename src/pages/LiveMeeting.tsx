@@ -395,39 +395,52 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <p className="text-sm font-semibold text-[#269BA5]">
-          MEETING INTELLIGENCE
-        </p>
 
-        <h1 className="mt-2 text-2xl font-bold text-[#187D87]">
-          Live Meeting
-        </h1>
+      <section className="relative overflow-hidden rounded-2xl border border-[#6810D9]/20 bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-6 py-7 text-white shadow-[0_8px_24px_rgba(81,53,232,0.16)] md:px-8">
+        <div className="relative z-10 flex items-center justify-between gap-5">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white">
+              <AudioLines size={14} />
+              MEETING INTELLIGENCE
+            </span>
 
-        <p className="mt-2 text-sm text-[#89818B]">
-          Capture browser meeting audio and save its transcript automatically.
-        </p>
-      </div>
+            <h1 className="mt-4 text-2xl font-bold text-white md:text-3xl">
+              Live Meeting
+            </h1>
 
-      <section className="rounded-2xl border border-[#C6E5E6] bg-white p-6 shadow-sm">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/85">
+              Capture browser meeting audio and save its transcript automatically.
+            </p>
+          </div>
+
+          <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white sm:flex">
+            <Mic size={30} strokeWidth={1.6} />
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+      </section>
+
+
+      <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#DDF3F3] text-[#269BA5]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0E9FF] text-[#6810D9]">
             <AudioLines size={24} />
           </div>
 
           <div>
-            <h2 className="font-bold text-[#187D87]">
+            <h2 className="font-bold text-[#17152B]">
               Start a live session
             </h2>
 
-            <p className="text-xs text-[#89818B]">
+            <p className="text-xs text-[#89849F]">
               Project ID: {projectId}
             </p>
           </div>
         </div>
 
         <div className="mt-6">
-          <label className="mb-2 block text-sm font-semibold text-[#187D87]">
+          <label className="mb-2 block text-sm font-semibold text-[#25213B]">
             Meeting title
           </label>
 
@@ -436,20 +449,20 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             onChange={(event) => setTitle(event.target.value)}
             disabled={busy}
             maxLength={250}
-            className="w-full rounded-xl border border-[#C6E5E6] bg-[#F3FAFA] px-4 py-3 text-sm text-[#187D87] outline-none transition placeholder:text-[#89818B] focus:border-[#269BA5] focus:ring-2 focus:ring-[#DDF3F3]"
+            className="w-full rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-4 py-3 text-sm text-[#25213B] outline-none transition placeholder:text-[#89849F] focus:border-[#6810D9] focus:ring-2 focus:ring-[#F0E9FF]"
             placeholder="Enter meeting title"
           />
         </div>
 
-        <div className="mt-6 rounded-xl border border-dashed border-[#269BA5] bg-[#F3FAFA] p-5">
+        <div className="mt-6 rounded-xl border border-dashed border-[#6810D9] bg-[#F8F5FF] p-5">
           <label className="flex cursor-pointer flex-col items-center gap-2 text-center">
-            <Upload className="text-[#269BA5]" size={25} />
+            <Upload className="text-[#6810D9]" size={25} />
 
-            <span className="text-sm font-semibold text-[#187D87]">
+            <span className="text-sm font-semibold text-[#25213B]">
               Select test audio
             </span>
 
-            <span className="text-xs text-[#89818B]">
+            <span className="text-xs text-[#89849F]">
               WAV, MP3 or another browser-supported audio format
             </span>
 
@@ -457,7 +470,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
               type="file"
               accept="audio/*"
               disabled={busy}
-              className="mt-2 max-w-full text-xs text-[#55505A] file:mr-3 file:rounded-lg file:border-0 file:bg-[#DDF3F3] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#187D87] hover:file:bg-[#C6E5E6]"
+              className="mt-2 max-w-full text-xs text-[#625D7A] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F0E9FF] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#6810D9] hover:file:bg-[#E2DDF5]"
               onChange={(event) =>
                 handleFileChange(event.target.files?.[0] ?? null)
               }
@@ -465,7 +478,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
           </label>
 
           {testFile && (
-            <div className="mt-4 rounded-lg border border-[#C6E5E6] bg-white p-3 text-sm text-[#187D87]">
+            <div className="mt-4 rounded-lg border border-[#E2DDF5] bg-[#FFFFFF] p-3 text-sm text-[#25213B]">
               Selected: {testFile.name}
             </div>
           )}
@@ -473,7 +486,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
 
         {testFileUrl && (
           <div className="mt-5">
-            <p className="mb-2 text-sm font-semibold text-[#187D87]">
+            <p className="mb-2 text-sm font-semibold text-[#25213B]">
               Test audio playback
             </p>
 
@@ -483,7 +496,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
               className="w-full"
             />
 
-            <p className="mt-2 text-xs text-[#89818B]">
+            <p className="mt-2 text-xs text-[#89849F]">
               Start capture, select the tab containing this page, enable
               Share tab audio, then play this audio.
             </p>
@@ -495,7 +508,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             type="button"
             onClick={startCapture}
             disabled={busy}
-            className="flex items-center gap-2 rounded-xl bg-[#187D87] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#269BA5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#6810D9]/15 transition hover:shadow-lg hover:shadow-[#6810D9]/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Mic size={17} />
             Start live meeting
@@ -505,24 +518,24 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             type="button"
             onClick={stopCapture}
             disabled={status !== 'capturing'}
-            className="flex items-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-5 py-3 text-sm font-semibold text-[#187D87] transition hover:border-[#269BA5] hover:bg-[#F3FAFA] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-[#E2DDF5] bg-[#FFFFFF] px-5 py-3 text-sm font-semibold text-[#25213B] transition hover:border-[#6810D9] hover:bg-[#F8F5FF] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Square size={16} />
             Stop and transcribe
           </button>
         </div>
 
-        <div className="mt-6 rounded-xl border border-[#C6E5E6] bg-[#F3FAFA] p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#89818B]">
+        <div className="mt-6 rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#89849F]">
             Session status
           </p>
 
           <div className="mt-3 flex items-center gap-2">
             {status === 'capturing' ? (
               <>
-                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#DC2626]" />
 
-                <span className="text-sm font-semibold text-red-700">
+                <span className="text-sm font-semibold text-[#DC2626]">
                   Recording and streaming audio
                 </span>
               </>
@@ -530,10 +543,10 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
               <>
                 <LoaderCircle
                   size={18}
-                  className="animate-spin text-[#269BA5]"
+                  className="animate-spin text-[#6810D9]"
                 />
 
-                <span className="text-sm font-semibold text-[#269BA5]">
+                <span className="text-sm font-semibold text-[#6810D9]">
                   {status === 'connecting'
                     ? 'Connecting...'
                     : 'Transcribing...'}
@@ -542,19 +555,19 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             ) : status === 'completed' ? (
               <>
                 <CheckCircle2
-                  className="text-[#63866B]"
+                  className="text-[#16A34A]"
                   size={18}
                 />
 
-                <span className="text-sm font-semibold text-[#63866B]">
+                <span className="text-sm font-semibold text-[#16A34A]">
                   Meeting saved and transcribed
                 </span>
               </>
             ) : (
               <>
-                <span className="h-2.5 w-2.5 rounded-full bg-[#89818B]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#89849F]" />
 
-                <span className="text-sm font-semibold text-[#55505A]">
+                <span className="text-sm font-semibold text-[#625D7A]">
                   {status === 'error'
                     ? 'Session failed'
                     : 'Not recording'}
@@ -564,34 +577,34 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
           </div>
 
           {serverMessage && (
-            <p className="mt-2 text-xs text-[#55505A]">
+            <p className="mt-2 text-xs text-[#625D7A]">
               {serverMessage}
             </p>
           )}
 
           {meetingId !== null && (
-            <p className="mt-2 text-sm font-semibold text-[#187D87]">
+            <p className="mt-2 text-sm font-semibold text-[#25213B]">
               Saved meeting ID: {meetingId}
             </p>
           )}
 
           {duration > 0 && (
-            <p className="mt-1 text-xs text-[#89818B]">
+            <p className="mt-1 text-xs text-[#89849F]">
               Duration: {duration} seconds
             </p>
           )}
         </div>
 
         {error && (
-          <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#DC2626]">
             <AlertCircle size={18} className="mt-0.5 shrink-0" />
             {error}
           </div>
         )}
 
         {recordedUrl && (
-          <div className="mt-5 rounded-xl border border-[#C9DCCB] bg-[#F0F7F0] p-4">
-            <p className="font-semibold text-[#426B49]">
+          <div className="mt-5 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] p-4">
+            <p className="font-semibold text-[#166534]">
               Local recording available
             </p>
 
@@ -604,7 +617,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             <button
               type="button"
               onClick={downloadRecording}
-              className="mt-3 flex items-center gap-2 rounded-lg bg-[#63866B] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4E7156]"
+              className="mt-3 flex items-center gap-2 rounded-lg bg-[#16A34A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#15803D]"
             >
               <Download size={16} />
               Download recording
@@ -614,12 +627,12 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
       </section>
 
       {segments.length > 0 && (
-        <section className="rounded-2xl border border-[#C6E5E6] bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#187D87]">
+        <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-[#17152B]">
             Meeting transcript
           </h2>
 
-          <p className="mt-1 text-xs text-[#89818B]">
+          <p className="mt-1 text-xs text-[#89849F]">
             {segments.length} transcript segments
           </p>
 
@@ -627,14 +640,14 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             {segments.map((segment, index) => (
               <div
                 key={`${segment.start_seconds}-${index}`}
-                className="border-b border-[#C6E5E6] pb-3 last:border-0"
+                className="border-b border-[#E2DDF5] pb-3 last:border-0"
               >
-                <p className="text-xs font-semibold text-[#269BA5]">
+                <p className="text-xs font-semibold text-[#6810D9]">
                   {segment.start_seconds.toFixed(1)}s –{' '}
                   {segment.end_seconds.toFixed(1)}s
                 </p>
 
-                <p className="mt-1 text-sm leading-6 text-[#187D87]">
+                <p className="mt-1 text-sm leading-6 text-[#25213B]">
                   {segment.text}
                 </p>
               </div>

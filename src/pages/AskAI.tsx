@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -186,7 +187,8 @@ function downloadAnswerAsPDF(response: QuestionResponse) {
         <style>
           body {
             font-family: Arial, Helvetica, sans-serif;
-            color: #187D87;
+            color: #17152B;
+            background: #F8F5FF;
             max-width: 850px;
             margin: 0 auto;
             padding: 36px;
@@ -194,17 +196,17 @@ function downloadAnswerAsPDF(response: QuestionResponse) {
           }
 
           h1 {
-            color: #187D87;
+            color: #17152B;
             margin-bottom: 4px;
           }
 
           h2 {
-            color: #187D87;
+            color: #6810D9;
             margin: 28px 0 10px;
           }
 
           h3 {
-            color: #55505A;
+            color: #625D7A;
             margin: 0 0 8px;
             font-size: 15px;
           }
@@ -212,15 +214,16 @@ function downloadAnswerAsPDF(response: QuestionResponse) {
           .subtitle,
           .meta,
           .footer {
-            color: #89818B;
+            color: #625D7A;
             font-size: 12px;
           }
 
           .content,
           .source {
-            border: 1px solid #C6E5E6;
+            border: 1px solid #E2DDF5;
             border-radius: 10px;
             padding: 16px;
+            background: #FFFFFF;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
           }
@@ -230,7 +233,7 @@ function downloadAnswerAsPDF(response: QuestionResponse) {
           }
 
           .footer {
-            border-top: 1px solid #C6E5E6;
+            border-top: 1px solid #E2DDF5;
             margin-top: 32px;
             padding-top: 12px;
           }
@@ -436,16 +439,16 @@ export default function AskAI({ projectId }: AskAIProps) {
       {/* Page heading */}
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#269BA5]">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#6810D9]">
             <Sparkles size={16} />
             Project Workspace
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-[#187D87]">
+          <h1 className="text-3xl font-bold tracking-tight text-[#6810D9]">
             Ask MeetGraph AI
           </h1>
 
-          <p className="mt-2 text-sm text-[#55505A]">
+          <p className="mt-2 text-sm text-[#625D7A]">
             Explore your meeting conversations, tasks, participants and decisions.
           </p>
         </div>
@@ -454,7 +457,7 @@ export default function AskAI({ projectId }: AskAIProps) {
           type="button"
           onClick={() => void loadMeetings()}
           disabled={loadingMeetings || loading}
-          className="flex items-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-4 py-2.5 text-sm font-semibold text-[#187D87] shadow-sm transition hover:border-[#187D87] hover:bg-[#F3FAFA] hover:text-[#269BA5] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-[#E2DDF5] bg-white px-4 py-2.5 text-sm font-semibold text-[#6810D9] shadow-sm transition hover:border-[#6810D9] hover:bg-[#F0E9FF] hover:text-[#5135E8] disabled:opacity-50"
         >
           <RefreshCw
             size={16}
@@ -463,58 +466,58 @@ export default function AskAI({ projectId }: AskAIProps) {
           Refresh
         </button>
       </section>
-
-      {/* Hero banner */}
-      <section className="relative overflow-hidden rounded-3xl border border-[#C6E5E6] bg-white p-7 text-[#187D87] shadow-sm md:p-9">
+    {/* Hero banner */}
+      <section className="relative overflow-hidden rounded-3xl border border-[#6810D9]/20 bg-gradient-to-r from-[#7412D8] to-[#5135E8] p-7 text-white shadow-[0_8px_24px_rgba(81,53,232,0.16)] md:p-9">
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
           <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-white px-3 py-1.5 text-xs font-medium text-[#55505A]">
-              <BrainCircuit size={14} className="text-[#269BA5]" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-medium text-white">
+              <BrainCircuit size={14} className="text-white" />
               Meeting intelligence assistant
             </span>
 
-            <h2 className="mt-5 text-2xl font-bold text-[#187D87] md:text-3xl">
+            <h2 className="mt-5 text-2xl font-bold text-white md:text-3xl">
               Your meeting knowledge,
               <br />
               ready to answer.
             </h2>
 
-            <p className="mt-3 text-sm leading-6 text-[#55505A]">
+            <p className="mt-3 text-sm leading-6 text-white/85">
               Ask questions across recorded meetings. Discover responsibilities,
               deadlines and decisions with supporting meeting evidence.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-white px-3 py-2 text-xs text-[#187D87]">
-                <AudioLines size={14} className="text-[#269BA5]" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-2 text-xs text-white">
+                <AudioLines size={14} className="text-white" />
                 {meetings.length} project meetings
               </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#C6E5E6] bg-white px-3 py-2 text-xs text-[#187D87]">
-                <ShieldCheck size={14} className="text-[#269BA5]" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-2 text-xs text-white">
+                <ShieldCheck size={14} className="text-white" />
                 Evidence-based answers
               </span>
             </div>
           </div>
 
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-[#C6E5E6] bg-[#DDF3F3] text-[#269BA5] shadow-sm">
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/15 text-white shadow-sm">
             <BrainCircuit size={46} strokeWidth={1.5} />
           </div>
         </div>
 
-        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[#269BA5]/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-[#DDF3F3]/60 blur-3xl" />
+        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       </section>
 
+
       {/* Meeting library status */}
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#C6E5E6] bg-white px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-[#55505A]">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E2DDF5] bg-white px-5 py-4 shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-[#625D7A]">
           <span
             className={`h-2.5 w-2.5 rounded-full ${loadingMeetings
-                ? 'bg-amber-400'
+                ? 'bg-[#E7AD55]'
                 : meetingError
-                  ? 'bg-red-500'
-                  : 'bg-emerald-500'
+                  ? 'bg-[#E47777]'
+                  : 'bg-[#55B88A]'
               }`}
           />
 
@@ -525,13 +528,13 @@ export default function AskAI({ projectId }: AskAIProps) {
               : 'Meeting library connected'}
         </div>
 
-        <span className="text-xs text-[#89818B]">
+        <span className="text-xs text-[#625D7A]">
           {meetings.length} recordings available
         </span>
       </section>
 
       {meetingError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {meetingError}
         </div>
       )}
@@ -540,21 +543,21 @@ export default function AskAI({ projectId }: AskAIProps) {
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_310px]">
 
         {/* Conversation panel */}
-        <section className="overflow-hidden rounded-2xl border border-[#C6E5E6] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-[#E2DDF5] bg-white shadow-sm">
 
           {/* Conversation header */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#C6E5E6] px-6 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2DDF5] px-6 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#DDF3F3] text-[#269BA5]">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0E9FF] text-[#6810D9]">
                 <MessageSquare size={21} />
               </div>
 
               <div>
-                <h2 className="font-bold text-[#187D87]">
+                <h2 className="font-bold text-[#17152B]">
                   Conversation
                 </h2>
 
-                <p className="mt-1 text-xs text-[#89818B]">
+                <p className="mt-1 text-xs text-[#625D7A]">
                   Ask anything about your project meetings
                 </p>
               </div>
@@ -563,7 +566,7 @@ export default function AskAI({ projectId }: AskAIProps) {
             <button
               type="button"
               onClick={startNewConversation}
-              className="inline-flex items-center gap-2 rounded-xl border border-[#C6E5E6] px-3 py-2 text-xs font-semibold text-[#55505A] transition hover:border-[#187D87] hover:bg-[#F3FAFA] hover:text-[#269BA5]"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#E2DDF5] px-3 py-2 text-xs font-semibold text-[#625D7A] transition hover:border-[#6810D9] hover:bg-[#F0E9FF] hover:text-[#6810D9]"
             >
               <Plus size={15} />
               New question
@@ -571,10 +574,10 @@ export default function AskAI({ projectId }: AskAIProps) {
           </div>
 
           {/* Meeting scope selector */}
-          <div className="border-b border-[#C6E5E6] bg-white px-5 py-4 md:px-6">
+          <div className="border-b border-[#E2DDF5] bg-[#F8F5FF] px-5 py-4 md:px-6">
             <label
               htmlFor="meeting-scope"
-              className="mb-2 block text-xs font-semibold text-[#187D87]"
+              className="mb-2 block text-xs font-semibold text-[#17152B]"
             >
               Search scope
             </label>
@@ -584,7 +587,7 @@ export default function AskAI({ projectId }: AskAIProps) {
               value={selectedMeetingId}
               onChange={(event) => handleMeetingChange(event.target.value)}
               disabled={loadingMeetings || loading}
-              className="w-full rounded-xl border border-[#C6E5E6] bg-[#F3FAFA] px-4 py-3 text-sm text-[#187D87] outline-none transition focus:border-[#187D87] focus:ring-4 focus:ring-[#DDF3F3] disabled:opacity-60"
+              className="w-full rounded-xl border border-[#E2DDF5] bg-white px-4 py-3 text-sm text-[#17152B] outline-none transition focus:border-[#6810D9] focus:ring-4 focus:ring-[#F0E9FF] disabled:opacity-60"
             >
               <option value="all">
                 All project meetings
@@ -597,7 +600,7 @@ export default function AskAI({ projectId }: AskAIProps) {
               ))}
             </select>
 
-            <p className="mt-2 text-[11px] text-[#89818B]">
+            <p className="mt-2 text-[11px] text-[#625D7A]">
               {selectedMeeting
                 ? `Questions will be restricted to ${selectedMeeting.title}.`
                 : 'Questions will search across all meetings in this project.'}
@@ -605,25 +608,25 @@ export default function AskAI({ projectId }: AskAIProps) {
           </div>
 
           {/* Conversation body */}
-          <div className="min-h-[350px] space-y-6 bg-[#F3FAFA]/70 p-5 md:p-7">
+          <div className="min-h-[350px] space-y-6 bg-[#F8F5FF] p-5 md:p-7">
 
             {!response && !loading && (
               <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#DDF3F3] text-[#269BA5]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0E9FF] text-[#6810D9]">
                   <BrainCircuit size={34} />
                 </div>
 
-                <h3 className="mt-5 text-lg font-bold text-[#187D87]">
+                <h3 className="mt-5 text-lg font-bold text-[#17152B]">
                   What would you like to know?
                 </h3>
 
-                <p className="mt-2 max-w-md text-sm leading-6 text-[#55505A]">
+                <p className="mt-2 max-w-md text-sm leading-6 text-[#625D7A]">
                   Ask about a meeting, participant, assigned task or deadline.
                   Answers are retrieved from available meeting records.
                 </p>
 
-                <div className="mt-6 flex items-center gap-2 text-xs text-[#89818B]">
-                  <Lightbulb size={15} className="text-[#269BA5]" />
+                <div className="mt-6 flex items-center gap-2 text-xs text-[#625D7A]">
+                  <Lightbulb size={15} className="text-[#6810D9]" />
                   Try one of the suggested questions
                 </div>
               </div>
@@ -631,15 +634,15 @@ export default function AskAI({ projectId }: AskAIProps) {
 
             {loading && (
               <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#DDF3F3] text-[#269BA5]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0E9FF] text-[#6810D9]">
                   <LoaderCircle size={32} className="animate-spin" />
                 </div>
 
-                <h3 className="mt-5 font-bold text-[#187D87]">
+                <h3 className="mt-5 font-bold text-[#17152B]">
                   Searching meeting records
                 </h3>
 
-                <p className="mt-2 text-sm text-[#89818B]">
+                <p className="mt-2 text-sm text-[#625D7A]">
                   Finding relevant information and supporting evidence...
                 </p>
               </div>
@@ -649,8 +652,8 @@ export default function AskAI({ projectId }: AskAIProps) {
               <>
                 {/* User question */}
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#187D87] px-5 py-4 text-white shadow-sm">
-                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-[#DDF3F3]">
+                  <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#6810D9] px-5 py-4 text-white shadow-sm">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-[#F0E9FF]">
                       <User size={14} />
                       YOUR QUESTION
                     </div>
@@ -663,20 +666,20 @@ export default function AskAI({ projectId }: AskAIProps) {
 
                 {/* AI answer */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DDF3F3] text-[#269BA5]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0E9FF] text-[#6810D9]">
                     <Bot size={21} />
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-bold text-[#187D87]">
+                      <span className="text-sm font-bold text-[#17152B]">
                         MeetGraph AI
                       </span>
 
                       <span
                         className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${response.sources.length > 0
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
+                            ? 'bg-[#DCFCE7] text-[#166534]'
+                            : 'bg-[#FEF3C7] text-[#92400E]'
                           }`}
                       >
                         {response.sources.length > 0
@@ -685,17 +688,17 @@ export default function AskAI({ projectId }: AskAIProps) {
                       </span>
                     </div>
 
-                    <article className="rounded-2xl rounded-tl-md border border-[#C6E5E6] bg-white p-5 shadow-sm">
-                      <p className="whitespace-pre-wrap text-sm leading-7 text-[#187D87]">
+                    <article className="rounded-2xl rounded-tl-md border border-[#E2DDF5] bg-white p-5 shadow-sm">
+                      <p className="whitespace-pre-wrap text-sm leading-7 text-[#17152B]">
                         {response.answer}
                       </p>
 
-                      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#C6E5E6] pt-4">
-                        <span className="rounded-lg bg-[#DDF3F3] px-3 py-1.5 text-[11px] font-semibold capitalize text-[#187D87]">
+                      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#E2DDF5] pt-4">
+                        <span className="rounded-lg bg-[#F0E9FF] px-3 py-1.5 text-[11px] font-semibold capitalize text-[#6810D9]">
                           {response.answer_method.replaceAll('_', ' ')}
                         </span>
 
-                        <span className="text-xs text-[#89818B]">
+                        <span className="text-xs text-[#625D7A]">
                           {response.sources.length} supporting sources
                         </span>
                       </div>
@@ -706,7 +709,7 @@ export default function AskAI({ projectId }: AskAIProps) {
                       <button
                         type="button"
                         onClick={() => downloadAnswerAsPDF(response)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#187D87] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#269BA5] hover:shadow-md hover:shadow-[#187D87]/20"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#6810D9] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#5135E8] hover:shadow-md hover:shadow-[#6810D9]/20"
                       >
                         <Download size={15} />
                         Download PDF
@@ -715,7 +718,7 @@ export default function AskAI({ projectId }: AskAIProps) {
                       <button
                         type="button"
                         onClick={() => downloadAnswerAsTXT(response)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-4 py-2.5 text-xs font-semibold text-[#187D87] transition hover:bg-[#F3FAFA]"
+                        className="inline-flex items-center gap-2 rounded-xl border border-[#E2DDF5] bg-white px-4 py-2.5 text-xs font-semibold text-[#6810D9] transition hover:bg-[#F0E9FF]"
                       >
                         <FileText size={15} />
                         Download TXT
@@ -725,23 +728,23 @@ export default function AskAI({ projectId }: AskAIProps) {
                 </div>
 
                 {/* Supporting evidence */}
-                <div className="border-t border-[#C6E5E6] pt-5 md:ml-[52px]">
+                <div className="border-t border-[#E2DDF5] pt-5 md:ml-[52px]">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-bold text-[#187D87]">
+                      <h3 className="font-bold text-[#17152B]">
                         Supporting evidence
                       </h3>
 
-                      <p className="mt-1 text-xs text-[#89818B]">
+                      <p className="mt-1 text-xs text-[#625D7A]">
                         Information retrieved from original meeting records
                       </p>
                     </div>
 
-                    <FileText size={20} className="text-[#269BA5]" />
+                    <FileText size={20} className="text-[#6810D9]" />
                   </div>
 
                   {response.sources.length === 0 ? (
-                    <div className="rounded-xl border border-[#C6E5E6] bg-white p-4 text-sm text-[#89818B]">
+                    <div className="rounded-xl border border-[#E2DDF5] bg-white p-4 text-sm text-[#625D7A]">
                       No supporting transcript evidence was returned.
                     </div>
                   ) : (
@@ -749,32 +752,32 @@ export default function AskAI({ projectId }: AskAIProps) {
                       {response.sources.map((source, index) => (
                         <article
                           key={`${source.meeting_id}-${index}`}
-                          className="rounded-2xl border border-[#C6E5E6] bg-white p-4 transition hover:border-[#187D87]"
+                          className="rounded-2xl border border-[#E2DDF5] bg-white p-4 transition hover:border-[#6810D9]"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                              <p className="text-[11px] font-medium text-[#89818B]">
+                              <p className="text-[11px] font-medium text-[#625D7A]">
                                 MEETING {source.meeting_id}
                               </p>
 
-                              <h4 className="mt-1 text-sm font-semibold text-[#187D87]">
+                              <h4 className="mt-1 text-sm font-semibold text-[#17152B]">
                                 {source.meeting_title}
                               </h4>
                             </div>
 
-                            <span className="rounded-full bg-[#DDF3F3] px-3 py-1 text-[10px] font-semibold capitalize text-[#187D87]">
+                            <span className="rounded-full bg-[#F0E9FF] px-3 py-1 text-[10px] font-semibold capitalize text-[#6810D9]">
                               {source.source_type.replaceAll('_', ' ')}
                             </span>
                           </div>
 
-                          <blockquote className="mt-3 rounded-xl border-l-[3px] border-[#269BA5] bg-[#F3FAFA] px-4 py-3 text-sm leading-6 text-[#187D87]">
+                          <blockquote className="mt-3 rounded-xl border-l-[3px] border-[#6810D9] bg-[#F0E9FF] px-4 py-3 text-sm leading-6 text-[#25213B]">
                             {source.evidence_text}
                           </blockquote>
 
-                          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#89818B]">
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#625D7A]">
                             {source.speaker && (
                               <span className="inline-flex items-center gap-1.5">
-                                <User size={13} className="text-[#269BA5]" />
+                                <User size={13} className="text-[#6810D9]" />
                                 {source.speaker}
                               </span>
                             )}
@@ -782,7 +785,7 @@ export default function AskAI({ projectId }: AskAIProps) {
                             {(source.start_seconds != null ||
                               source.end_seconds != null) && (
                                 <span className="inline-flex items-center gap-1.5">
-                                  <Clock3 size={13} className="text-[#269BA5]" />
+                                  <Clock3 size={13} className="text-[#6810D9]" />
                                   {formatTime(source.start_seconds) ?? 'Unknown'}
                                   {source.end_seconds != null &&
                                     ` - ${formatTime(source.end_seconds)}`}
@@ -798,7 +801,7 @@ export default function AskAI({ projectId }: AskAIProps) {
             )}
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
                 {error}
               </div>
             )}
@@ -810,13 +813,13 @@ export default function AskAI({ projectId }: AskAIProps) {
               event.preventDefault();
               void submitQuestion();
             }}
-            className="border-t border-[#C6E5E6] bg-white p-5 md:p-6"
+            className="border-t border-[#E2DDF5] bg-white p-5 md:p-6"
           >
             <label htmlFor="meeting-question" className="sr-only">
               Ask a question
             </label>
 
-            <div className="rounded-2xl border border-[#C6E5E6] bg-[#F3FAFA] p-3 transition focus-within:border-[#187D87] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#DDF3F3]">
+            <div className="rounded-2xl border border-[#E2DDF5] bg-[#F8F5FF] p-3 transition focus-within:border-[#6810D9] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#F0E9FF]">
               <textarea
                 id="meeting-question"
                 value={question}
@@ -825,11 +828,11 @@ export default function AskAI({ projectId }: AskAIProps) {
                 rows={3}
                 maxLength={1000}
                 disabled={loading}
-                className="w-full resize-y bg-transparent px-2 py-2 text-sm leading-6 text-[#187D87] outline-none placeholder:text-[#89818B] disabled:opacity-60"
+                className="w-full resize-y bg-transparent px-2 py-2 text-sm leading-6 text-[#17152B] outline-none placeholder:text-[#89849F] disabled:opacity-60"
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#C6E5E6] pt-3">
-                <span className="text-[11px] text-[#89818B]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E2DDF5] pt-3">
+                <span className="text-[11px] text-[#625D7A]">
                   Answers are based on saved meeting evidence
                 </span>
 
@@ -840,7 +843,7 @@ export default function AskAI({ projectId }: AskAIProps) {
                     loadingMeetings ||
                     question.trim().length < 3
                   }
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#187D87] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#269BA5] hover:shadow-md hover:shadow-[#187D87]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#6810D9] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#5135E8] hover:shadow-md hover:shadow-[#6810D9]/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <LoaderCircle size={15} className="animate-spin" />
@@ -859,26 +862,26 @@ export default function AskAI({ projectId }: AskAIProps) {
         <aside className="space-y-5">
 
           {/* Suggested questions */}
-          <section className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-[#E2DDF5] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
-              <Lightbulb size={18} className="text-[#269BA5]" />
+              <Lightbulb size={18} className="text-[#6810D9]" />
 
-              <h3 className="font-bold text-[#187D87]">
+              <h3 className="font-bold text-[#17152B]">
                 Suggested questions
               </h3>
             </div>
 
-            <p className="mt-2 text-xs leading-5 text-[#89818B]">
+            <p className="mt-2 text-xs leading-5 text-[#625D7A]">
               Select a question to search your meeting records.
             </p>
 
             {selectedMeetingId === 'all' && meetings.length >= 2 && (
-              <div className="mt-5 border-t border-[#C6E5E6] pt-4">
+              <div className="mt-5 border-t border-[#E2DDF5] pt-4">
                 <div className="mb-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#269BA5]">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#6810D9]">
                     Cross-meeting comparison
                   </h4>
-                  <p className="mt-1 text-xs leading-5 text-[#89818B]">
+                  <p className="mt-1 text-xs leading-5 text-[#625D7A]">
                     Compare discussion across Meeting 1 and Meeting 2 using
                     the evidence available in this project.
                   </p>
@@ -895,17 +898,17 @@ export default function AskAI({ projectId }: AskAIProps) {
                           setQuestion(suggestedQuestion);
                           void submitQuestion(suggestedQuestion);
                         }}
-                        className="group flex w-full items-start gap-3 rounded-xl border border-[#DDF3F3] bg-[#F3FAFA] p-3 text-left transition hover:border-[#187D87] hover:bg-[#DDF3F3] disabled:opacity-50"
+                        className="group flex w-full items-start gap-3 rounded-xl border border-[#E2DDF5] bg-[#F0E9FF] p-3 text-left transition hover:border-[#6810D9] hover:bg-[#F0E9FF] disabled:opacity-50"
                       >
-                        <div className="rounded-lg bg-white p-2 text-[#269BA5]">
+                        <div className="rounded-lg bg-white p-2 text-[#6810D9]">
                           <Icon size={16} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-[#187D87]">
+                          <p className="text-xs font-semibold text-[#17152B]">
                             {title}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-[#89818B] group-hover:text-[#269BA5]">
+                          <p className="mt-1 text-xs leading-5 text-[#625D7A] group-hover:text-[#5135E8]">
                             {suggestedQuestion}
                           </p>
                         </div>
@@ -917,7 +920,7 @@ export default function AskAI({ projectId }: AskAIProps) {
             )}
 
             {selectedMeetingId !== 'all' && (
-              <p className="mt-4 rounded-xl bg-[#F3FAFA] p-3 text-xs leading-5 text-[#55505A]">
+              <p className="mt-4 rounded-xl bg-[#F0E9FF] p-3 text-xs leading-5 text-[#625D7A]">
                 To compare meetings, change Search scope to All project meetings.
               </p>
             )}
@@ -933,18 +936,18 @@ export default function AskAI({ projectId }: AskAIProps) {
                       setQuestion(suggestedQuestion);
                       void submitQuestion(suggestedQuestion);
                     }}
-                    className="group flex w-full items-start gap-3 rounded-xl border border-[#C6E5E6] p-3 text-left transition hover:border-[#187D87] hover:bg-[#F3FAFA] disabled:opacity-50"
+                    className="group flex w-full items-start gap-3 rounded-xl border border-[#E2DDF5] p-3 text-left transition hover:border-[#6810D9] hover:bg-[#F0E9FF] disabled:opacity-50"
                   >
-                    <div className="rounded-lg bg-[#DDF3F3] p-2 text-[#269BA5]">
+                    <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
                       <Icon size={16} />
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-[#187D87]">
+                      <p className="text-xs font-semibold text-[#17152B]">
                         {title}
                       </p>
 
-                      <p className="mt-1 text-xs leading-5 text-[#89818B] group-hover:text-[#269BA5]">
+                      <p className="mt-1 text-xs leading-5 text-[#625D7A] group-hover:text-[#6810D9]">
                         {suggestedQuestion}
                       </p>
                     </div>
@@ -955,17 +958,17 @@ export default function AskAI({ projectId }: AskAIProps) {
           </section>
 
           {/* Recent questions */}
-          <section className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-[#E2DDF5] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
-              <Clock3 size={18} className="text-[#269BA5]" />
+              <Clock3 size={18} className="text-[#6810D9]" />
 
-              <h3 className="font-bold text-[#187D87]">
+              <h3 className="font-bold text-[#17152B]">
                 Recent questions
               </h3>
             </div>
 
             {history.length === 0 ? (
-              <p className="mt-3 text-xs leading-5 text-[#89818B]">
+              <p className="mt-3 text-xs leading-5 text-[#625D7A]">
                 Your recent questions will appear here.
               </p>
             ) : (
@@ -979,11 +982,11 @@ export default function AskAI({ projectId }: AskAIProps) {
                       setQuestion(item);
                       void submitQuestion(item);
                     }}
-                    className="flex w-full items-start gap-2 rounded-lg px-2 py-2.5 text-left text-xs leading-5 text-[#55505A] transition hover:bg-[#F3FAFA] hover:text-[#269BA5] disabled:opacity-50"
+                    className="flex w-full items-start gap-2 rounded-lg px-2 py-2.5 text-left text-xs leading-5 text-[#625D7A] transition hover:bg-[#F0E9FF] hover:text-[#6810D9] disabled:opacity-50"
                   >
                     <MessageSquare
                       size={14}
-                      className="mt-0.5 shrink-0 text-[#269BA5]"
+                      className="mt-0.5 shrink-0 text-[#6810D9]"
                     />
 
                     <span>{item}</span>
@@ -994,16 +997,16 @@ export default function AskAI({ projectId }: AskAIProps) {
           </section>
 
           {/* Evidence information */}
-          <section className="rounded-2xl border border-[#C6E5E6] bg-white p-5">
+          <section className="rounded-2xl border border-[#E2DDF5] bg-white p-5">
             <div className="flex items-center gap-2">
-              <ShieldCheck size={18} className="text-[#269BA5]" />
+              <ShieldCheck size={18} className="text-[#6810D9]" />
 
-              <h3 className="text-sm font-bold text-[#187D87]">
+              <h3 className="text-sm font-bold text-[#17152B]">
                 Evidence-first answers
               </h3>
             </div>
 
-            <p className="mt-3 text-xs leading-6 text-[#55505A]">
+            <p className="mt-3 text-xs leading-6 text-[#625D7A]">
               MeetGraph AI retrieves information from saved project meeting
               records. If supporting information is unavailable, it should
               not be treated as a confirmed meeting fact.

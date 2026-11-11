@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   CalendarDays,
@@ -55,7 +54,7 @@ export default function Sidebar({
       className={`
         mg-sidebar fixed inset-y-0 left-0 z-50
         flex h-[100dvh] w-[280px] shrink-0 flex-col
-        border-r border-[#EBC3D4] bg-white px-3
+        border-r border-[#E2DDF5] bg-[#FFFFFF] px-3
         transition-transform duration-300 ease-in-out
         md:sticky md:top-0 md:z-20 md:h-screen md:w-[238px]
         md:translate-x-0
@@ -63,16 +62,16 @@ export default function Sidebar({
       `}
     >
       {/* Brand */}
-      <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-[#EBC3D4] px-2">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C65383] text-white shadow-sm">
+      <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-[#E2DDF5] px-2">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6810D9] to-[#5135E8] text-white shadow-md shadow-[#6810D9]/20">
           <AudioLines size={21} strokeWidth={2.1} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[15px] font-bold tracking-tight text-[#34303A]">
+          <h1 className="truncate text-[15px] font-bold tracking-tight text-[#17152B]">
             MeetGraph AI
           </h1>
-          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#89818B]">
+          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#89849F]">
             Meeting intelligence
           </p>
         </div>
@@ -81,7 +80,7 @@ export default function Sidebar({
           type="button"
           onClick={onClose}
           aria-label="Close navigation menu"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#55505A] hover:bg-[#FFF5F8] hover:text-[#A83E6D] md:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#625D7A] hover:bg-[#F0E9FF] hover:text-[#6810D9] md:hidden"
         >
           <X size={20} />
         </button>
@@ -89,7 +88,7 @@ export default function Sidebar({
 
       {/* Navigation */}
       <div className="min-h-0 flex-1 overflow-y-auto px-1 pt-7">
-        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#89818B]">
+        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#89849F]">
           Workspace
         </p>
 
@@ -105,8 +104,8 @@ export default function Sidebar({
                 aria-current={active ? 'page' : undefined}
                 className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left text-[13px] transition-colors duration-150 ${
                   active
-                    ? 'border-[#C65383] bg-[#F8E1EB] font-semibold text-[#A83E6D]'
-                    : 'border-transparent font-medium text-[#55505A] hover:border-[#EBC3D4] hover:bg-[#FFF5F8] hover:text-[#A83E6D]'
+                    ? 'border-[#E2DDF5] bg-[#F0E9FF] font-semibold text-[#6810D9]'
+                    : 'border-transparent font-medium text-[#625D7A] hover:border-[#E2DDF5] hover:bg-[#F8F5FF] hover:text-[#6810D9]'
                 }`}
               >
                 <Icon
@@ -114,15 +113,15 @@ export default function Sidebar({
                   strokeWidth={active ? 2.1 : 1.8}
                   className={
                     active
-                      ? 'shrink-0 text-[#A83E6D]'
-                      : 'shrink-0 text-[#89818B] group-hover:text-[#A83E6D]'
+                      ? 'shrink-0 text-[#6810D9]'
+                      : 'shrink-0 text-[#89849F] group-hover:text-[#6810D9]'
                   }
                 />
 
                 <span className="min-w-0 flex-1">{label}</span>
 
                 {active && (
-                  <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#A83E6D]" />
+                  <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#6810D9]" />
                 )}
               </button>
             );
@@ -132,22 +131,23 @@ export default function Sidebar({
 
       {/* Sidebar footer */}
       <div className="mt-auto shrink-0 px-1 pb-5 pt-4">
-        <div className="rounded-xl border border-[#EBC3D4] bg-[#F8E1EB] p-3.5">
-          <div className="flex items-center gap-2 text-[#A83E6D]">
+        <div className="rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] p-3.5">
+          <div className="flex items-center gap-2 text-[#6810D9]">
             <AudioLines size={15} />
             <p className="text-xs font-semibold">Meeting intelligence</p>
           </div>
 
-          <p className="mt-2 text-[11px] leading-5 text-[#55505A]">
+          <p className="mt-2 text-[11px] leading-5 text-[#625D7A]">
             Meetings, tasks and decisions in one connected workspace.
           </p>
         </div>
 
-        <div className="mt-4 border-t border-[#EBC3D4] px-2 pt-4">
-          <p className="text-xs font-semibold text-[#34303A]">
+        <div className="mt-4 border-t border-[#E2DDF5] px-2 pt-4">
+          <p className="text-xs font-semibold text-[#17152B]">
             MeetGraph AI
           </p>
-          <p className="mt-1 text-[11px] text-[#89818B]">
+
+          <p className="mt-1 text-[11px] text-[#89849F]">
             Development workspace
           </p>
         </div>

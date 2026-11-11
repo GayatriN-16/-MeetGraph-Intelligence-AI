@@ -1,34 +1,37 @@
-﻿
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-/* MeetGraph AI | Existing brand theme */
+/* MeetGraph AI | Purple & Lavender Light Theme */
 :root {
   color-scheme: light;
 
-  --mg-primary: #D5FBFB;
-  --mg-primary-strong: #172B4D;
-  --mg-primary-soft: #D5FBFB;
-  --mg-pista: #FBB7EC;
-  --mg-pista-strong: #172B4D;
-  --mg-navy: #172B4D;
-  --mg-navy-soft: #42536B;
-  --mg-background: #FFFFFF;
-  --mg-surface: #FFFFFF;
-  --mg-surface-muted: #D5FBFB;
-  --mg-text: #172B4D;
-  --mg-text-secondary: #42536B;
-  --mg-muted: #718096;
-  --mg-border: #172B4D;
-  --mg-border-strong: #172B4D;
-  --mg-success: #172B4D;
-  --mg-success-bg: #D5FBFB;
-  --mg-warning: #A8752C;
-  --mg-warning-bg: #FFF4DF;
-  --mg-danger: #B64B50;
-  --mg-danger-bg: #FCEBED;
+  --mg-primary: #6810D9;
+  --mg-primary-strong: #5135E8;
+  --mg-primary-soft: #F0E9FF;
+  --mg-pista: #F8F5FF;
+  --mg-pista-strong: #6810D9;
+  --mg-navy: #6810D9;
+  --mg-navy-soft: #625D7A;
 
-  --mg-shadow-sm: 0 1px 3px rgba(23, 43, 77, 0.06);
-  --mg-shadow-md: 0 8px 24px rgba(23, 43, 77, 0.08);
+  --mg-background: #E8E8FA;
+  --mg-surface: #FFFFFF;
+  --mg-surface-muted: #F8F5FF;
+
+  --mg-text: #17152B;
+  --mg-text-secondary: #625D7A;
+  --mg-muted: #625D7A;
+
+  --mg-border: #E2DDF5;
+  --mg-border-strong: #CDBBFA;
+
+  --mg-success: #168653;
+  --mg-success-bg: #EAF7F0;
+  --mg-warning: #B7791F;
+  --mg-warning-bg: #FFF6E5;
+  --mg-danger: #DC2626;
+  --mg-danger-bg: #FEF2F2;
+
+  --mg-shadow-sm: 0 1px 3px rgba(38, 25, 76, 0.07);
+  --mg-shadow-md: 0 8px 24px rgba(38, 25, 76, 0.10);
 }
 
 /* Global reset */
@@ -91,6 +94,17 @@ select {
   color: var(--mg-text);
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #625D7A;
+  opacity: 1;
+}
+
+select option {
+  color: #17152B;
+  background: #FFFFFF;
+}
+
 textarea {
   resize: vertical;
 }
@@ -113,23 +127,23 @@ canvas {
 }
 
 .react-flow__edge-path {
-  stroke: #168C98 !important;
+  stroke: #6810D9 !important;
   stroke-width: 2.5px !important;
   opacity: 1 !important;
 }
 
 .react-flow__edge.animated .react-flow__edge-path {
-  stroke: #168C98 !important;
+  stroke: #5135E8 !important;
   stroke-width: 2.5px !important;
 }
 
 .react-flow__arrowhead {
-  fill: #168C98 !important;
-  stroke: #168C98 !important;
+  fill: #6810D9 !important;
+  stroke: #6810D9 !important;
 }
 
 .react-flow__edge-text {
-  fill: #172B4D;
+  fill: #17152B;
 }
 
 .react-flow__edge-textbg {
@@ -137,8 +151,8 @@ canvas {
 }
 
 .react-flow__handle {
-  background: #168C98;
-  border: 1px solid #FFFFFF;
+  background: #6810D9;
+  border: 1px solid #E2DDF5;
 }
 
 /* Root application */
@@ -151,8 +165,8 @@ canvas {
 }
 
 ::selection {
-  background: var(--mg-primary-soft);
-  color: var(--mg-navy);
+  background: #E2D5FF;
+  color: #17152B;
 }
 
 :focus-visible {
@@ -163,7 +177,7 @@ canvas {
 /* Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #B8C9DA transparent;
+  scrollbar-color: #CDBBFA transparent;
 }
 
 ::-webkit-scrollbar {
@@ -172,7 +186,7 @@ canvas {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #B8C9DA;
+  background: #CDBBFA;
   border-radius: 20px;
 }
 
@@ -196,8 +210,9 @@ canvas {
 }
 
 .mg-sidebar {
-  background: var(--mg-surface);
-  color: var(--mg-text);
+  background: #FFFFFF;
+  color: #17152B;
+  border-color: #E2DDF5;
 }
 
 .mg-muted {
@@ -205,7 +220,7 @@ canvas {
 }
 
 .mg-primary-button {
-  background: var(--mg-navy);
+  background: linear-gradient(135deg, #6810D9, #5135E8);
   color: #FFFFFF;
   transition:
     background 160ms ease,
@@ -214,7 +229,7 @@ canvas {
 }
 
 .mg-primary-button:hover {
-  background: #25436F;
+  background: linear-gradient(135deg, #570BC0, #4328D0);
 }
 
 .mg-primary-button:disabled {

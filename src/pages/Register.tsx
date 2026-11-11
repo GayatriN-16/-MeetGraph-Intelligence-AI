@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   AudioLines,
@@ -57,46 +58,46 @@ export default function Register({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4 py-10">
+    <main className="flex min-h-screen items-center justify-center bg-[#E8E8FA] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-7 flex items-center justify-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#D64F88] text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#7412D8] to-[#5135E8] text-white shadow-lg shadow-[#6810D9]/20">
             <AudioLines size={25} />
           </div>
 
           <div>
-            <h1 className="text-xl font-bold text-[#26364A]">
+            <h1 className="text-xl font-bold text-[#17152B]">
               MeetGraph AI
             </h1>
-            <p className="text-[10px] font-semibold tracking-[0.16em] text-[#718096]">
+            <p className="text-[10px] font-semibold tracking-[0.16em] text-[#77738F]">
               MEETING INTELLIGENCE
             </p>
           </div>
         </div>
 
-        <section className="rounded-2xl border border-[#F1D5E1] bg-white p-7 shadow-sm sm:p-9">
+        <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-7 shadow-xl shadow-[#5135E8]/5 sm:p-9">
           <div className="mb-6">
-            <span className="inline-flex rounded-full border border-[#BCE7EB] bg-[#E8F8F9] px-3 py-1 text-xs font-semibold text-[#087F91]">
+            <span className="inline-flex rounded-full border border-[#E2DDF5] bg-[#F0E9FF] px-3 py-1 text-xs font-semibold text-[#6810D9]">
               CREATE YOUR WORKSPACE ACCOUNT
             </span>
 
-            <h2 className="mt-5 text-2xl font-bold text-[#087F91]">
+            <h2 className="mt-5 text-2xl font-bold text-[#17152B]">
               Create account
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-[#718096]">
+            <p className="mt-2 text-sm leading-6 text-[#625D7A]">
               Get started with intelligent meeting management.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#26364A]">
+              <label className="mb-2 block text-sm font-medium text-[#25213B]">
                 Full name
               </label>
 
-              <div className="flex items-center rounded-xl border border-[#DCE7EA] px-3 focus-within:border-[#078B9B]">
-                <User size={18} className="text-[#94A3B8]" />
+              <div className="flex items-center rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-3 transition focus-within:border-[#6810D9] focus-within:ring-2 focus-within:ring-[#F0E9FF]">
+                <User size={18} className="text-[#89849F]" />
 
                 <input
                   type="text"
@@ -107,18 +108,18 @@ export default function Register({
                   minLength={2}
                   maxLength={150}
                   required
-                  className="w-full bg-transparent px-3 py-3 text-sm text-[#26364A] outline-none"
+                  className="w-full bg-transparent px-3 py-3 text-sm text-[#25213B] outline-none placeholder:text-[#89849F]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#26364A]">
+              <label className="mb-2 block text-sm font-medium text-[#25213B]">
                 Email address
               </label>
 
-              <div className="flex items-center rounded-xl border border-[#DCE7EA] px-3 focus-within:border-[#078B9B]">
-                <Mail size={18} className="text-[#94A3B8]" />
+              <div className="flex items-center rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-3 transition focus-within:border-[#6810D9] focus-within:ring-2 focus-within:ring-[#F0E9FF]">
+                <Mail size={18} className="text-[#89849F]" />
 
                 <input
                   type="email"
@@ -127,18 +128,18 @@ export default function Register({
                   placeholder="you@example.com"
                   autoComplete="email"
                   required
-                  className="w-full bg-transparent px-3 py-3 text-sm text-[#26364A] outline-none"
+                  className="w-full bg-transparent px-3 py-3 text-sm text-[#25213B] outline-none placeholder:text-[#89849F]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#26364A]">
+              <label className="mb-2 block text-sm font-medium text-[#25213B]">
                 Password
               </label>
 
-              <div className="flex items-center rounded-xl border border-[#DCE7EA] px-3 focus-within:border-[#078B9B]">
-                <Lock size={18} className="text-[#94A3B8]" />
+              <div className="flex items-center rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-3 transition focus-within:border-[#6810D9] focus-within:ring-2 focus-within:ring-[#F0E9FF]">
+                <Lock size={18} className="text-[#89849F]" />
 
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -149,13 +150,13 @@ export default function Register({
                   minLength={8}
                   maxLength={128}
                   required
-                  className="w-full bg-transparent px-3 py-3 text-sm text-[#26364A] outline-none"
+                  className="w-full bg-transparent px-3 py-3 text-sm text-[#25213B] outline-none placeholder:text-[#89849F]"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[#94A3B8] hover:text-[#087F91]"
+                  className="text-[#89849F] transition hover:text-[#6810D9]"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -164,12 +165,12 @@ export default function Register({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#26364A]">
+              <label className="mb-2 block text-sm font-medium text-[#25213B]">
                 Confirm password
               </label>
 
-              <div className="flex items-center rounded-xl border border-[#DCE7EA] px-3 focus-within:border-[#078B9B]">
-                <Lock size={18} className="text-[#94A3B8]" />
+              <div className="flex items-center rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-3 transition focus-within:border-[#6810D9] focus-within:ring-2 focus-within:ring-[#F0E9FF]">
+                <Lock size={18} className="text-[#89849F]" />
 
                 <input
                   type="password"
@@ -178,13 +179,13 @@ export default function Register({
                   placeholder="Re-enter your password"
                   autoComplete="new-password"
                   required
-                  className="w-full bg-transparent px-3 py-3 text-sm text-[#26364A] outline-none"
+                  className="w-full bg-transparent px-3 py-3 text-sm text-[#25213B] outline-none placeholder:text-[#89849F]"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-3 text-sm text-[#DC2626]">
                 {error}
               </div>
             )}
@@ -192,26 +193,26 @@ export default function Register({
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D64F88] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#C44279] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-[#6810D9]/15 transition hover:shadow-lg hover:shadow-[#6810D9]/25 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Creating account...' : 'Create account'}
               {!loading && <ArrowRight size={17} />}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-[#718096]">
+          <p className="mt-6 text-center text-sm text-[#625D7A]">
             Already have an account?{' '}
             <button
               type="button"
               onClick={onNavigateLogin}
-              className="font-semibold text-[#D64F88] hover:underline"
+              className="font-semibold text-[#6810D9] hover:underline"
             >
               Sign in
             </button>
           </p>
         </section>
 
-        <p className="mt-6 text-center text-xs text-[#94A3B8]">
+        <p className="mt-6 text-center text-xs text-[#89849F]">
           MeetGraph AI · Meeting Intelligence Workspace
         </p>
       </div>

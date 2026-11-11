@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
@@ -11,6 +12,7 @@ import {
   TrendingUp,
   Users,
   XCircle,
+  Sparkles,
 } from 'lucide-react';
 
 import {
@@ -70,18 +72,18 @@ function StatCard({
   accent: 'pink' | 'cyan' | 'navy' | 'green';
 }) {
   const styles = {
-    pink: 'bg-[#DDF3F3] text-[#269BA5]',
-    cyan: 'bg-[#DDF3F3] text-[#269BA5]',
-    navy: 'bg-[#DDF3F3] text-[#187D87]',
-    green: 'bg-[#E8F6EF] text-[#37845C]',
+    pink: 'bg-[#F0E9FF] text-[#6810D9]',
+    cyan: 'bg-[#EAE6FF] text-[#5135E8]',
+    navy: 'bg-[#F0E9FF] text-[#625D7A]',
+    green: 'bg-[#DCFCE7] text-[#16A34A]',
   };
 
   return (
-    <article className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+    <article className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(81,53,232,0.08)]">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-[#89818B]">{label}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-[#34303A]">
+          <p className="text-sm font-medium text-[#89849F]">{label}</p>
+          <p className="mt-3 text-3xl font-bold tracking-tight text-[#17152B]">
             {value}
           </p>
         </div>
@@ -91,7 +93,7 @@ function StatCard({
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-[#89818B]">{description}</p>
+      <p className="mt-4 text-xs text-[#89849F]">{description}</p>
     </article>
   );
 }
@@ -211,8 +213,8 @@ export default function Analytics({ projectId }: AnalyticsProps) {
   if (loading) {
     return (
       <div className="flex min-h-[55vh] flex-col items-center justify-center">
-        <RefreshCw size={25} className="animate-spin text-[#269BA5]" />
-        <p className="mt-4 text-sm text-[#89818B]">
+        <RefreshCw size={25} className="animate-spin text-[#6810D9]" />
+        <p className="mt-4 text-sm text-[#89849F]">
           Loading project analytics...
         </p>
       </div>
@@ -221,16 +223,16 @@ export default function Analytics({ projectId }: AnalyticsProps) {
 
   if (error) {
     return (
-      <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-[#C6E5E6] bg-white p-7 text-center">
-        <AlertCircle size={30} className="mx-auto text-red-600" />
-        <h2 className="mt-3 font-semibold text-[#34303A]">
+      <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-7 text-center">
+        <AlertCircle size={30} className="mx-auto text-[#DC2626]" />
+        <h2 className="mt-3 font-semibold text-[#17152B]">
           Unable to load analytics
         </h2>
-        <p className="mt-2 text-sm text-[#89818B]">{error}</p>
+        <p className="mt-2 text-sm text-[#625D7A]">{error}</p>
         <button
           type="button"
           onClick={() => void loadAnalytics()}
-          className="mt-5 rounded-xl bg-[#187D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#269BA5]"
+          className="mt-5 rounded-xl bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"
         >
           Try again
         </button>
@@ -250,29 +252,43 @@ export default function Analytics({ projectId }: AnalyticsProps) {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-7">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#269BA5]">
-            Workspace insights
-          </p>
-          <h1 className="mt-2 text-2xl font-bold text-[#34303A]">
-            Project Analytics
-          </h1>
-          <p className="mt-1 text-sm text-[#89818B]">
-            A data-driven overview of your meeting activity and project progress.
-          </p>
-        </div>
+      {/* Page introduction */}
+      <section className="relative overflow-hidden rounded-2xl border border-[#6810D9]/20 bg-gradient-to-r from-[#7412D8] to-[#5135E8] px-6 py-7 shadow-[0_8px_24px_rgba(81,53,232,0.16)] md:px-8">
+        <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+              <Sparkles size={13} />
+              Workspace insights
+            </span>
 
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+              Project Analytics
+            </h1>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/85">
+              A data-driven overview of your meeting activity and project progress.
+            </p>
+          </div>
+
+          <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white sm:flex">
+            <TrendingUp size={30} strokeWidth={1.7} />
+          </div>
+        </div>
+      </section>
+
+      {/* Refresh action */}
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={() => void loadAnalytics()}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#C6E5E6] bg-white px-4 py-2.5 text-sm font-semibold text-[#187D87] hover:bg-[#F3FAFA]"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E2DDF5] bg-[#FFFFFF] px-4 py-2.5 text-sm font-semibold text-[#625D7A] transition hover:border-[#5135E8] hover:bg-[#F0E9FF] hover:text-[#6810D9]"
         >
           <RefreshCw size={16} />
           Refresh data
         </button>
-      </header>
+      </div>
 
+      {/* Statistics */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total meetings"
@@ -304,31 +320,34 @@ export default function Analytics({ projectId }: AnalyticsProps) {
         />
       </section>
 
+      {/* Activity and task completion */}
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <article className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm xl:col-span-2">
+        <article className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm xl:col-span-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-[#34303A]">
+              <h2 className="font-semibold text-[#17152B]">
                 Meeting activity
               </h2>
-              <p className="mt-1 text-xs text-[#89818B]">
+              <p className="mt-1 text-xs text-[#89849F]">
                 Meetings created over the last six calendar months
               </p>
             </div>
-            <Activity size={20} className="text-[#269BA5]" />
+            <div className="rounded-lg bg-[#F0E9FF] p-2.5 text-[#6810D9]">
+              <Activity size={20} />
+            </div>
           </div>
 
-          <div className="mt-7 flex h-48 items-end gap-3 border-b border-[#C6E5E6] px-1">
+          <div className="mt-7 flex h-48 items-end gap-3 border-b border-[#E2DDF5] px-1">
             {monthlyActivity.map((item) => (
               <div
                 key={item.label}
                 className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
               >
-                <span className="text-xs font-semibold text-[#55505A]">
+                <span className="text-xs font-semibold text-[#625D7A]">
                   {item.count}
                 </span>
                 <div
-                  className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-[#187D87] to-[#70CFD3] transition-all"
+                  className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-[#6810D9] to-[#5135E8] transition-all"
                   style={{
                     height: `${Math.max(
                       item.count > 0 ? 8 : 2,
@@ -337,16 +356,18 @@ export default function Analytics({ projectId }: AnalyticsProps) {
                   }}
                   title={`${item.count} meetings`}
                 />
-                <span className="text-xs text-[#89818B]">{item.label}</span>
+                <span className="text-xs text-[#89849F]">{item.label}</span>
               </div>
             ))}
           </div>
         </article>
 
-        <article className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <Target size={19} className="text-[#269BA5]" />
-            <h2 className="font-semibold text-[#34303A]">
+            <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
+              <Target size={19} />
+            </div>
+            <h2 className="font-semibold text-[#17152B]">
               Task completion
             </h2>
           </div>
@@ -355,64 +376,67 @@ export default function Analytics({ projectId }: AnalyticsProps) {
             <div
               className="relative flex h-40 w-40 items-center justify-center rounded-full"
               style={{
-                background: `conic-gradient(#269BA5 ${metrics.completionRate}%, #C6E5E6 ${metrics.completionRate}% 100%)`,
+                background: `conic-gradient(#6810D9 ${metrics.completionRate}%, #E2DDF5 ${metrics.completionRate}% 100%)`,
               }}
             >
-              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white">
-                <span className="text-3xl font-bold text-[#34303A]">
+              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-[#FFFFFF]">
+                <span className="text-3xl font-bold text-[#17152B]">
                   {metrics.completionRate}%
                 </span>
-                <span className="text-xs text-[#89818B]">Completed</span>
+                <span className="text-xs text-[#89849F]">Completed</span>
               </div>
             </div>
           </div>
 
           <div className="mt-7 space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-[#55505A]">
-                <CheckCircle2 size={16} className="text-[#37845C]" />
+              <span className="flex items-center gap-2 text-[#625D7A]">
+                <CheckCircle2 size={16} className="text-[#16A34A]" />
                 Completed
               </span>
-              <strong className="text-[#34303A]">{metrics.completed}</strong>
+              <strong className="text-[#17152B]">{metrics.completed}</strong>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-[#55505A]">
-                <Clock3 size={16} className="text-[#269BA5]" />
+              <span className="flex items-center gap-2 text-[#625D7A]">
+                <Clock3 size={16} className="text-[#D97706]" />
                 Pending
               </span>
-              <strong className="text-[#34303A]">{metrics.pending}</strong>
+              <strong className="text-[#17152B]">{metrics.pending}</strong>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-[#55505A]">
-                <XCircle size={16} className="text-red-600" />
+              <span className="flex items-center gap-2 text-[#625D7A]">
+                <XCircle size={16} className="text-[#DC2626]" />
                 Overdue
               </span>
-              <strong className="text-[#34303A]">{metrics.overdue}</strong>
+              <strong className="text-[#17152B]">{metrics.overdue}</strong>
             </div>
           </div>
         </article>
       </section>
 
+      {/* Processing and intelligence overview */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <article className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-[#34303A]">
+            <h2 className="font-semibold text-[#17152B]">
               Meeting processing
             </h2>
-            <TrendingUp size={19} className="text-[#269BA5]" />
+            <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
+              <TrendingUp size={19} />
+            </div>
           </div>
 
           <div className="mt-5 space-y-4">
             <div>
               <div className="mb-2 flex justify-between text-sm">
-                <span className="text-[#55505A]">Transcribed meetings</span>
-                <strong className="text-[#34303A]">
+                <span className="text-[#625D7A]">Transcribed meetings</span>
+                <strong className="text-[#17152B]">
                   {metrics.processed} / {meetings.length}
                 </strong>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#C6E5E6]">
+              <div className="h-2 overflow-hidden rounded-full bg-[#E2DDF5]">
                 <div
-                  className="h-full rounded-full bg-[#70CFCB]"
+                  className="h-full rounded-full bg-gradient-to-r from-[#7412D8] to-[#5135E8]"
                   style={{
                     width: `${meetings.length
                       ? (metrics.processed / meetings.length) * 100
@@ -423,15 +447,15 @@ export default function Analytics({ projectId }: AnalyticsProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-[#DDF3F3] p-4">
-                <p className="text-xs text-[#187D87]">Processed</p>
-                <p className="mt-2 text-2xl font-bold text-[#34303A]">
+              <div className="rounded-xl bg-[#F0E9FF] p-4">
+                <p className="text-xs text-[#5135E8]">Processed</p>
+                <p className="mt-2 text-2xl font-bold text-[#17152B]">
                   {metrics.processed}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#F3FAFA] p-4">
-                <p className="text-xs text-[#55505A]">Other statuses</p>
-                <p className="mt-2 text-2xl font-bold text-[#34303A]">
+              <div className="rounded-xl bg-[#F8F5FF] p-4">
+                <p className="text-xs text-[#625D7A]">Other statuses</p>
+                <p className="mt-2 text-2xl font-bold text-[#17152B]">
                   {Math.max(0, meetings.length - metrics.processed)}
                 </p>
               </div>
@@ -439,36 +463,38 @@ export default function Analytics({ projectId }: AnalyticsProps) {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <Users size={19} className="text-[#269BA5]" />
-            <h2 className="font-semibold text-[#34303A]">
+            <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
+              <Users size={19} />
+            </div>
+            <h2 className="font-semibold text-[#17152B]">
               Intelligence overview
             </h2>
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-[#C6E5E6] p-4">
-              <p className="text-xs text-[#89818B]">Processed meetings</p>
-              <p className="mt-2 text-2xl font-bold text-[#34303A]">
+            <div className="rounded-xl border border-[#E2DDF5] bg-[#F8F5FF]/50 p-4">
+              <p className="text-xs text-[#89849F]">Processed meetings</p>
+              <p className="mt-2 text-2xl font-bold text-[#17152B]">
                 {intelligence.processed_meetings}
               </p>
             </div>
-            <div className="rounded-xl border border-[#C6E5E6] p-4">
-              <p className="text-xs text-[#89818B]">Total decisions</p>
-              <p className="mt-2 text-2xl font-bold text-[#34303A]">
+            <div className="rounded-xl border border-[#E2DDF5] bg-[#F8F5FF]/50 p-4">
+              <p className="text-xs text-[#89849F]">Total decisions</p>
+              <p className="mt-2 text-2xl font-bold text-[#17152B]">
                 {intelligence.total_decisions}
               </p>
             </div>
-            <div className="rounded-xl border border-[#C6E5E6] p-4">
-              <p className="text-xs text-[#89818B]">Total action items</p>
-              <p className="mt-2 text-2xl font-bold text-[#34303A]">
+            <div className="rounded-xl border border-[#E2DDF5] bg-[#F8F5FF]/50 p-4">
+              <p className="text-xs text-[#89849F]">Total action items</p>
+              <p className="mt-2 text-2xl font-bold text-[#17152B]">
                 {metrics.total}
               </p>
             </div>
-            <div className="rounded-xl border border-[#C6E5E6] p-4">
-              <p className="text-xs text-[#89818B]">Completion rate</p>
-              <p className="mt-2 text-2xl font-bold text-[#34303A]">
+            <div className="rounded-xl border border-[#E2DDF5] bg-[#F8F5FF]/50 p-4">
+              <p className="text-xs text-[#89849F]">Completion rate</p>
+              <p className="mt-2 text-2xl font-bold text-[#17152B]">
                 {metrics.completionRate}%
               </p>
             </div>
@@ -476,42 +502,45 @@ export default function Analytics({ projectId }: AnalyticsProps) {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-[#C6E5E6] bg-white p-5 shadow-sm">
+      {/* Recent meetings */}
+      <section className="rounded-2xl border border-[#E2DDF5] bg-[#FFFFFF] p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-[#34303A]">Recent meetings</h2>
-            <p className="mt-1 text-xs text-[#89818B]">
+            <h2 className="font-semibold text-[#17152B]">Recent meetings</h2>
+            <p className="mt-1 text-xs text-[#89849F]">
               Latest recordings in this workspace
             </p>
           </div>
-          <CalendarDays size={19} className="text-[#269BA5]" />
+          <div className="rounded-lg bg-[#F0E9FF] p-2 text-[#6810D9]">
+            <CalendarDays size={19} />
+          </div>
         </div>
 
         {recentMeetings.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[#89818B]">
+          <p className="py-8 text-center text-sm text-[#89849F]">
             No meetings available yet.
           </p>
         ) : (
-          <div className="mt-4 divide-y divide-[#C6E5E6]">
+          <div className="mt-4 divide-y divide-[#E2DDF5]">
             {recentMeetings.map((meeting) => (
               <div
                 key={meeting.id}
-                className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center"
+                className="flex flex-col justify-between gap-3 py-4 transition-colors hover:bg-[#F8F5FF] sm:flex-row sm:items-center"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#34303A]">
+                  <p className="truncate text-sm font-semibold text-[#17152B]">
                     {meeting.title}
                   </p>
-                  <p className="mt-1 text-xs text-[#89818B]">
+                  <p className="mt-1 text-xs text-[#89849F]">
                     {formatDate(meeting.meeting_date || meeting.created_at)}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[#89818B]">
+                  <span className="text-xs text-[#89849F]">
                     {formatDuration(meeting.duration_seconds || 0)}
                   </span>
-                  <span className="rounded-full bg-[#DDF3F3] px-3 py-1 text-xs font-semibold capitalize text-[#187D87]">
+                  <span className="rounded-full border border-[#E2DDF5] bg-[#F0E9FF] px-3 py-1 text-xs font-semibold capitalize text-[#5135E8]">
                     {meeting.status}
                   </span>
                 </div>

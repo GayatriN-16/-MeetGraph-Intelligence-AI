@@ -278,23 +278,23 @@ export default function App() {
   function renderPage() {
     if (selectedProjectId === null) {
       return (
-        <section className="mx-auto mt-10 w-full max-w-xl rounded-2xl border border-[#BCE7EB] bg-white p-6 text-center shadow-sm sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E4F6F7] text-[#087F91]">
+        <section className="mx-auto mt-10 w-full max-w-xl rounded-2xl border border-[#E2DDF5] bg-white p-6 text-center shadow-sm sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0E9FF] text-[#6810D9]">
             <FolderOpen size={30} strokeWidth={1.7} />
           </div>
 
-          <h2 className="mt-5 text-xl font-semibold text-[#26364A]">
+          <h2 className="mt-5 text-xl font-semibold text-[#17152B]">
             No workspace found
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-[#718096]">
+          <p className="mt-2 text-sm leading-6 text-[#625D7A]">
             Create your first workspace to start uploading and analysing meetings.
           </p>
 
           <button
             type="button"
             onClick={() => setShowCreateWorkspace(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#D64F88] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#C44279]"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#6810D9] to-[#5135E8] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-md hover:shadow-[#6810D9]/20"
           >
             <Plus size={17} />
             Create Workspace
@@ -337,14 +337,14 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC]">
+      <div className="flex min-h-screen items-center justify-center bg-[#E8E8FA]">
         <div className="text-center">
           <RefreshCw
             size={28}
-            className="mx-auto animate-spin text-[#078B9B]"
+            className="mx-auto animate-spin text-[#6810D9]"
           />
 
-          <p className="mt-4 text-sm text-[#718096]">
+          <p className="mt-4 text-sm text-[#625D7A]">
             Verifying your account...
           </p>
         </div>
@@ -375,7 +375,7 @@ export default function App() {
   // Main application
 
   return (
-    <div className="flex min-h-screen w-full overflow-x-clip bg-[var(--mg-background)] text-[var(--mg-text)]">
+    <div className="flex min-h-screen w-full overflow-x-clip bg-[#E8E8FA] text-[#17152B]">
 
       <Sidebar
         activePage={activePage}
@@ -414,21 +414,21 @@ export default function App() {
           onMenuClick={() => setMobileMenuOpen(true)}
         />
 
-        <main className="min-h-0 min-w-0 w-full flex-1 overflow-x-clip bg-[var(--mg-background)] p-3 sm:p-4 md:overflow-y-auto md:p-7 xl:p-8">
+        <main className="min-h-0 min-w-0 w-full flex-1 overflow-x-clip bg-[#E8E8FA] p-3 sm:p-4 md:overflow-y-auto md:p-7 xl:p-8">
 
           {loading ? (
             <div className="flex min-h-[60vh] flex-col items-center justify-center">
               <RefreshCw
                 size={24}
-                className="animate-spin text-[#078B9B]"
+                className="animate-spin text-[#6810D9]"
               />
 
-              <p className="mt-4 text-sm text-[#718096]">
+              <p className="mt-4 text-sm text-[#625D7A]">
                 Loading MeetGraph AI workspace...
               </p>
             </div>
           ) : error ? (
-            <div className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-[#EBC3D4] bg-white p-6 shadow-sm">
+            <div className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-[#E2DDF5] bg-white p-6 shadow-sm">
               <div className="flex items-start gap-3">
                 <AlertCircle
                   size={21}
@@ -436,18 +436,18 @@ export default function App() {
                 />
 
                 <div className="min-w-0">
-                  <h2 className="font-semibold text-[#26364A]">
+                  <h2 className="font-semibold text-[#17152B]">
                     Unable to load workspace
                   </h2>
 
-                  <p className="mt-2 break-words text-sm text-[#718096]">
+                  <p className="mt-2 break-words text-sm text-[#625D7A]">
                     {error}
                   </p>
 
                   <button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="mt-4 rounded-lg bg-[#087F91] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#066B7A]"
+                    className="mt-4 rounded-lg bg-gradient-to-r from-[#6810D9] to-[#5135E8] px-4 py-2.5 text-sm font-semibold text-white hover:shadow-md"
                   >
                     Retry
                   </button>
@@ -459,8 +459,8 @@ export default function App() {
           )}
         </main>
 
-        <footer className="w-full border-t border-[#EBC3D4] bg-white px-3 py-3 sm:px-6">
-          <p className="text-center text-[10px] text-[#89818B] sm:text-left sm:text-xs">
+        <footer className="w-full border-t border-[#E2DDF5] bg-white px-3 py-3 sm:px-6">
+          <p className="text-center text-[10px] text-[#89849F] sm:text-left sm:text-xs">
             MeetGraph AI <span className="mx-1">·</span> Meeting Intelligence Workspace
           </p>
         </footer>
@@ -469,20 +469,20 @@ export default function App() {
       {/* Create workspace dialog */}
 
       {showCreateWorkspace && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-[#EBC3D4] bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17152B]/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-[#E2DDF5] bg-white p-6 shadow-2xl">
 
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E4F6F7] text-[#087F91]">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0E9FF] text-[#6810D9]">
                   <FolderOpen size={22} />
                 </div>
 
-                <h2 className="mt-4 text-xl font-bold text-[#26364A]">
+                <h2 className="mt-4 text-xl font-bold text-[#17152B]">
                   Create Workspace
                 </h2>
 
-                <p className="mt-1 text-sm text-[#718096]">
+                <p className="mt-1 text-sm text-[#625D7A]">
                   Set up a workspace for your meetings.
                 </p>
               </div>
@@ -492,7 +492,7 @@ export default function App() {
                 onClick={() => setShowCreateWorkspace(false)}
                 disabled={creatingWorkspace}
                 aria-label="Close dialog"
-                className="rounded-lg p-2 text-[#89818B] hover:bg-[#FFF1F6]"
+                className="rounded-lg p-2 text-[#89849F] hover:bg-[#F0E9FF] hover:text-[#6810D9]"
               >
                 <X size={19} />
               </button>
@@ -505,7 +505,7 @@ export default function App() {
               <div>
                 <label
                   htmlFor="workspace-name"
-                  className="mb-2 block text-sm font-medium text-[#26364A]"
+                  className="mb-2 block text-sm font-medium text-[#17152B]"
                 >
                   Workspace name
                 </label>
@@ -521,14 +521,14 @@ export default function App() {
                   minLength={2}
                   maxLength={200}
                   required
-                  className="w-full rounded-xl border border-[#DCE7EA] px-4 py-3 text-sm text-[#26364A] outline-none transition focus:border-[#078B9B] focus:ring-2 focus:ring-[#E4F6F7]"
+                  className="w-full rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-4 py-3 text-sm text-[#17152B] outline-none transition placeholder:text-[#89849F] focus:border-[#6810D9] focus:ring-2 focus:ring-[#F0E9FF]"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="workspace-description"
-                  className="mb-2 block text-sm font-medium text-[#26364A]"
+                  className="mb-2 block text-sm font-medium text-[#17152B]"
                 >
                   Description (optional)
                 </label>
@@ -541,7 +541,7 @@ export default function App() {
                   }
                   placeholder="Describe your workspace..."
                   rows={3}
-                  className="w-full resize-none rounded-xl border border-[#DCE7EA] px-4 py-3 text-sm text-[#26364A] outline-none transition focus:border-[#078B9B] focus:ring-2 focus:ring-[#E4F6F7]"
+                  className="w-full resize-none rounded-xl border border-[#E2DDF5] bg-[#F8F5FF] px-4 py-3 text-sm text-[#17152B] outline-none transition placeholder:text-[#89849F] focus:border-[#6810D9] focus:ring-2 focus:ring-[#F0E9FF]"
                 />
               </div>
 
@@ -556,7 +556,7 @@ export default function App() {
                   type="button"
                   onClick={() => setShowCreateWorkspace(false)}
                   disabled={creatingWorkspace}
-                  className="rounded-lg border border-[#EBC3D4] px-4 py-2.5 text-sm font-medium text-[#55505A] hover:bg-[#FFF5F8]"
+                  className="rounded-lg border border-[#E2DDF5] px-4 py-2.5 text-sm font-medium text-[#625D7A] hover:bg-[#F8F5FF]"
                 >
                   Cancel
                 </button>
@@ -564,7 +564,7 @@ export default function App() {
                 <button
                   type="submit"
                   disabled={creatingWorkspace}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#D64F88] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#C44279] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#6810D9] to-[#5135E8] px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Plus size={16} />
                   {creatingWorkspace ? 'Creating...' : 'Create Workspace'}
