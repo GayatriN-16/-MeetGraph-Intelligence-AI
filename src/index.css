@@ -95,13 +95,53 @@ textarea {
   resize: vertical;
 }
 
+/* Responsive media elements */
 img,
 video,
-canvas,
-svg {
+canvas {
   max-width: 100%;
 }
 
+/* React Flow graph rendering */
+.react-flow {
+  width: 100%;
+  height: 100%;
+}
+
+.react-flow__edges {
+  overflow: visible;
+}
+
+.react-flow__edge-path {
+  stroke: #168C98 !important;
+  stroke-width: 2.5px !important;
+  opacity: 1 !important;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke: #168C98 !important;
+  stroke-width: 2.5px !important;
+}
+
+.react-flow__arrowhead {
+  fill: #168C98 !important;
+  stroke: #168C98 !important;
+}
+
+.react-flow__edge-text {
+  fill: #172B4D;
+}
+
+.react-flow__edge-textbg {
+  fill: #FFFFFF;
+}
+
+.react-flow__handle {
+  background: #168C98;
+  border: 1px solid #FFFFFF;
+}
+
+/* Root application */
 #root {
   width: 100%;
   min-width: 320px;
@@ -209,7 +249,6 @@ svg {
     font-size: 14px;
   }
 
-  /* Keep page containers inside the phone viewport */
   main,
   main > div,
   main > section {
@@ -217,7 +256,6 @@ svg {
     max-width: 100%;
   }
 
-  /* Prevent oversized text from expanding cards */
   h1,
   h2,
   h3,
@@ -227,13 +265,11 @@ svg {
     overflow-wrap: anywhere;
   }
 
-  /* Better touch targets */
   button,
   select {
     touch-action: manipulation;
   }
 
-  /* Full-width modal content */
   [role="dialog"] {
     max-width: calc(100vw - 24px);
     max-height: calc(100dvh - 24px);
