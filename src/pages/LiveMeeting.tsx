@@ -1,4 +1,6 @@
+
 import { useEffect, useRef, useState } from 'react';
+import { api } from '../api/client';
 import {
   AudioLines,
   Mic,
@@ -48,18 +50,25 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
   const startedAtRef = useRef(0);
   const intentionalStopRef = useRef(false);
 
-  // Revoke each object URL when it is replaced or when the component unmounts.
+  // Revoke recording preview URL when replaced or unmounted.
   useEffect(() => {
     if (!recordedUrl) return;
-    return () => URL.revokeObjectURL(recordedUrl);
+
+    return () => {
+      URL.revokeObjectURL(recordedUrl);
+    };
   }, [recordedUrl]);
 
+  // Revoke test audio URL when replaced or unmounted.
   useEffect(() => {
     if (!testFileUrl) return;
-    return () => URL.revokeObjectURL(testFileUrl);
+
+    return () => {
+      URL.revokeObjectURL(testFileUrl);
+    };
   }, [testFileUrl]);
 
-  // Media and socket cleanup must run only on unmount, not when preview URLs change.
+  // Clean up active media and socket resources on unmount.
   useEffect(() => {
     return () => {
       const recorder = recorderRef.current;
@@ -134,6 +143,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
       setMeetingId(null);
       setSegments([]);
       setDuration(0);
+
       intentionalStopRef.current = false;
       chunksRef.current = [];
 
@@ -142,36 +152,55 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
       }
 
       if (!navigator.mediaDevices?.getDisplayMedia) {
-        throw new Error('Your browser does not support tab audio capture.');
+        throw new Error(
+          'Your browser does not support tab audio capture.'
+        );
       }
 
+      // 1. Request browser screen/tab sharing.
       displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: true,
       });
+
       streamRef.current = displayStream;
 
       const audioTracks = displayStream.getAudioTracks();
 
       if (audioTracks.length === 0) {
         displayStream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+
         throw new Error(
-          'No tab audio received. Select a Chrome tab and enable Share tab audio.',
+          'No tab audio received. Select a Chrome tab and enable Share tab audio.'
         );
       }
 
+      // 2. Request an authenticated, short-lived WebSocket ticket.
+      const ticketResponse = await api.createLiveSessionTicket(projectId);
+
+      if (!ticketResponse?.ticket) {
+        throw new Error(
+          'The backend did not return a valid live-session ticket.'
+        );
+      }
+
+      // 3. Determine WebSocket protocol.
       const protocol =
         window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
+      // 4. Build authenticated WebSocket connection parameters.
       const params = new URLSearchParams({
         project_id: String(projectId),
         title: title.trim(),
+        ticket: ticketResponse.ticket,
       });
 
       const socketUrl =
         `${protocol}//${window.location.host}` +
         `/api/v1/live-sessions/stream?${params.toString()}`;
 
+      // 5. Connect to the authenticated backend WebSocket.
       socket = new WebSocket(socketUrl);
       socketRef.current = socket;
 
@@ -179,28 +208,48 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
 
       socket.addEventListener('message', handleServerMessage);
 
-      socket.addEventListener('close', () => {
+      socket.addEventListener('close', (event) => {
         if (!intentionalStopRef.current) {
           setServerMessage('Connection closed.');
-          setError('The live session connection closed unexpectedly.');
+
+          setError(
+            event.code === 4401
+              ? 'Live-session authentication failed. Please sign in again and retry.'
+              : event.code === 4403
+                ? 'You do not have permission to access this project.'
+                : 'The live session connection closed unexpectedly.'
+          );
+
           setStatus('error');
         }
       });
 
+      // 6. Wait for WebSocket connection.
       await new Promise<void>((resolve, reject) => {
         const activeSocket = socket!;
 
         const handleOpen = () => {
-          activeSocket.removeEventListener('error', handleConnectionError);
+          activeSocket.removeEventListener(
+            'error',
+            handleConnectionError
+          );
           resolve();
         };
 
         const handleConnectionError = () => {
           activeSocket.removeEventListener('open', handleOpen);
-          reject(new Error('Could not connect to the MeetGraph AI backend.'));
+
+          reject(
+            new Error(
+              'Could not connect to the MeetGraph AI backend.'
+            )
+          );
         };
 
-        activeSocket.addEventListener('open', handleOpen, { once: true });
+        activeSocket.addEventListener('open', handleOpen, {
+          once: true,
+        });
+
         activeSocket.addEventListener('error', handleConnectionError, {
           once: true,
         });
@@ -210,6 +259,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
         throw new Error('WebSocket connection is not available.');
       }
 
+      // 7. Create audio-only stream for MediaRecorder.
       const audioStream = new MediaStream(audioTracks);
 
       const mimeType = [
@@ -224,6 +274,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
       recorderRef.current = recorder;
       streamRef.current = displayStream;
 
+      // 8. Stream recorded audio chunks to the backend.
       recorder.ondataavailable = (event) => {
         if (event.data.size === 0) return;
 
@@ -232,11 +283,14 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(event.data);
         } else {
-          setError('The backend connection closed before the audio chunk could be sent.');
+          setError(
+            'The backend connection closed before the audio chunk could be sent.'
+          );
           setStatus('error');
         }
       };
 
+      // 9. Handle recording stop.
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, {
           type: recorder.mimeType || 'audio/webm',
@@ -245,7 +299,10 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
         const url = URL.createObjectURL(blob);
 
         setRecordedUrl((previous) => {
-          if (previous) URL.revokeObjectURL(previous);
+          if (previous) {
+            URL.revokeObjectURL(previous);
+          }
+
           return url;
         });
 
@@ -253,18 +310,26 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
         streamRef.current = null;
 
         if (socket?.readyState === WebSocket.OPEN) {
-          // MediaRecorder emits its final dataavailable event before onstop.
-          // WebSocket preserves send order, so this control message follows all audio chunks.
+          // MediaRecorder sends its final audio chunk before onstop.
+          // Therefore, this stop message follows all audio chunks.
           intentionalStopRef.current = true;
+
           socket.send(JSON.stringify({ action: 'stop' }));
-          setServerMessage('Recording uploaded. Waiting for transcription...');
+
+          setServerMessage(
+            'Recording uploaded. Waiting for transcription...'
+          );
+
           setStatus('transcribing');
         } else {
-          setError('The backend connection closed before the recording could be finalized.');
+          setError(
+            'The backend connection closed before the recording could be finalized.'
+          );
           setStatus('error');
         }
       };
 
+      // 10. Stop recording if the user ends screen sharing.
       displayStream.getVideoTracks().forEach((track) => {
         track.addEventListener('ended', () => {
           if (recorder.state === 'recording') {
@@ -273,21 +338,29 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
         });
       });
 
+      // 11. Start recording and stream audio every second.
       recorder.start(1000);
+
       startedAtRef.current = Date.now();
+
       setStatus('capturing');
       setServerMessage('Audio is being sent to the backend.');
     } catch (err) {
       displayStream?.getTracks().forEach((track) => track.stop());
+
       streamRef.current = null;
 
       intentionalStopRef.current = true;
+
       socket?.close();
       socketRef.current = null;
 
       setStatus('error');
+
       setError(
-        err instanceof Error ? err.message : 'Unable to start live capture.',
+        err instanceof Error
+          ? err.message
+          : 'Unable to start live capture.'
       );
     }
   }
@@ -300,7 +373,7 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
     }
 
     setDuration(
-      Math.round((Date.now() - startedAtRef.current) / 1000),
+      Math.round((Date.now() - startedAtRef.current) / 1000)
     );
   }
 
@@ -308,8 +381,10 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
     if (!recordedUrl) return;
 
     const link = document.createElement('a');
+
     link.href = recordedUrl;
     link.download = 'meetgraph-live-recording.webm';
+
     link.click();
   }
 
@@ -446,20 +521,31 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             {status === 'capturing' ? (
               <>
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+
                 <span className="text-sm font-semibold text-red-700">
                   Recording and streaming audio
                 </span>
               </>
             ) : status === 'connecting' || status === 'transcribing' ? (
               <>
-                <LoaderCircle size={18} className="animate-spin text-[#269BA5]" />
+                <LoaderCircle
+                  size={18}
+                  className="animate-spin text-[#269BA5]"
+                />
+
                 <span className="text-sm font-semibold text-[#269BA5]">
-                  {status === 'connecting' ? 'Connecting...' : 'Transcribing...'}
+                  {status === 'connecting'
+                    ? 'Connecting...'
+                    : 'Transcribing...'}
                 </span>
               </>
             ) : status === 'completed' ? (
               <>
-                <CheckCircle2 className="text-[#63866B]" size={18} />
+                <CheckCircle2
+                  className="text-[#63866B]"
+                  size={18}
+                />
+
                 <span className="text-sm font-semibold text-[#63866B]">
                   Meeting saved and transcribed
                 </span>
@@ -467,8 +553,11 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
             ) : (
               <>
                 <span className="h-2.5 w-2.5 rounded-full bg-[#89818B]" />
+
                 <span className="text-sm font-semibold text-[#55505A]">
-                  {status === 'error' ? 'Session failed' : 'Not recording'}
+                  {status === 'error'
+                    ? 'Session failed'
+                    : 'Not recording'}
                 </span>
               </>
             )}
@@ -506,7 +595,11 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
               Local recording available
             </p>
 
-            <audio controls src={recordedUrl} className="mt-3 w-full" />
+            <audio
+              controls
+              src={recordedUrl}
+              className="mt-3 w-full"
+            />
 
             <button
               type="button"
@@ -532,9 +625,13 @@ export default function LiveMeeting({ projectId }: LiveMeetingProps) {
 
           <div className="mt-5 space-y-4">
             {segments.map((segment, index) => (
-              <div key={`${segment.start_seconds}-${index}`} className="border-b border-[#C6E5E6] pb-3 last:border-0">
+              <div
+                key={`${segment.start_seconds}-${index}`}
+                className="border-b border-[#C6E5E6] pb-3 last:border-0"
+              >
                 <p className="text-xs font-semibold text-[#269BA5]">
-                  {segment.start_seconds.toFixed(1)}s – {segment.end_seconds.toFixed(1)}s
+                  {segment.start_seconds.toFixed(1)}s –{' '}
+                  {segment.end_seconds.toFixed(1)}s
                 </p>
 
                 <p className="mt-1 text-sm leading-6 text-[#187D87]">

@@ -1,11 +1,21 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Meeting, Project, TranscriptSegment
+from app.core.security import get_current_user
+from app.core.authorization import get_owned_project
+from app.models import User, Meeting, TranscriptSegment
 from app.schemas.meeting import MeetingResponse
 from app.services.storage import save_transcript, delete_recording
 from app.services.transcript_parser import parse_transcript_content
@@ -31,15 +41,17 @@ async def upload_meeting_transcript(
     title: str = Form(...),
     transcript: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = db.get(Project, project_id)
-
-    if not project:
-        await transcript.close()
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found.",
+    try:
+        get_owned_project(
+            project_id,
+            db,
+            current_user,
         )
+    except HTTPException:
+        await transcript.close()
+        raise
 
     clean_title = title.strip()
 

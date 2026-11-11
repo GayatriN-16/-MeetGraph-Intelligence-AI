@@ -4,7 +4,13 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
+from app.core.security import get_current_user
+from app.core.authorization import (
+    get_owned_project,
+    get_owned_meeting,
+)
 from app.models import (
+    User,
     Meeting,
     Project,
     TranscriptSegment,
@@ -77,14 +83,13 @@ def serialize_agenda(result):
 def extract_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     segments = get_segments(db, meeting_id)
 
@@ -102,7 +107,6 @@ def extract_meeting(
     result = extract_meeting_intelligence(segments, year)
 
     try:
-        # Replace previous extraction results when extraction is retried.
         db.execute(
             delete(ActionItem).where(
                 ActionItem.meeting_id == meeting_id
@@ -190,14 +194,13 @@ def extract_meeting(
 def get_meeting_intelligence(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     segments = get_segments(db, meeting_id)
 
@@ -248,14 +251,13 @@ def get_meeting_intelligence(
 def get_project_intelligence(
     project_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = db.get(Project, project_id)
-
-    if not project:
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found.",
-        )
+    project = get_owned_project(
+        project_id,
+        db,
+        current_user,
+    )
 
     meetings = db.scalars(
         select(Meeting)
@@ -380,14 +382,13 @@ def get_project_intelligence(
 def generate_ai_meeting_summary(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     segments = get_segments(db, meeting_id)
 
@@ -435,14 +436,13 @@ def generate_ai_meeting_summary(
 def get_ai_evidence_insights(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     segments = get_segments(db, meeting_id)
 

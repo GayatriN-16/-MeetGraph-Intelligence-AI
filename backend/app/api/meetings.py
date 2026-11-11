@@ -16,7 +16,13 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db, SessionLocal
+from app.core.security import get_current_user
+from app.core.authorization import (
+    get_owned_project,
+    get_owned_meeting,
+)
 from app.models import (
+    User,
     Meeting,
     Project,
     Speaker,
@@ -33,6 +39,7 @@ from app.services.diarization import (
     match_segments_to_speakers,
 )
 
+
 router = APIRouter(tags=["Meetings"])
 
 
@@ -43,7 +50,7 @@ def process_transcription_background(
 ):
     """Transcribe a meeting and persist its extracted intelligence."""
 
-    # Phase 1: transcribe and persist the transcript.
+    # Phase 1: Transcribe and persist the transcript.
     with SessionLocal() as db:
         try:
             meeting = db.get(Meeting, meeting_id)
@@ -53,13 +60,16 @@ def process_transcription_background(
 
             result = transcribe_recording(storage_path, language)
 
-            # Remove intelligence records before deleting old speakers,
-            # because action items and decisions may reference speaker IDs.
+            # Remove existing intelligence before deleting old speakers.
             db.execute(
-                delete(ActionItem).where(ActionItem.meeting_id == meeting_id)
+                delete(ActionItem).where(
+                    ActionItem.meeting_id == meeting_id
+                )
             )
             db.execute(
-                delete(Decision).where(Decision.meeting_id == meeting_id)
+                delete(Decision).where(
+                    Decision.meeting_id == meeting_id
+                )
             )
             db.execute(
                 delete(TranscriptSegment).where(
@@ -67,7 +77,9 @@ def process_transcription_background(
                 )
             )
             db.execute(
-                delete(Speaker).where(Speaker.meeting_id == meeting_id)
+                delete(Speaker).where(
+                    Speaker.meeting_id == meeting_id
+                )
             )
 
             for item in result["segments"]:
@@ -84,45 +96,64 @@ def process_transcription_background(
             meeting.duration_seconds = result["duration_seconds"]
             meeting.status = "transcribed"
             meeting.processing_error = None
+
             db.commit()
 
         except Exception as exc:
             db.rollback()
+
             failed_meeting = db.get(Meeting, meeting_id)
+
             if failed_meeting:
                 failed_meeting.status = "failed"
                 failed_meeting.processing_error = str(exc)[:2000]
                 db.commit()
+
             return
 
-    # Phase 2: extract and persist action items and decisions.
+    # Phase 2: Extract and persist action items and decisions.
     try:
         with SessionLocal() as db:
             meeting = db.get(Meeting, meeting_id)
+
             if not meeting:
-                raise RuntimeError("Meeting not found during intelligence extraction.")
+                raise RuntimeError(
+                    "Meeting not found during intelligence extraction."
+                )
 
             segments = db.scalars(
                 select(TranscriptSegment)
-                .where(TranscriptSegment.meeting_id == meeting_id)
+                .where(
+                    TranscriptSegment.meeting_id == meeting_id
+                )
                 .order_by(TranscriptSegment.start_seconds)
             ).all()
 
             if not segments:
-                raise RuntimeError("No transcript segments were saved for this meeting.")
+                raise RuntimeError(
+                    "No transcript segments were saved for this meeting."
+                )
 
-            year = meeting.created_at.year if meeting.created_at else 2026
-            intelligence = extract_meeting_intelligence(segments, year)
+            year = (
+                meeting.created_at.year
+                if meeting.created_at
+                else 2026
+            )
 
-            # The old records were cleared before transcript replacement.
-            # Persist only records returned by the canonical extractor.
+            intelligence = extract_meeting_intelligence(
+                segments,
+                year,
+            )
+
             for item in intelligence.get("action_items", []):
                 db.add(
                     ActionItem(
                         meeting_id=meeting_id,
                         task_description=item["task_description"],
                         assignee_name=item.get("assignee_name"),
-                        assignee_speaker_id=item.get("assignee_speaker_id"),
+                        assignee_speaker_id=item.get(
+                            "assignee_speaker_id"
+                        ),
                         due_date=item.get("due_date"),
                         estimated_duration_minutes=item.get(
                             "estimated_duration_minutes"
@@ -150,9 +181,10 @@ def process_transcription_background(
             db.commit()
 
     except Exception as exc:
-        # Preserve the successfully saved transcript and expose the failure.
+        # Preserve the successfully saved transcript.
         with SessionLocal() as db:
             failed_meeting = db.get(Meeting, meeting_id)
+
             if failed_meeting:
                 failed_meeting.status = "transcribed"
                 failed_meeting.processing_error = (
@@ -172,15 +204,17 @@ async def upload_meeting(
     project_id: int = Form(...),
     recording: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = db.get(Project, project_id)
-
-    if not project:
-        await recording.close()
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found.",
+    try:
+        get_owned_project(
+            project_id,
+            db,
+            current_user,
         )
+    except HTTPException:
+        await recording.close()
+        raise
 
     original_filename = Path(recording.filename or "").name
 
@@ -223,11 +257,19 @@ async def upload_meeting(
 def list_meetings(
     project_id: int | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    query = select(Meeting).order_by(Meeting.created_at.desc())
+    query = (
+        select(Meeting)
+        .join(Project, Meeting.project_id == Project.id)
+        .where(Project.owner_id == current_user.id)
+        .order_by(Meeting.created_at.desc())
+    )
 
     if project_id is not None:
-        query = query.where(Meeting.project_id == project_id)
+        query = query.where(
+            Meeting.project_id == project_id
+        )
 
     return db.scalars(query).all()
 
@@ -239,14 +281,13 @@ def list_meetings(
 def get_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     return meeting
 
@@ -260,14 +301,13 @@ def transcribe_meeting(
     background_tasks: BackgroundTasks,
     language: str | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     if meeting.status == "transcribing":
         raise HTTPException(
@@ -303,14 +343,13 @@ def transcribe_meeting(
 async def diarize_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     if not Path(meeting.storage_path).is_file():
         raise HTTPException(
@@ -320,7 +359,9 @@ async def diarize_meeting(
 
     transcript_segments = db.scalars(
         select(TranscriptSegment)
-        .where(TranscriptSegment.meeting_id == meeting_id)
+        .where(
+            TranscriptSegment.meeting_id == meeting_id
+        )
         .order_by(TranscriptSegment.start_seconds)
     ).all()
 
@@ -349,16 +390,21 @@ async def diarize_meeting(
                 Speaker.meeting_id == meeting_id
             )
         )
+
         db.flush()
 
         speaker_records = {}
 
-        for index, label in enumerate(result["speakers"], start=1):
+        for index, label in enumerate(
+            result["speakers"],
+            start=1,
+        ):
             speaker = Speaker(
                 meeting_id=meeting_id,
                 display_name=f"Speaker {index}",
                 diarization_label=label,
             )
+
             db.add(speaker)
             db.flush()
 
@@ -406,7 +452,9 @@ async def diarize_meeting(
                 in speaker_records.items()
             ],
             "speaker_turns_detected": len(result["turns"]),
-            "transcript_segments_total": len(transcript_segments),
+            "transcript_segments_total": len(
+                transcript_segments
+            ),
             "transcript_segments_assigned": assigned_count,
             "transcript_segments_unassigned": (
                 len(transcript_segments) - assigned_count
@@ -415,6 +463,7 @@ async def diarize_meeting(
 
     except Exception as exc:
         db.rollback()
+
         raise HTTPException(
             status_code=500,
             detail=f"Speaker diarization failed: {str(exc)}",
@@ -425,18 +474,19 @@ async def diarize_meeting(
 def get_meeting_transcript(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     segments = db.scalars(
         select(TranscriptSegment)
-        .where(TranscriptSegment.meeting_id == meeting_id)
+        .where(
+            TranscriptSegment.meeting_id == meeting_id
+        )
         .order_by(TranscriptSegment.start_seconds)
     ).all()
 
@@ -472,14 +522,13 @@ def get_meeting_transcript(
 def remove_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    meeting = db.get(Meeting, meeting_id)
-
-    if not meeting:
-        raise HTTPException(
-            status_code=404,
-            detail="Meeting not found.",
-        )
+    meeting = get_owned_meeting(
+        meeting_id,
+        db,
+        current_user,
+    )
 
     storage_path = meeting.storage_path
 

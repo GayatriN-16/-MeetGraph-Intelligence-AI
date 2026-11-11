@@ -10,6 +10,8 @@ from app.api.projects import router as projects_router
 from app.api.extraction import router as extraction_router
 from app.api.questions import router as questions_router
 from app.core.config import settings
+from app.api.live_sessions import router as live_sessions_router
+from app.api.auth import router as auth_router
 
 
 app = FastAPI(
@@ -41,7 +43,8 @@ app.include_router(meetings_router, prefix="/api/v1")
 app.include_router(transcripts_router, prefix="/api/v1")
 app.include_router(extraction_router, prefix="/api/v1")
 app.include_router(questions_router, prefix="/api/v1")
-
+app.include_router(live_sessions_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 
 @app.get("/", tags=["General"])
 async def root():

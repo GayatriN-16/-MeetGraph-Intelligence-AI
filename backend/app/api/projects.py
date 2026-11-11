@@ -1,9 +1,11 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.security import get_current_user, require_admin
+from app.core.authorization import get_owned_project
 from app.models import User, Project, Meeting
 from app.schemas.project import (
     UserCreate,
@@ -23,26 +25,36 @@ router = APIRouter(tags=["Projects and Development Setup"])
 def create_development_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin),
 ):
+    email = payload.email.strip().lower()
+
     existing_user = db.scalar(
-        select(User).where(User.email == payload.email)
+        select(User).where(User.email == email)
     )
 
     if existing_user:
         raise HTTPException(
-            status_code=409,
+            status_code=status.HTTP_409_CONFLICT,
             detail="A user with this email already exists.",
         )
 
     user = User(
-        name=payload.name,
-        email=payload.email,
-        role="admin",
+        name=payload.name.strip(),
+        email=email,
+        role="member",
     )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists.",
+        )
 
     return user
 
@@ -55,32 +67,44 @@ def create_development_user(
 def create_project(
     payload: ProjectCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    owner = db.get(User, payload.owner_id)
-
-    if not owner or not owner.is_active:
-        raise HTTPException(
-            status_code=404,
-            detail="Active project owner was not found.",
-        )
-
     project = Project(
-        name=payload.name,
-        description=payload.description,
-        owner_id=payload.owner_id,
+        name=payload.name.strip(),
+        description=(
+            payload.description.strip()
+            if payload.description
+            else None
+        ),
+        owner_id=current_user.id,
     )
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    try:
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to create workspace.",
+        )
 
     return project
 
 
-@router.get("/projects", response_model=list[ProjectResponse])
-def list_projects(db: Session = Depends(get_db)):
+@router.get(
+    "/projects",
+    response_model=list[ProjectResponse],
+)
+def list_projects(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return db.scalars(
-        select(Project).order_by(Project.created_at.desc())
+        select(Project)
+        .where(Project.owner_id == current_user.id)
+        .order_by(Project.created_at.desc())
     ).all()
 
 
@@ -88,14 +112,13 @@ def list_projects(db: Session = Depends(get_db)):
 def get_project_meetings(
     project_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = db.get(Project, project_id)
-
-    if not project:
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found.",
-        )
+    project = get_owned_project(
+        project_id,
+        db,
+        current_user,
+    )
 
     meetings = db.scalars(
         select(Meeting)

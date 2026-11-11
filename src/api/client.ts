@@ -1,15 +1,49 @@
-﻿
-const API_BASE = (
+﻿const API_BASE = (
   import.meta.env.VITE_API_BASE_URL || '/api/v1'
 ).replace(/\/+$/, '');
+
+const AUTH_TOKEN_KEY = 'meetgraph_access_token';
+
+// Authentication types
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
+
+export const authStorage = {
+  getToken: (): string | null =>
+    sessionStorage.getItem(AUTH_TOKEN_KEY),
+
+  setToken: (token: string): void =>
+    sessionStorage.setItem(AUTH_TOKEN_KEY, token),
+
+  clearToken: (): void =>
+    sessionStorage.removeItem(AUTH_TOKEN_KEY),
+};
+
+// API request handler
 
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const token = authStorage.getToken();
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -19,12 +53,13 @@ async function request<T>(
 
     try {
       const errorData = await response.json();
-      message =
-        errorData.detail ||
-        errorData.message ||
-        message;
+      message = errorData.detail || errorData.message || message;
     } catch {
-      // The response was not JSON.
+      // Response was not JSON.
+    }
+
+    if (response.status === 401) {
+      authStorage.clearToken();
     }
 
     throw new Error(message);
@@ -37,6 +72,8 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
+// Project types
+
 export interface Project {
   id: number;
   name: string;
@@ -44,6 +81,8 @@ export interface Project {
   owner_id: number;
   created_at: string;
 }
+
+// Meeting types
 
 export interface Meeting {
   id: number;
@@ -155,9 +194,74 @@ export interface MeetingTranscript {
   segments: TranscriptSegment[];
 }
 
+// API methods
+
 export const api = {
+  // Authentication
+
+  register: (
+    name: string,
+    email: string,
+    password: string,
+  ) =>
+    request<AuthUser>('/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password }),
+    }),
+
+  login: async (email: string, password: string) => {
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+
+    const result = await request<AuthTokenResponse>(
+      '/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      },
+    );
+
+    authStorage.setToken(result.access_token);
+    return result;
+  },
+
+  getCurrentUser: () =>
+    request<AuthUser>('/auth/me'),
+
+  logout: () => {
+    authStorage.clearToken();
+  },
+
+  // Projects
+
   getProjects: () =>
     request<Project[]>('/projects'),
+
+  createProject: (name: string, description: string) =>
+    request<Project>('/projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, description }),
+    }),
+
+    createLiveSessionTicket: (projectId: number) =>
+  request<{ ticket: string; expires_in: number }>(
+    `/live-sessions/ticket?project_id=${projectId}`,
+    {
+      method: 'POST',
+    }
+  ),
+
+  // Meetings
 
   getMeetings: (projectId: number) =>
     request<Meeting[]>(`/meetings?project_id=${projectId}`),
@@ -170,10 +274,14 @@ export const api = {
       `/meetings/${meetingId}/transcript`,
     ),
 
+  // Intelligence
+
   getIntelligence: (projectId: number) =>
     request<ProjectIntelligence>(
       `/projects/${projectId}/intelligence`,
     ),
+
+  // Ask AI
 
   askQuestion: (
     projectId: number,
@@ -194,13 +302,14 @@ export const api = {
       },
     ),
 
+  // Upload meeting recording
+
   uploadMeeting: (
     projectId: number,
     title: string,
     recording: File,
   ) => {
     const formData = new FormData();
-
     formData.append('project_id', String(projectId));
     formData.append('title', title);
     formData.append('recording', recording);
@@ -211,13 +320,14 @@ export const api = {
     });
   },
 
+  // Upload transcript
+
   uploadTranscript: (
     projectId: number,
     title: string,
     transcript: File,
   ) => {
     const formData = new FormData();
-
     formData.append('project_id', String(projectId));
     formData.append('title', title);
     formData.append('transcript', transcript);
@@ -228,16 +338,18 @@ export const api = {
     });
   },
 
+  // Transcribe meeting
+
   transcribeMeeting: (meetingId: number) =>
     request<unknown>(`/meetings/${meetingId}/transcribe`, {
       method: 'POST',
     }),
 
+  // Delete meeting
+
   deleteMeeting: (meetingId: number) =>
     request<DeleteMeetingResponse>(
       `/meetings/${meetingId}`,
-      {
-        method: 'DELETE',
-      },
+      { method: 'DELETE' },
     ),
 };

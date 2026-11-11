@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Project, Meeting
+from app.core.security import get_current_user
+from app.core.authorization import get_owned_project, get_owned_meeting
+from app.models import User
 from app.schemas.question import QuestionRequest, QuestionResponse
 from app.services.question_answering import answer_project_question
 
@@ -19,32 +21,32 @@ def ask_project_question(
     project_id: int,
     payload: QuestionRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    # Verify that the project exists.
-    project = db.get(Project, project_id)
+    # Verify that the authenticated user owns this project.
+    get_owned_project(
+        project_id,
+        db,
+        current_user,
+    )
 
-    if not project:
-        raise HTTPException(
-            status_code=404,
-            detail="Project not found.",
-        )
-
-    # Verify that the selected meeting belongs to this project.
+    # Verify that the selected meeting belongs to the user's project.
     if payload.meeting_id is not None:
-        meeting = db.scalar(
-            select(Meeting).where(
-                Meeting.id == payload.meeting_id,
-                Meeting.project_id == project_id,
-            )
+        meeting = get_owned_meeting(
+            payload.meeting_id,
+            db,
+            current_user,
         )
 
-        if not meeting:
+        if meeting.project_id != project_id:
+            from fastapi import HTTPException
+
             raise HTTPException(
                 status_code=404,
                 detail="Selected meeting was not found in this project.",
             )
 
-    # Pass the meeting filter to the question-answering service.
+    # Preserve the existing question-answering service.
     result = answer_project_question(
         db=db,
         project_id=project_id,

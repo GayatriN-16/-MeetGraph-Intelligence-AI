@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,7 +22,6 @@ class UserResponse(BaseModel):
 class ProjectCreate(BaseModel):
     name: str = Field(min_length=2, max_length=200)
     description: str | None = None
-    owner_id: int
 
 
 class ProjectResponse(BaseModel):
