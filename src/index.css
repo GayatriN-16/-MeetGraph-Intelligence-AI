@@ -1,0 +1,313 @@
+﻿@import "tailwindcss";
+
+/* MeetGraph AI | Purple & Lavender Light Theme */
+:root {
+  color-scheme: light;
+
+  --mg-primary: #6810D9;
+  --mg-primary-strong: #5135E8;
+  --mg-primary-soft: #F0E9FF;
+  --mg-pista: #F8F5FF;
+  --mg-pista-strong: #6810D9;
+  --mg-navy: #6810D9;
+  --mg-navy-soft: #625D7A;
+
+  --mg-background: #E8E8FA;
+  --mg-surface: #FFFFFF;
+  --mg-surface-muted: #F8F5FF;
+
+  --mg-text: #17152B;
+  --mg-text-secondary: #625D7A;
+  --mg-muted: #625D7A;
+
+  --mg-border: #E2DDF5;
+  --mg-border-strong: #CDBBFA;
+
+  --mg-success: #168653;
+  --mg-success-bg: #EAF7F0;
+  --mg-warning: #B7791F;
+  --mg-warning-bg: #FFF6E5;
+  --mg-danger: #DC2626;
+  --mg-danger-bg: #FEF2F2;
+
+  --mg-shadow-sm: 0 1px 3px rgba(38, 25, 76, 0.07);
+  --mg-shadow-md: 0 8px 24px rgba(38, 25, 76, 0.10);
+}
+
+/* Global reset */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  overflow-x: clip;
+  color: var(--mg-text);
+  background: var(--mg-background);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input,
+textarea,
+select {
+  max-width: 100%;
+  color: var(--mg-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #625D7A;
+  opacity: 1;
+}
+
+select option {
+  color: #17152B;
+  background: #FFFFFF;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Responsive media elements */
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* React Flow graph rendering */
+.react-flow {
+  width: 100%;
+  height: 100%;
+}
+
+.react-flow__edges {
+  overflow: visible;
+}
+
+.react-flow__edge-path {
+  stroke: #6810D9 !important;
+  stroke-width: 2.5px !important;
+  opacity: 1 !important;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke: #5135E8 !important;
+  stroke-width: 2.5px !important;
+}
+
+.react-flow__arrowhead {
+  fill: #6810D9 !important;
+  stroke: #6810D9 !important;
+}
+
+.react-flow__edge-text {
+  fill: #17152B;
+}
+
+.react-flow__edge-textbg {
+  fill: #FFFFFF;
+}
+
+.react-flow__handle {
+  background: #6810D9;
+  border: 1px solid #E2DDF5;
+}
+
+/* Root application */
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+::selection {
+  background: #E2D5FF;
+  color: #17152B;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mg-primary-strong);
+  outline-offset: 3px;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #CDBBFA transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CDBBFA;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Existing project components */
+.mg-card {
+  background: var(--mg-surface);
+  border: 1px solid var(--mg-border);
+  border-radius: 14px;
+  box-shadow: var(--mg-shadow-sm);
+}
+
+.mg-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  background: var(--mg-background);
+}
+
+.mg-sidebar {
+  background: #FFFFFF;
+  color: #17152B;
+  border-color: #E2DDF5;
+}
+
+.mg-muted {
+  color: var(--mg-muted);
+}
+
+.mg-primary-button {
+  background: linear-gradient(135deg, #6810D9, #5135E8);
+  color: #FFFFFF;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.mg-primary-button:hover {
+  background: linear-gradient(135deg, #570BC0, #4328D0);
+}
+
+.mg-primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Animation */
+@keyframes mg-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive content safety */
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  main,
+  main > div,
+  main > section {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  button,
+  select {
+    touch-action: manipulation;
+  }
+
+  [role="dialog"] {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
+/* Tablet and desktop */
+@media (min-width: 768px) {
+  .mg-sidebar {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

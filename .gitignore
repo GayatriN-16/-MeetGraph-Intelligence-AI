@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Python backend
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.env
+backend/**/*.pyc
+# Meeting recordings (local user data)
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
+
+# IDE settings
+.vscode/
+
+# Root-level Python environments
+.venv/
+venv/
+
+# Local project reports
+project_inventory.txt

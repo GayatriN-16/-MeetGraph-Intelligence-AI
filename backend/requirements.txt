@@ -1,0 +1,17 @@
+﻿
+fastapi
+uvicorn[standard]
+pydantic-settings
+python-multipart
+sqlalchemy>=2.0,<3.0
+psycopg[binary]>=3.2,<4.0
+alembic
+pytest
+httpx
+faster-whisper==1.2.1
+google-genai<3.0.0
+pyannote.audio==4.0.7
+av==17.1.0
+pwdlib[argon2]
+PyJWT
+email-validator

@@ -1,175 +1,404 @@
-# MeetGraph AI — Enterprise Meeting Intelligence & Connected Knowledge Graph Platform
 
-> **Final Year BE Computer Engineering Project**  
-> **Developer:** [Gayatri Nikam](https://github.com/GayatriN-16)  
-> **Live Application:** [MeetGraph AI App](https://ais-dev-l4aknxur6g64jcbniqpmfm-330250524849.asia-southeast1.run.app)
+# MeetGraph AI – Enterprise Meeting Intelligence Platform
+
+**Final Year BE Computer Engineering Project**
+
+**Developed collaboratively by:**
+- Gayatri Nikam
+- Vaibhav Pawar
+- Rutuja Jadhav
+- Yash Kumbhar
+
+**GitHub Repository:** [MeetGraph AI](https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview)
+
+**Live Application:** [MeetGraph AI](https://meet-graph-ai-preview.vercel.app/)
 
 ---
 
-## 📌 Project Overview
+## 1. Project Overview
 
-**MeetGraph AI** is an Enterprise Meeting Intelligence Platform that transforms conversational audio recordings into searchable, interconnected organizational memory. Beyond basic meeting transcription and summarization, MeetGraph AI synthesizes multi-meeting relationships into a **Neo4j Knowledge Graph** and leverages **GraphRAG (Graph-Augmented Retrieval)** to deliver evidence-grounded answers with exact source citations and timecodes.
+MeetGraph AI is an AI-powered meeting intelligence platform designed to simplify the process of reviewing, understanding, and managing meeting discussions.
 
-### 🔄 Core Technical Pipeline
+Users can upload meeting recordings, generate timestamped transcripts, identify speakers, create AI-powered meeting summaries, extract action items and decisions, and ask questions about individual meetings or an entire project.
+
+The platform transforms meeting conversations into structured and searchable information, helping users retrieve important details without manually reviewing complete recordings.
+
+### Problem Statement
+
+Organizations conduct multiple meetings to discuss projects, assign responsibilities, make decisions, and track progress. However, important information is often distributed across recordings, notes, and conversations.
+
+Manually reviewing these recordings is time-consuming and makes it difficult to retrieve specific decisions, assigned tasks, and discussion details.
+
+MeetGraph AI addresses this problem through centralized meeting transcription, information extraction, summarization, and evidence-based question answering.
+
+## 2. Key Features
+
+- **Meeting Management:** Upload and manage multiple meeting recordings under a project.
+- **Audio Transcription:** Convert supported audio and video recordings into text using Faster-Whisper.
+- **Speaker Diarization:** Identify different speakers and associate transcript segments with speaker information using pyannote.audio.
+- **AI Meeting Summaries:** Generate structured meeting summaries, discussion topics, and key points using Google Gemini.
+- **Action Item Extraction:** Identify tasks, assigned people, and explicitly mentioned deadlines.
+- **Decision Extraction:** Extract meeting decisions from available transcript evidence.
+- **Project Intelligence Dashboard:** View meeting statistics, processing information, action items, and decisions.
+- **Ask AI:** Ask natural-language questions about a selected meeting or multiple meetings within a project.
+- **Evidence-Based Responses:** Retrieve supporting transcript excerpts with meeting references, speaker information, and timestamps.
+- **Meeting-Specific Intelligence:** Review discussions, topics, summaries, and extracted information from individual meetings.
+
+## 3. Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript |
+| UI and Styling | Tailwind CSS, Lucide React, Motion |
+| Frontend Build Tool | Vite |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL |
+| ORM | SQLAlchemy |
+| Database Migrations | Alembic |
+| Speech-to-Text | Faster-Whisper |
+| Speaker Diarization | pyannote.audio |
+| Audio Processing | PyAV |
+| Generative AI | Google Gemini API |
+| Development Tools | VS Code, Git, GitHub |
+
+## 4. System Architecture
+
+```text
+                       USER
+                         |
+                         v
+              REACT + TYPESCRIPT FRONTEND
+                         |
+                    REST API Requests
+                         |
+                         v
+                  FASTAPI BACKEND
+                         |
+                +--------+---------+
+                |                  |
+                v                  v
+           POSTGRESQL         AUDIO STORAGE
+                |                  |
+                |                  v
+                |          AUDIO PREPROCESSING
+                |                  |
+                |                  v
+                |           FASTER-WHISPER
+                |                  |
+                |                  v
+                |          SPEAKER DIARIZATION
+                |             (pyannote)
+                |                  |
+                |                  v
+                |        TIMESTAMPED TRANSCRIPT
+                |                  |
+                |                  v
+                |           GEMINI AI ANALYSIS
+                |                  |
+                |          +-------+-------+
+                |          |       |       |
+                |          v       v       v
+                |       SUMMARY  TOPICS  INSIGHTS
+                |          |       |       |
+                |          +-------+-------+
+                |                  |
+                v                  v
+           PROJECT DATA     QUESTION ANSWERING
+                |                  |
+                +--------+---------+
+                         |
+                         v
+                  FRONTEND RESULTS
 ```
-Upload Recording (MP3/MP4/WAV/M4A)
-  └── 1. Audio Preprocessing & Faster-Whisper Speaker Diarization
-        └── 2. Timestamped Transcript Generation & Sentiment Tagging
-              └── 3. LLM Knowledge Extraction (Decisions, Tasks, Deadlines, Risks)
-                    └── 4. Neo4j Knowledge Graph Mapping & ChromaDB Vector Embeddings
-                          └── 5. GraphRAG Evidence-Grounded Natural Language QA
-```
 
----
+### Architecture Notes
 
-## ✨ Key Features & Product Capabilities
+- PostgreSQL stores application data.
+- Audio files are stored using the configured filesystem storage directory.
+- Faster-Whisper handles speech-to-text transcription.
+- pyannote.audio supports speaker diarization.
+- Google Gemini provides AI-powered meeting summaries and analysis.
+- The current question-answering implementation uses local transcript and extracted evidence retrieval.
 
-- 📊 **Executive Dashboard**: High-density analytics showing total meetings, verified decisions, open action items, knowledge entity counts, and real-time extraction pipeline progress.
-- 🕸️ **Interactive React Flow Knowledge Graph (`@xyflow/react`)**: Spatial node-link visualization mapping connected entities (`Meeting`, `Person`, `Project`, `Task`, `Decision`, `Topic`, `Risk`) with zoom/pan, filters, and contextual detail inspector.
-- ⚡ **Cross-Meeting Timeline Conflict Engine**: Automatically synthesizes cross-meeting dependency mismatches (e.g., 14-day schedule mismatch between Q3 Roadmap target and Client Review commit) marked as *"Possible conflict — review required"*.
-- 🎙️ **Visual Meeting Briefs & Diarized Transcript Player**: Compact visual recaps linked to timestamped audio quotes, play/pause simulation, timecode seeking, and speaker filters.
-- 💬 **GraphRAG Conversational Assistant**: Grounded AI query interface powered by **Google Gemini AI** that answers complex cross-meeting questions with clickable source citations `[41:05]`.
-- 📋 **Tasks & Verified Decisions Hub**: Track multi-stakeholder consensus decisions, confidence verification percentages, assigned action items, and export task reports to Jira Software.
-- 🔒 **JWT Role-Based Access Control (RBAC) & Audit Logging**: Multi-role security separating **Admin** (*User management, SOC2 audit trail*) from **Member** (*Project-scoped visibility*).
-- ⚙️ **6-Stage System Architecture Visualizer**: Interactive architectural diagram covering Data Ingestion, AI Processing, Knowledge Storage, Applications, Webhook Integrations, and Security.
+**Planned architecture extensions:** Neo4j, ChromaDB, and GraphRAG are future development components. They should not be considered implemented components of the current version.
 
----
+## 5. Application Modules
 
-## 🛠️ Technology Stack
+### Dashboard
 
-| Layer | Technologies Used |
-| :--- | :--- |
-| **Frontend UI** | React 19, TypeScript, Tailwind CSS, `@xyflow/react`, Lucide React, Motion |
-| **Backend REST API** | Express / Node.js (Compatible with Python FastAPI `/api/v1` PRD specification), `tsx` |
-| **Database Architecture** | PostgreSQL (Relational Data), Neo4j (Knowledge Graph), ChromaDB (Vector Store) |
-| **AI / Speech Pipeline** | `@google/genai` (Gemini 2.5 Flash), Faster-Whisper (Speaker Diarization), FFmpeg |
-| **Security & Auth** | JWT Authentication, Role-Based Access Control (RBAC), SOC2 Type II Encryption |
+Provides an overview of project meetings, processing information, extracted tasks, and decisions.
 
----
+### Meetings
 
-## 📐 System Architecture Diagram
+Allows users to upload, view, and manage meeting recordings.
 
-```
-+-----------------------------------------------------------------------------------+
-|                                 WEB FRONTEND                                      |
-|  React 19 + TypeScript + Tailwind CSS + @xyflow/react Knowledge Graph Visualizer |
-+----------------------------------------+------------------------------------------+
-                                         | REST APIs (/api/v1/*)
-                                         v
-+-----------------------------------------------------------------------------------+
-|                             FASTAPI / EXPRESS BACKEND                             |
-|  - Auth Middleware (JWT & RBAC)             - Meeting Processing & Job Status     |
-|  - GraphRAG Query Synthesis Engine          - Jira & Slack Webhook Dispatch       |
-+-----------+----------------------------+-----------------------------+------------+
-            |                            |                             |
-            v                            v                             v
-+-----------------------+  +---------------------------+  +-------------------------+
-|     POSTGRESQL DB     |  |    NEO4J GRAPH CLUSTER    |  |  CHROMADB VECTOR STORE  |
-| Users, Meetings,      |  | Multi-hop Relationships:  |  | 1536-dim Embeddings     |
-| Projects, Tasks, Logs |  | People, Decisions, Risks  |  | Semantic Transcript Search|
-+-----------------------+  +---------------------------+  +-------------------------+
-```
+### Meeting Intelligence
 
----
+Processes meeting recordings and presents transcripts, summaries, discussion topics, and extracted information.
 
-## 🔌 API Endpoints Specification (`/api/v1`)
+### Ask AI
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/login` | Issue JWT token & return user profile |
-| `GET` | `/api/v1/auth/me` | Fetch active user credentials and permissions |
-| `GET` | `/api/v1/projects` | List projects with member counts and health |
-| `GET` | `/api/v1/meetings` | Retrieve meetings library filtered by project scope |
-| `POST` | `/api/v1/meetings` | Ingest audio stream and trigger diarization pipeline |
-| `GET` | `/api/v1/tasks` | Fetch open action items with owner and due dates |
-| `POST` | `/api/v1/tasks` | Create new action item and assign to team member |
-| `PATCH` | `/api/v1/tasks/:id/toggle` | Toggle task completion status |
-| `GET` | `/api/v1/decisions` | Retrieve AI-extracted and user-verified decisions |
-| `GET` | `/api/v1/graph` | Return `@xyflow/react` spatial nodes and edges |
-| `GET` | `/api/v1/risks` | Retrieve detected cross-meeting timeline conflicts |
-| `POST` | `/api/v1/search` | GraphRAG evidence-grounded search with citations |
-| `GET` | `/api/v1/audit-logs` | Fetch system security and processing audit trail |
+Allows users to ask natural-language questions about one meeting or across meetings within a project. Responses can include supporting transcript evidence.
 
----
+### Tasks and Decisions
 
-## 🚀 Getting Started locally
+Displays extracted action items, assignees, deadlines, and meeting decisions.
+
+### Knowledge Graph
+
+Provides the frontend module for knowledge graph exploration. Full Neo4j-backed graph storage and GraphRAG functionality remain future development work.
+
+## 6. Backend API Overview
+
+The backend exposes REST APIs under the `/api/v1` prefix.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/v1/health` | Check application and database health |
+| GET | `/api/v1/projects` | Retrieve projects |
+| GET | `/api/v1/meetings` | Retrieve project meetings |
+| POST | `/api/v1/meetings/upload` | Upload a meeting recording |
+| POST | `/api/v1/meetings/{meeting_id}/transcribe` | Transcribe a recording |
+| POST | `/api/v1/meetings/{meeting_id}/extract` | Extract meeting intelligence |
+| GET | `/api/v1/meetings/{meeting_id}/intelligence` | Retrieve meeting intelligence |
+| GET | `/api/v1/projects/{project_id}/intelligence` | Retrieve project intelligence |
+| POST | `/api/v1/meetings/{meeting_id}/ai-summary` | Generate an AI meeting summary |
+| POST | `/api/v1/meetings/{meeting_id}/evidence-insights` | Generate transcript-supported insights |
+| POST | `/api/v1/projects/{project_id}/ask` | Ask questions about project meetings |
+
+For complete request and response specifications, run the backend and visit `/docs` for interactive Swagger API documentation.
+
+## 7. Getting Started
+
+Follow these steps to set up MeetGraph AI locally.
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- Gemini API Key (Configure in `.env`)
 
-### Installation Steps
+- Python 3.10 or a compatible version supported by the backend dependencies
+- Node.js and npm
+- PostgreSQL
+- Google Gemini API key
+- Hugging Face access token for the diarization model
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/GayatriN-16/MeetGraph-AI.git
-   cd MeetGraph-AI
-   ```
+### Step 1: Clone the Repository
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/ivaibhavpawar1045/MeetGraph-AI-Preview.git MeetGraph-Intelligence-AI
 
-3. **Configure Environment Variables:**
-   Create a `.env` file in the project root:
-   ```env
-   GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-   PORT=3000
-   ```
-
-4. **Start the Development Server:**
-   ```bash
-   npm run dev
-   ```
-   Open your browser at `http://localhost:3000`.
-
-5. **Build for Production:**
-   ```bash
-   npm run build
-   npm start
-   ```
-
----
-
-## 📁 Repository Folder Structure
-
+cd MeetGraph-Intelligence-AI
 ```
-.
-├── server.ts                       # REST API Backend Entry Point (/api/v1)
-├── package.json                    # Dependencies and scripts
-├── vite.config.ts                  # Vite build configuration
-├── public/                         # Static assets and media attachments
+
+### Step 2: Configure the Backend
+
+```bash
+cd backend
+
+python -m venv .venv
+```
+
+Activate the virtual environment on Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Install backend dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 3: Configure Environment Variables
+
+Create `backend/.env` using `backend/.env.example` as a reference.
+
+Configure the required values:
+
+```env
+POSTGRES_USER=your_database_user
+POSTGRES_PASSWORD=your_database_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=meetgraph_ai
+
+HF_TOKEN=your_huggingface_token
+
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=your_configured_gemini_model
+```
+
+Use the actual environment variable names expected by the backend configuration.
+
+**Important:** Never upload `.env` files, API keys, passwords, or access tokens to GitHub.
+
+### Step 4: Configure the Database
+
+Create the PostgreSQL database using the name configured in your environment variables.
+
+Run database migrations from the `backend` directory:
+
+```bash
+alembic upgrade head
+```
+
+### Step 5: Start the Backend
+
+From the `backend` directory:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Backend URL:
+
+```text
+http://127.0.0.1:8000
+```
+
+API documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### Step 6: Start the Frontend
+
+Open another terminal at the repository root:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the frontend URL displayed by Vite, normally:
+
+```text
+http://localhost:5173
+```
+
+The frontend uses the Vite development proxy to communicate with the local FastAPI backend.
+
+### Step 7: Build and Verify the Frontend
+
+```bash
+npm run lint
+npm run build
+```
+
+## 8. Repository Structure
+
+```text
+MeetGraph-Intelligence-AI/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   │   ├── extraction.py
+│   │   │   ├── gemini_service.py
+│   │   │   ├── question_answering.py
+│   │   │   ├── diarization.py
+│   │   │   └── storage.py
+│   │   └── main.py
+│   │
+│   ├── migrations/
+│   ├── scripts/
+│   ├── tests/
+│   ├── storage/
+│   ├── requirements.txt
+│   └── alembic.ini
+│
+├── docs/
+│   └── UI-Review/
+│
+├── public/
+│
 ├── src/
-│   ├── App.tsx                     # Main application layout and tab router
-│   ├── types.ts                    # Complete TypeScript interfaces
 │   ├── api/
-│   │   └── client.ts               # API Client with JWT authorization headers
-│   ├── services/
-│   │   └── aiService.ts            # Replaceable LLM client abstraction (Gemini API)
-│   ├── data/
-│   │   └── mockData.ts             # PRD seed data (Meetings, Decisions, Tasks, Nodes)
-│   └── components/
-│       ├── Dashboard.tsx           # Executive Analytics Console
-│       ├── MeetingsLibrary.tsx     # Filterable Meetings Grid
-│       ├── VisualMeetingBrief.tsx  # Compact Visual Summary
-│       ├── MeetingDetailModal.tsx  # Diarized Transcript & Audio Player
-│       ├── ReactFlowKnowledgeGraph.tsx # Interactive @xyflow/react Visualizer
-│       ├── TasksAndDecisions.tsx   # Verified Decisions & Task Management
-│       ├── AskAI.tsx               # Evidence-grounded GraphRAG Assistant
-│       ├── ArchitecturePipeline.tsx # 6-Stage System Architecture Spec
-│       ├── ExternalIntegrations.tsx# Webhooks for Google Meet, Teams, Zoom, Jira, Slack
-│       ├── AdminAuditLogs.tsx      # Admin User Management & SOC2 Audit Trail
-│       ├── AuthModal.tsx           # JWT Sign-In & Role Switcher
-│       ├── ConflictEvidenceModal.tsx # Timeline Conflict Analyzer
-│       └── UploadMeetingModal.tsx  # Audio Ingestion & Extraction Stepper
+│   │   └── client.ts
+│   ├── components/
+│   │   └── layout/
+│   ├── pages/
+│   │   ├── AskAI.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── KnowledgeGraph.tsx
+│   │   ├── Meetings.tsx
+│   │   └── TasksAndDecisions.tsx
+│   ├── App.tsx
+│   └── index.css
+│
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── vite.config.ts
 ```
+
+The structure above highlights the main application directories and selected files. Additional files and modules may exist in the repository.
+
+## 9. Team Members and Contributions
+
+MeetGraph AI is a collaborative final-year engineering project developed by four team members.
+
+| Team Member | Primary Role | Responsibilities |
+|---|---|---|
+| **Gayatri Nikam** | Frontend Development and Integration | Frontend architecture, dashboard development, backend testing, and user interface implementation |
+| **Vaibhav Pawar** | Backend Development and AI Functionality | FastAPI backend development, REST APIs, database integration, AI-related functionality, backend testing, and deployment |
+| **Rutuja Jadhav** | Testing and Transcription | Meeting intelligence, transcription workflow, and application testing |
+| **Yash Kumbhar** | Documentation | Project documentation and technical documentation |
+
+### Shared Project Responsibilities
+
+All team members contributed to the overall development process through project discussions, requirement understanding, coordination, testing, and review.
+
+All four members are acknowledged as developers and contributors to MeetGraph AI. The responsibilities listed above describe their primary areas of contribution.
+
+## 10. Future Scope
+
+The following capabilities are planned extensions beyond the currently implemented functionality:
+
+- Neo4j-based connected meeting knowledge graph.
+- GraphRAG for relationship-aware retrieval across meetings.
+- ChromaDB or another vector database for semantic transcript search.
+- Live meeting capture and transcription through a browser extension.
+- Advanced cross-meeting decision and timeline conflict detection.
+- Integrations with collaboration and project management platforms.
+- Enhanced user authentication, role-based permissions, and audit logging.
+- Persistent cloud-based recording storage and scalable processing.
+
+## 11. Testing and Verification
+
+The development workflow includes the following verification activities:
+
+- Python backend compilation.
+- Backend automated test suite.
+- Frontend production build using Vite.
+- TypeScript verification using `npm run lint`.
+- Local PostgreSQL connectivity verification.
+- Local recording storage verification.
+
+Testing results should be reported using the latest test execution rather than a fixed historical test count.
+
+These checks describe the tested development environment and do not independently certify every production deployment capability.
+
+## 12. Credits and Acknowledgements
+
+MeetGraph AI is a collaborative final-year BE Computer Engineering project developed by:
+
+1. **Gayatri Nikam**
+2. **Vaibhav Pawar**
+3. **Rutuja Jadhav**
+4. **Yash Kumbhar**
+
+We acknowledge the open-source communities and technologies that supported this project, including React, FastAPI, PostgreSQL, Faster-Whisper, pyannote.audio, and Google Gemini.
 
 ---
 
-## 👩‍💻 Author & Credits
+**Project Name:** MeetGraph AI – Enterprise Meeting Intelligence Platform
 
-- **Developer:** [Gayatri Nikam](https://github.com/GayatriN-16)
-- **Project:** Final Year BE Computer Engineering Project (MeetGraph AI)
-- **License:** Apache 2.0
+**Project Type:** Final Year BE Computer Engineering Project
+
+*MeetGraph AI: Transforming meeting conversations into searchable organizational knowledge.*
